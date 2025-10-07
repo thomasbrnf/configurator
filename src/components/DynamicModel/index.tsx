@@ -2,7 +2,10 @@ import { useGLTF, useTexture } from "@react-three/drei";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { useMaterial } from "../../context/MaterialContext";
-import { availableModules, availableCompleteSets } from "../../context/ConfiguratorContext";
+import {
+  availableModules,
+  availableCompleteSets,
+} from "../../context/ConfiguratorContext";
 
 interface DynamicModelProps {
   objectId: string;
@@ -11,32 +14,63 @@ interface DynamicModelProps {
   scale?: [number, number, number];
 }
 
-export function DynamicModel({ objectId, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1] }: DynamicModelProps) {
-  const { 
-    getObjectMaterial, 
-    selectedObjectId, 
-    uvScale, 
+export function DynamicModel({
+  objectId,
+  position = [0, 0, 0],
+  rotation = [0, 0, 0],
+  scale = [1, 1, 1],
+}: DynamicModelProps) {
+  const {
+    selectedObjectId,
+    uvScale,
     normalScale,
     metalness,
-    roughness
+    roughness,
+    getObjectMaterial,
+    addObject,
+    objects,
   } = useMaterial();
-  
+
   const isSelected = selectedObjectId === objectId;
 
-  // Find the model definition
-  const moduleDefinition = availableModules.find(m => m.id === objectId);
-  const completeSetDefinition = availableCompleteSets.find(s => s.id === objectId);
+  const moduleDefinition = availableModules.find((m) => m.id === objectId);
+  const completeSetDefinition = availableCompleteSets.find(
+    (s) => s.id === objectId,
+  );
   const modelDefinition = moduleDefinition || completeSetDefinition;
 
-  // Get the model path, fallback to default sofa if not found
   const modelPath = modelDefinition?.modelPath || "/models/sofa3.glb";
-  
-  const { nodes } = useGLTF(modelPath);
+
+  const { nodes, materials } = useGLTF(modelPath);
+
   const objectMaterial = getObjectMaterial(objectId);
 
+  useEffect(() => {
+    const objectExists = objects.some((obj) => obj.id === objectId);
+    if (!objectExists) {
+      addObject({
+        id: objectId,
+        name: modelDefinition?.displayName || objectId,
+        material: objectMaterial || {
+          name: "Granit 01",
+          diffuse: "/materials/the smallest granit/Granit_01_new_3.jpg",
+          normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+        },
+      });
+    }
+  }, [
+    objectId,
+    modelDefinition?.displayName,
+    objects,
+    addObject,
+    objectMaterial,
+  ]);
+
   const [diffuseMap, normalMap] = useTexture([
-    objectMaterial?.diffuse || "/materials/the smallest granit/Granit_01_new_3.jpg",
-    objectMaterial?.normal || "/materials/the smallest granit/Granit_normal_map_5.jpg",
+    objectMaterial?.diffuse ||
+      "/materials/the smallest granit/Granit_01_new_3.jpg",
+    objectMaterial?.normal ||
+      "/materials/the smallest granit/Granit_normal_map_5.jpg",
   ]);
 
   const customMaterial = useMemo(() => {
@@ -57,15 +91,30 @@ export function DynamicModel({ objectId, position = [0, 0, 0], rotation = [0, 0,
     diffuse.needsUpdate = true;
     normal.needsUpdate = true;
 
+    const originalMaterial = materials[
+      "Material #2 1"
+    ] as THREE.MeshStandardMaterial;
+    const aoMap = originalMaterial?.aoMap || null;
+
     return new THREE.MeshStandardMaterial({
       map: diffuse,
       normalMap: normal,
       normalScale: new THREE.Vector2(normalScale, normalScale),
+      aoMap: aoMap,
+      aoMapIntensity: aoMap ? 1.0 : 0,
       roughness: roughness,
       metalness: metalness,
       envMapIntensity: 0.5,
     });
-  }, [diffuseMap, normalMap, uvScale, normalScale, metalness, roughness]);
+  }, [
+    diffuseMap,
+    normalMap,
+    uvScale,
+    normalScale,
+    metalness,
+    roughness,
+    materials,
+  ]);
 
   useEffect(() => {
     if (customMaterial.map) {
@@ -91,10 +140,9 @@ export function DynamicModel({ objectId, position = [0, 0, 0], rotation = [0, 0,
     customMaterial.needsUpdate = true;
   }, [metalness, roughness, customMaterial]);
 
-  // Apply custom materials to all meshes in the model
   const applyMaterials = (object: THREE.Object3D) => {
     object.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof THREE.Mesh && !child.userData.isSelectionOutline) {
         child.material = customMaterial;
         child.castShadow = true;
         child.receiveShadow = true;
@@ -111,10 +159,10 @@ export function DynamicModel({ objectId, position = [0, 0, 0], rotation = [0, 0,
   }
 
   return (
-    <group 
-      position={position} 
-      rotation={rotation} 
-      scale={scale} 
+    <group
+      position={position}
+      rotation={rotation}
+      scale={scale}
       userData={{ objectId }}
       ref={(ref) => {
         if (ref) {
@@ -122,34 +170,40 @@ export function DynamicModel({ objectId, position = [0, 0, 0], rotation = [0, 0,
         }
       }}
     >
-      <primitive 
-        object={mainObject} 
-        dispose={null}
-      />
+      <primitive object={mainObject} dispose={null} />
       {isSelected && (
-        <group scale={[1.02, 1.02, 1.02]}>
-          <primitive 
-            object={mainObject.clone()}
-          />
-          <meshBasicMaterial 
-            color="#06402b" 
-            side={THREE.BackSide}
-            transparent={true}
-            opacity={0.8}
-            attach="material"
-          />
-        </group>
+        <primitive
+          object={mainObject.clone()}
+          scale={[1.02, 1.02, 1.02]}
+          ref={(ref: THREE.Object3D) => {
+            if (ref) {
+              const selectionMaterial = new THREE.MeshBasicMaterial({
+                color: "#06402b",
+                side: THREE.BackSide,
+                transparent: true,
+                opacity: 0.8,
+              });
+
+              ref.traverse((child: THREE.Object3D) => {
+                if (child instanceof THREE.Mesh) {
+                  child.material = selectionMaterial;
+                  child.userData.isSelectionOutline = true;
+                }
+              });
+            }
+          }}
+        />
       )}
     </group>
   );
 }
 
 // Preload all available models
-availableModules.forEach(module => {
+availableModules.forEach((module) => {
   useGLTF.preload(module.modelPath);
 });
 
-availableCompleteSets.forEach(set => {
+availableCompleteSets.forEach((set) => {
   useGLTF.preload(set.modelPath);
 });
 

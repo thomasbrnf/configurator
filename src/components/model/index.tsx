@@ -37,22 +37,24 @@ export function Model(
     > & { objectId?: string },
 ) {
   const { nodes, materials } = useGLTF("/models/sofa3.glb");
-  const { 
-    getObjectMaterial, 
-    selectedObjectId, 
-    uvScale, 
+  const {
+    getObjectMaterial,
+    selectedObjectId,
+    uvScale,
     normalScale,
     metalness,
-    roughness
+    roughness,
   } = useMaterial();
-  
+
   const objectId = props.objectId || "sofa-1";
   const objectMaterial = getObjectMaterial(objectId);
   const isSelected = selectedObjectId === objectId;
 
   const [diffuseMap, normalMap] = useTexture([
-    objectMaterial?.diffuse || "/materials/the smallest granit/Granit_01_new_3.jpg",
-    objectMaterial?.normal || "/materials/the smallest granit/Granit_normal_map_5.jpg",
+    objectMaterial?.diffuse ||
+      "/materials/the smallest granit/Granit_01_new_3.jpg",
+    objectMaterial?.normal ||
+      "/materials/the smallest granit/Granit_normal_map_5.jpg",
   ]);
 
   const customMaterial = useMemo(() => {
@@ -80,7 +82,6 @@ export function Model(
     diffuse.needsUpdate = true;
     normal.needsUpdate = true;
 
-    // Extract AO map from original material if it exists
     const originalMaterial = materials[
       "Material #2 1"
     ] as THREE.MeshStandardMaterial;
@@ -96,7 +97,15 @@ export function Model(
       metalness: metalness,
       envMapIntensity: 0.5,
     });
-  }, [diffuseMap, normalMap, uvScale, normalScale, metalness, roughness, materials]);
+  }, [
+    diffuseMap,
+    normalMap,
+    uvScale,
+    normalScale,
+    metalness,
+    roughness,
+    materials,
+  ]);
 
   useEffect(() => {
     if (customMaterial.map) {
@@ -140,7 +149,7 @@ export function Model(
             castShadow
             receiveShadow
             geometry={(nodes.label_1 as THREE.Mesh).geometry}
-            material={materials['tag (sleeve)_FRONT_2260 2']}
+            material={materials["tag (sleeve)_FRONT_2260 2"]}
             position={[-1129.229, -511.043, -196.998]}
             rotation={[-1.404, 0.883, -0.038]}
             scale={6}
@@ -149,7 +158,7 @@ export function Model(
             castShadow
             receiveShadow
             geometry={(nodes.label as THREE.Mesh).geometry}
-            material={materials['tag (sleeve)_FRONT_2260 3']}
+            material={materials["tag (sleeve)_FRONT_2260 3"]}
             position={[96.873, -13.628, 14.509]}
             rotation={[-1.404, 0.883, -0.038]}
             scale={6}
@@ -159,7 +168,7 @@ export function Model(
           castShadow
           receiveShadow
           geometry={(nodes.bottom_cube as THREE.Mesh).geometry}
-          material={materials['Material.001']}
+          material={materials["Material.001"]}
           position={[0.017, -19.875, -127.851]}
           scale={[1004.683, 374.246, 1.092]}
         />
@@ -182,8 +191,8 @@ export function Model(
                 position={[0, -440.496, 0]}
                 scale={1.02}
               >
-                <meshBasicMaterial 
-                  color="#06402b" 
+                <meshBasicMaterial
+                  color="#06402b"
                   side={THREE.BackSide}
                   transparent={true}
                   opacity={0.8}
@@ -196,7 +205,7 @@ export function Model(
               castShadow
               receiveShadow
               geometry={(nodes.Mesh015 as THREE.Mesh).geometry}
-              material={materials['Material #34 1']}
+              material={materials["Material #34 1"]}
               position={[-3696.063, -440.496, 706.194]}
             />
           </group>

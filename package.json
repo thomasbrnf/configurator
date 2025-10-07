@@ -21,6 +21,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@gltf-transform/core": "^4.2.1",
+    "@gltf-transform/extensions": "^4.2.1",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",

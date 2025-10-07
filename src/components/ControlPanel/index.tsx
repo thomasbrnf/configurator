@@ -23,33 +23,52 @@ const materialGroups: MaterialGroup[] = [
 ];
 
 export const TopLeftButtons: React.FC = () => {
-  const { setCurrentStep, resetConfigurator, setConfigurationType } = useConfigurator();
+  const { setCurrentStep, resetConfigurator, setConfigurationType } =
+    useConfigurator();
 
   const handleAddModule = () => {
-    setConfigurationType('modules');
-    setCurrentStep('module-selection');
+    setConfigurationType("modules");
+    setCurrentStep("module-selection");
   };
 
   const handleChangeConfigType = () => {
     resetConfigurator();
-    setCurrentStep('welcome');
+    setCurrentStep("welcome");
   };
 
   return (
-    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[200] space-x-3">
-      <button 
-        id="addModel" 
-        onClick={handleAddModule}
-        className="px-4 py-2.5 bg-[#06402b] text-white text-sm font-medium rounded-lg hover:bg-[#06402b]/80 active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-sm"
-      >
-        Dodaj Moduł
-      </button>
-      <button 
-        id="changeConfigType" 
+    <div className="fixed top-6 left-6 z-[200] flex items-center gap-3">
+      {/* Change Config Type Button */}
+      <button
+        id="changeConfigType"
         onClick={handleChangeConfigType}
-        className="px-4 py-2.5 bg-white text-[#06402b] text-sm font-medium rounded-lg border border-[#06402b]/20 hover:border-[#06402b]/40 hover:bg-[#06402b]/5 active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-sm"
+        className="px-4 py-2.5 bg-white text-black text-sm font-medium rounded-lg border border-[#06402b]/20 hover:border-[#06402b]/40 hover:bg-[#06402b]/5 active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-sm"
       >
         Zmień Typ Konfiguracji
+      </button>
+      
+      {/* Add Module Button */}
+      <button
+        id="addModel"
+        onClick={handleAddModule}
+        className="group h-12 px-4 bg-[#06402b] text-white font-medium rounded-full hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-lg backdrop-blur-sm flex items-center overflow-hidden"
+      >
+        <svg
+          className="w-6 h-6 flex-shrink-0 transition-transform duration-300 group-hover:rotate-90"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        <span className=" text-sm whitespace-nowrap max-w-0 group-hover:max-w-xs transition-all duration-300 overflow-hidden opacity-0 group-hover:opacity-100">
+          Dodaj Moduł
+        </span>
       </button>
     </div>
   );
@@ -57,7 +76,7 @@ export const TopLeftButtons: React.FC = () => {
 
 export const SelectedObjectInfo: React.FC = () => {
   const { selectedObjectId, objects } = useMaterial();
-  const selectedObject = objects.find(obj => obj.id === selectedObjectId);
+  const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
 
   if (!selectedObject) return null;
 
@@ -65,7 +84,6 @@ export const SelectedObjectInfo: React.FC = () => {
     <div className="fixed bottom-6 right-6 transform  z-[200]">
       <div className="bg-white/90 backdrop-blur-lg rounded-xl border border-[#06402b]/15 overflow-hidden shadow-lg">
         <div className="px-6 py-4">
-     
           <div className="text-lg font-bold text-black mb-3 tracking-tight">
             {selectedObject.name}
           </div>
@@ -73,11 +91,11 @@ export const SelectedObjectInfo: React.FC = () => {
             <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md border-2 border-[#06402b]/20 flex-shrink-0">
               <div
                 className="w-full h-full"
-                style={{ 
+                style={{
                   backgroundImage: `url('${selectedObject.material.diffuse}')`,
-                  backgroundSize: '1000%',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: "1000%",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
                 }}
               ></div>
             </div>
@@ -98,7 +116,8 @@ export const SelectedObjectInfo: React.FC = () => {
 
 // Materials Modal Component
 export const MaterialsModal: React.FC = () => {
-  const { setCurrentMaterial, currentMaterial, selectedObjectId } = useMaterial();
+  const { setCurrentMaterial, currentMaterial, selectedObjectId } =
+    useMaterial();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string>("granit");
 
@@ -115,8 +134,10 @@ export const MaterialsModal: React.FC = () => {
   };
 
   const isMaterialActive = (material: MaterialDefinition) => {
-    return currentMaterial.name === material.name && 
-           currentMaterial.diffuse === material.diffuse;
+    return (
+      currentMaterial.name === material.name &&
+      currentMaterial.diffuse === material.diffuse
+    );
   };
 
   if (!selectedObjectId) return null;
@@ -124,15 +145,15 @@ export const MaterialsModal: React.FC = () => {
   return (
     <div className="fixed top-6 right-6 z-[200]">
       <div className="bg-white/95 backdrop-blur-lg rounded-xl border border-[#06402b]/15 shadow-lg overflow-hidden">
-        <div 
+        <div
           className="px-4 py-3 cursor-pointer select-none bg-[#06402b]/5 hover:bg-[#06402b]/10 transition-colors duration-200"
           onClick={toggleModal}
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-black">
-              Materiały
-            </h3>
-            <div className={`w-5 h-5 rounded-md bg-[#06402b]/20 flex items-center justify-center text-black/70 text-sm font-medium transition-transform duration-200 ${isModalOpen ? 'rotate-180' : ''}`}>
+            <h3 className="text-sm font-semibold text-black">Materiały</h3>
+            <div
+              className={`w-5 h-5 rounded-md bg-[#06402b]/20 flex items-center justify-center text-black/70 text-sm font-medium transition-transform duration-200 ${isModalOpen ? "rotate-180" : ""}`}
+            >
               ↓
             </div>
           </div>
@@ -158,7 +179,9 @@ export const MaterialsModal: React.FC = () => {
                   <h4 className="m-0 text-xs font-semibold text-black tracking-wide uppercase">
                     {group.displayName}
                   </h4>
-                  <div className={`w-5 h-5 rounded-md bg-[#06402b]/10 flex items-center justify-center text-black/70 text-sm font-medium transition-transform duration-200 ${expandedSection === group.key ? 'rotate-180' : ''}`}>
+                  <div
+                    className={`w-5 h-5 rounded-md bg-[#06402b]/10 flex items-center justify-center text-black/70 text-sm font-medium transition-transform duration-200 ${expandedSection === group.key ? "rotate-180" : ""}`}
+                  >
                     ↓
                   </div>
                 </div>
@@ -175,27 +198,37 @@ export const MaterialsModal: React.FC = () => {
                         <div
                           key={index}
                           className={`w-12 h-12 rounded-lg cursor-pointer transition-all duration-200 border-2 ${
-                            isActive 
-                              ? 'border-[#06402b] shadow-md scale-105' 
-                              : 'border-[#06402b]/15 hover:border-[#06402b]/40 hover:shadow-sm hover:scale-105'
+                            isActive
+                              ? "border-[#06402b] shadow-md scale-105"
+                              : "border-[#06402b]/15 hover:border-[#06402b]/40 hover:shadow-sm hover:scale-105"
                           } flex-shrink-0 relative overflow-hidden active:scale-95`}
                           title={material.name}
                           onClick={() => handleMaterialClick(material)}
                         >
                           <div
                             className="absolute inset-0"
-                            style={{ 
+                            style={{
                               backgroundImage: `url('${material.diffuse}')`,
-                              backgroundSize: '1000%',
-                              backgroundPosition: 'center',
-                              backgroundRepeat: 'no-repeat',
+                              backgroundSize: "1000%",
+                              backgroundPosition: "center",
+                              backgroundRepeat: "no-repeat",
                             }}
                           ></div>
                           {isActive && (
                             <div className="absolute inset-0 bg-[#06402b]/20 flex items-center justify-center">
                               <div className="w-6 h-6 bg-[#06402b] rounded-full flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M5 13l4 4L19 7"
+                                  />
                                 </svg>
                               </div>
                             </div>

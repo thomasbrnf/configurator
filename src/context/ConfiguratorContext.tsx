@@ -1,8 +1,12 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
-export type ConfigurationStep = 'welcome' | 'config-type' | 'module-selection' | 'scene';
-export type ConfigurationType = 'complete' | 'modules' | null;
+export type ConfigurationStep =
+  | "welcome"
+  | "config-type"
+  | "module-selection"
+  | "scene";
+export type ConfigurationType = "complete" | "modules" | null;
 
 export interface ModuleDefinition {
   id: string;
@@ -54,24 +58,6 @@ export const availableModules: ModuleDefinition[] = [
     modelPath: "/models/gala_collezione_KARATO [1D(5)SP].glb",
   },
   {
-    id: "3qf-bb",
-    name: "[3QFBB]",
-    displayName: "[3QFBB]",
-    modelPath: "/models/gala_collezione_KARATO [3QFBB].glb",
-  },
-  {
-    id: "3qf-l",
-    name: "[3QFL]",
-    displayName: "[3QFL]",
-    modelPath: "/models/gala_collezione_KARATO [3QFL].glb",
-  },
-  {
-    id: "3qf-p",
-    name: "[3QFP]",
-    displayName: "[3QFP]",
-    modelPath: "/models/gala_collezione_KARATO [3QFP].glb",
-  },
-  {
     id: "en-2",
     name: "[EN(2)]",
     displayName: "[EN(2)]",
@@ -104,33 +90,39 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "Kompletna Sofa 3",
     modelPath: "/models/complete sofa 3.glb",
   },
+  {
+    id: "complete-sofa-4",
+    name: "Complete Sofa 4",
+    displayName: "Kompletna Sofa 4",
+    modelPath: "/models/sofa3.glb",
+  },
 ];
 
 interface ConfiguratorContextType {
   // Step management
   currentStep: ConfigurationStep;
   setCurrentStep: (step: ConfigurationStep) => void;
-  
+
   // Configuration type
   configurationType: ConfigurationType;
   setConfigurationType: (type: ConfigurationType) => void;
-  
+
   // Module selection (for modular configuration)
   selectedModules: Set<string>;
   toggleModule: (moduleId: string) => void;
   clearModules: () => void;
   addModulesToScene: () => void;
-  
+
   // Complete set selection
   selectedCompleteSet: string | null;
   setSelectedCompleteSet: (setId: string | null) => void;
-  
+
   // Scene objects (what's currently displayed)
   sceneObjects: string[];
   addObjectToScene: (objectId: string) => void;
   removeObjectFromScene: (objectId: string) => void;
   clearScene: () => void;
-  
+
   // Reset configurator
   resetConfigurator: () => void;
 }
@@ -142,14 +134,19 @@ const ConfiguratorContext = createContext<ConfiguratorContextType | undefined>(
 export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [currentStep, setCurrentStep] = useState<ConfigurationStep>('welcome');
-  const [configurationType, setConfigurationType] = useState<ConfigurationType>(null);
-  const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
-  const [selectedCompleteSet, setSelectedCompleteSet] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState<ConfigurationStep>("welcome");
+  const [configurationType, setConfigurationType] =
+    useState<ConfigurationType>(null);
+  const [selectedModules, setSelectedModules] = useState<Set<string>>(
+    new Set(),
+  );
+  const [selectedCompleteSet, setSelectedCompleteSet] = useState<string | null>(
+    null,
+  );
   const [sceneObjects, setSceneObjects] = useState<string[]>([]);
 
   const toggleModule = (moduleId: string) => {
-    setSelectedModules(prev => {
+    setSelectedModules((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(moduleId)) {
         newSet.delete(moduleId);
@@ -166,16 +163,16 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
 
   const addModulesToScene = () => {
     const moduleIds = Array.from(selectedModules);
-    setSceneObjects(prev => [...prev, ...moduleIds]);
-    setCurrentStep('scene');
+    setSceneObjects((prev) => [...prev, ...moduleIds]);
+    setCurrentStep("scene");
   };
 
   const addObjectToScene = (objectId: string) => {
-    setSceneObjects(prev => [...prev, objectId]);
+    setSceneObjects((prev) => [...prev, objectId]);
   };
 
   const removeObjectFromScene = (objectId: string) => {
-    setSceneObjects(prev => prev.filter(id => id !== objectId));
+    setSceneObjects((prev) => prev.filter((id) => id !== objectId));
   };
 
   const clearScene = () => {
@@ -183,7 +180,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const resetConfigurator = () => {
-    setCurrentStep('welcome');
+    setCurrentStep("welcome");
     setConfigurationType(null);
     setSelectedModules(new Set());
     setSelectedCompleteSet(null);
@@ -218,7 +215,9 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
 export const useConfigurator = () => {
   const context = useContext(ConfiguratorContext);
   if (!context) {
-    throw new Error("useConfigurator must be used within a ConfiguratorProvider");
+    throw new Error(
+      "useConfigurator must be used within a ConfiguratorProvider",
+    );
   }
   return context;
 };

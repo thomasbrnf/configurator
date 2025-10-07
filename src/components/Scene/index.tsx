@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from "react";
 import { useMaterial } from "../../context/MaterialContext";
 import { useConfigurator } from "../../context/ConfiguratorContext";
 
-
 function CameraController() {
   const { camera } = useThree();
 
@@ -117,7 +116,7 @@ function ClickHandler() {
       if (mouseDownRef.current) {
         const deltaX = Math.abs(event.clientX - mouseDownRef.current.x);
         const deltaY = Math.abs(event.clientY - mouseDownRef.current.y);
-        
+
         // If mouse moved more than 5 pixels, consider it a drag/rotation
         if (deltaX > 5 || deltaY > 5) {
           setIsRotating(true);
@@ -137,7 +136,10 @@ function ClickHandler() {
         raycaster.current.setFromCamera(mouse.current, camera);
 
         // Calculate objects intersecting the picking ray
-        const intersects = raycaster.current.intersectObjects(scene.children, true);
+        const intersects = raycaster.current.intersectObjects(
+          scene.children,
+          true,
+        );
 
         if (intersects.length > 0) {
           // Find the first intersected object that has a name or parent with userData.objectId
@@ -146,7 +148,7 @@ function ClickHandler() {
 
           for (const intersect of intersects) {
             let obj = intersect.object;
-            
+
             // Traverse up the hierarchy to find an object with objectId
             while (obj && obj.parent) {
               if (obj.userData?.objectId) {
@@ -156,7 +158,7 @@ function ClickHandler() {
               }
               obj = obj.parent;
             }
-            
+
             if (targetObject) break;
           }
 
@@ -176,20 +178,20 @@ function ClickHandler() {
           setSelectedObjectId(null);
         }
       }
-      
+
       mouseDownRef.current = null;
       setIsRotating(false);
     }
 
     const canvas = gl.domElement;
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener("mousedown", handleMouseDown);
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseup", handleMouseUp);
 
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseup", handleMouseUp);
     };
   }, [camera, scene, gl, selectedObjectId, setSelectedObjectId, isRotating]);
 
@@ -200,19 +202,13 @@ function ClickHandler() {
 function SceneObjects() {
   const { sceneObjects } = useConfigurator();
 
-  // If no objects are configured, show the default sofa
-  if (sceneObjects.length === 0) {
-    return <Model />;
-  }
-
-  // Render configured objects with proper positioning
   return (
     <>
       {sceneObjects.map((objectId, index) => (
         <DynamicModel
           key={`${objectId}-${index}`}
           objectId={objectId}
-          position={[index * 3, 0, 0]} // Spread objects out horizontally
+          position={[index * 3, 0, 0]}
         />
       ))}
     </>
@@ -220,9 +216,9 @@ function SceneObjects() {
 }
 
 const Scene = () => {
-  const { setUvScale, setNormalScale, setMetalness, setRoughness } = useMaterial();
+  const { setUvScale, setNormalScale, setMetalness, setRoughness } =
+    useMaterial();
 
-  // Material controls
   useControls(
     "Material",
     {
@@ -308,8 +304,12 @@ const Scene = () => {
   );
 
   return (
-    <div style={{ width: "100vw", height: "100vh" , cursor: 'grab'  }}>
-      <Leva collapsed={true} oneLineLabels={true} titleBar={{position: {x: 420 , y: 0}}} />
+    <div style={{ width: "100vw", height: "100vh", cursor: "grab" }}>
+      <Leva
+        collapsed={true}
+        oneLineLabels={true}
+        titleBar={{ position: { x: 420, y: 0 } }}
+      />
       <Canvas
         camera={{ position: [0, 2, 2], fov: 60 }}
         shadows
@@ -346,7 +346,6 @@ const Scene = () => {
           castShadow
         />
 
-        {/* Render dynamic models based on configurator state */}
         <SceneObjects />
 
         <ContactShadows

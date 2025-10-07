@@ -8,13 +8,13 @@ const Configurator: React.FC = () => {
   const { currentStep } = useConfigurator();
 
   switch (currentStep) {
-    case 'welcome':
+    case "welcome":
       return <WelcomeStep />;
-    case 'config-type':
+    case "config-type":
       return <ConfigTypeStep />;
-    case 'module-selection':
+    case "module-selection":
       return <ModuleSelectionStep />;
-    case 'scene':
+    case "scene":
       return null;
     default:
       return null;

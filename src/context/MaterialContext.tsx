@@ -22,7 +22,7 @@ interface MaterialContextType {
   // Legacy support - will reference selected object's material
   currentMaterial: MaterialDefinition;
   setCurrentMaterial: (material: MaterialDefinition) => void;
-  
+
   // Multi-object support
   objects: SceneObject[];
   selectedObjectId: string | null;
@@ -31,7 +31,7 @@ interface MaterialContextType {
   removeObject: (id: string) => void;
   getObjectMaterial: (id: string) => MaterialDefinition | undefined;
   setObjectMaterial: (id: string, material: MaterialDefinition) => void;
-  
+
   uvScale: number;
   setUvScale: (scale: number) => void;
   normalScale: number;
@@ -113,15 +113,18 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
       material: availableMaterials.granit[0],
     },
   ]);
-  const [selectedObjectId, setSelectedObjectId] = useState<string | null>("sofa-1");
+  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(
+    "sofa-1",
+  );
   const [uvScale, setUvScale] = useState(4.2);
   const [normalScale, setNormalScale] = useState(0.2);
   const [metalness, setMetalness] = useState(0.15);
   const [roughness, setRoughness] = useState(0.85);
 
   // Legacy support - get material of selected object
-  const currentMaterial = selectedObjectId 
-    ? objects.find(obj => obj.id === selectedObjectId)?.material || availableMaterials.granit[0]
+  const currentMaterial = selectedObjectId
+    ? objects.find((obj) => obj.id === selectedObjectId)?.material ||
+      availableMaterials.granit[0]
     : availableMaterials.granit[0];
 
   const setCurrentMaterial = (material: MaterialDefinition) => {
@@ -131,25 +134,23 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addObject = (object: SceneObject) => {
-    setObjects(prev => [...prev, object]);
+    setObjects((prev) => [...prev, object]);
   };
 
   const removeObject = (id: string) => {
-    setObjects(prev => prev.filter(obj => obj.id !== id));
+    setObjects((prev) => prev.filter((obj) => obj.id !== id));
     if (selectedObjectId === id) {
       setSelectedObjectId(null);
     }
   };
 
   const getObjectMaterial = (id: string): MaterialDefinition | undefined => {
-    return objects.find(obj => obj.id === id)?.material;
+    return objects.find((obj) => obj.id === id)?.material;
   };
 
   const setObjectMaterial = (id: string, material: MaterialDefinition) => {
-    setObjects(prev => 
-      prev.map(obj => 
-        obj.id === id ? { ...obj, material } : obj
-      )
+    setObjects((prev) =>
+      prev.map((obj) => (obj.id === id ? { ...obj, material } : obj)),
     );
   };
 
