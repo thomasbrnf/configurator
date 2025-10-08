@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
+import { useMaterial } from "./MaterialContext";
 
 export type ConfigurationStep =
   | "welcome"
@@ -32,42 +33,49 @@ export const availableModules: ModuleDefinition[] = [
     name: "[1(80)BB]",
     displayName: "[1(80)BB]",
     modelPath: "/models/[1(80)BB].glb",
+    thumbnail: "/models/thumbnails/[1(80)BB].jpg",
   },
   {
     id: "1-80-l",
     name: "[1(80)L]",
     displayName: "[1(80)L]",
     modelPath: "/models/[1(80)L].glb",
+    thumbnail: "/models/thumbnails/[1(80)L].jpg",
   },
   {
     id: "1-80-p",
     name: "[1(80)P]",
     displayName: "[1(80)P]",
     modelPath: "/models/gala_collezione_KARATO [1(80)P].glb",
+    thumbnail: "/models/thumbnails/gala_collezione_KARATO [1(80)P].jpg",
   },
   {
     id: "1d-5-sl",
     name: "[1D(5)SL]",
     displayName: "[1D(5)SL]",
     modelPath: "/models/[1D(5)SL].glb",
+    thumbnail: "/models/thumbnails/[1D(5)SL].jpg",
   },
   {
     id: "1d-5-sp",
     name: "[1D(5)SP]",
     displayName: "[1D(5)SP]",
     modelPath: "/models/gala_collezione_KARATO [1D(5)SP].glb",
+    thumbnail: "/models/thumbnails/gala_collezione_KARATO [1D(5)SP].jpg",
   },
   {
     id: "en-2",
     name: "[EN(2)]",
     displayName: "[EN(2)]",
     modelPath: "/models/gala_collezione_KARATO [EN(2)].glb",
+    thumbnail: "/models/thumbnails/gala_collezione_KARATO [EN(2)].jpg",
   },
   {
     id: "poduszka",
     name: "[PODUSZKA]",
     displayName: "[PODUSZKA]",
     modelPath: "/models/gala_collezione_KARATO [PODUSZKA].glb",
+    thumbnail: "/models/thumbnails/gala_collezione_KARATO [PODUSZKA].jpg",
   },
 ];
 
@@ -77,24 +85,28 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     name: "Complete Sofa",
     displayName: "Kompletna Sofa",
     modelPath: "/models/complete sofa.glb",
+    thumbnail: "/models/thumbnails/complete sofa.jpg",
   },
   {
     id: "complete-sofa-2",
     name: "Complete Sofa 2",
     displayName: "Kompletna Sofa 2",
     modelPath: "/models/complete sofa 2.glb",
+    thumbnail: "/models/thumbnails/complete sofa 2.jpg",
   },
   {
     id: "complete-sofa-3",
     name: "Complete Sofa 3",
     displayName: "Kompletna Sofa 3",
     modelPath: "/models/complete sofa 3.glb",
+    thumbnail: "/models/thumbnails/complete sofa 3.jpg",
   },
   {
     id: "complete-sofa-4",
     name: "Complete Sofa 4",
     displayName: "Kompletna Sofa 4",
     modelPath: "/models/sofa3.glb",
+    thumbnail: "/models/thumbnails/sofa3.jpg",
   },
 ];
 
@@ -121,7 +133,29 @@ interface ConfiguratorContextType {
   sceneObjects: string[];
   addObjectToScene: (objectId: string) => void;
   removeObjectFromScene: (objectId: string) => void;
+  removeObjectByIndex: (index: number) => void;
   clearScene: () => void;
+
+  // Object rotations (tracked by index in sceneObjects) - [x, y, z] in radians
+  objectRotations: Map<number, [number, number, number]>;
+  setObjectRotation: (
+    index: number,
+    rotation: [number, number, number],
+  ) => void;
+  rotateObject: (index: number) => void; // Legacy: 90° Y-axis rotation
+  updateObjectRotation: (
+    index: number,
+    axis: "x" | "y" | "z",
+    delta: number,
+  ) => void;
+
+  // Object positions (tracked by index in sceneObjects) - [x, y, z]
+  objectPositions: Map<number, [number, number, number]>;
+  setObjectPosition: (index: number, position: [number, number, number]) => void;
+
+  // Rotation control UI state
+  rotationControlIndex: number | null;
+  setRotationControlIndex: (index: number | null) => void;
 
   // Reset configurator
   resetConfigurator: () => void;
@@ -134,6 +168,7 @@ const ConfiguratorContext = createContext<ConfiguratorContextType | undefined>(
 export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const { setSelectedObjectId } = useMaterial();
   const [currentStep, setCurrentStep] = useState<ConfigurationStep>("welcome");
   const [configurationType, setConfigurationType] =
     useState<ConfigurationType>(null);
@@ -144,6 +179,15 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     null,
   );
   const [sceneObjects, setSceneObjects] = useState<string[]>([]);
+  const [objectRotations, setObjectRotations] = useState<
+    Map<number, [number, number, number]>
+  >(new Map());
+  const [objectPositions, setObjectPositions] = useState<
+    Map<number, [number, number, number]>
+  >(new Map());
+  const [rotationControlIndex, setRotationControlIndex] = useState<
+    number | null
+  >(null);
 
   const toggleModule = (moduleId: string) => {
     setSelectedModules((prev) => {
@@ -164,19 +208,125 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   const addModulesToScene = () => {
     const moduleIds = Array.from(selectedModules);
     setSceneObjects((prev) => [...prev, ...moduleIds]);
+    // Select the first added module
+    if (moduleIds.length > 0) {
+      setSelectedObjectId(moduleIds[0]);
+    }
     setCurrentStep("scene");
   };
 
   const addObjectToScene = (objectId: string) => {
     setSceneObjects((prev) => [...prev, objectId]);
+    // Select the added object
+    setSelectedObjectId(objectId);
   };
 
   const removeObjectFromScene = (objectId: string) => {
-    setSceneObjects((prev) => prev.filter((id) => id !== objectId));
+    const indexToRemove = sceneObjects.findIndex((id) => id === objectId);
+    if (indexToRemove !== -1) {
+      removeObjectByIndex(indexToRemove);
+    }
+  };
+
+  const removeObjectByIndex = (indexToRemove: number) => {
+    setSceneObjects((prev) => prev.filter((_, index) => index !== indexToRemove));
+
+    // Clean up rotation and position for removed object and adjust indices
+    setObjectRotations((prev) => {
+      const newRotations = new Map<number, [number, number, number]>();
+      prev.forEach((rotation, index) => {
+        if (index < indexToRemove) {
+          newRotations.set(index, rotation);
+        } else if (index > indexToRemove) {
+          newRotations.set(index - 1, rotation);
+        }
+      });
+      return newRotations;
+    });
+
+    setObjectPositions((prev) => {
+      const newPositions = new Map<number, [number, number, number]>();
+      prev.forEach((position, index) => {
+        if (index < indexToRemove) {
+          newPositions.set(index, position);
+        } else if (index > indexToRemove) {
+          newPositions.set(index - 1, position);
+        }
+      });
+      return newPositions;
+    });
+
+    // Close rotation control if it was on the deleted object
+    if (rotationControlIndex === indexToRemove) {
+      setRotationControlIndex(null);
+    } else if (
+      rotationControlIndex !== null &&
+      rotationControlIndex > indexToRemove
+    ) {
+      setRotationControlIndex(rotationControlIndex - 1);
+    }
   };
 
   const clearScene = () => {
     setSceneObjects([]);
+    setObjectRotations(new Map());
+    setObjectPositions(new Map());
+    setRotationControlIndex(null);
+  };
+
+  const setObjectRotation = (
+    index: number,
+    rotation: [number, number, number],
+  ) => {
+    setObjectRotations((prev) => {
+      const newRotations = new Map(prev);
+      newRotations.set(index, rotation);
+      return newRotations;
+    });
+  };
+
+  const updateObjectRotation = (
+    index: number,
+    axis: "x" | "y" | "z",
+    delta: number,
+  ) => {
+    setObjectRotations((prev) => {
+      const newRotations = new Map(prev);
+      const currentRotation = newRotations.get(index) || [0, 0, 0];
+      const axisIndex = axis === "x" ? 0 : axis === "y" ? 1 : 2;
+      const updatedRotation: [number, number, number] = [
+        ...currentRotation,
+      ] as [number, number, number];
+      updatedRotation[axisIndex] += delta;
+      newRotations.set(index, updatedRotation);
+      return newRotations;
+    });
+  };
+
+  const rotateObject = (index: number) => {
+    // Legacy: 90° Y-axis rotation
+    setObjectRotations((prev) => {
+      const newRotations = new Map(prev);
+      const currentRotation = newRotations.get(index) || [0, 0, 0];
+      const updatedRotation: [number, number, number] = [
+        currentRotation[0],
+        currentRotation[1] + Math.PI / 2,
+        currentRotation[2],
+      ];
+      newRotations.set(index, updatedRotation);
+      return newRotations;
+    });
+  };
+
+  const setObjectPosition = (
+    index: number,
+    position: [number, number, number],
+  ) => {
+    setObjectPositions((prev) => {
+      const newPositions = new Map(prev);
+      newPositions.set(index, position);
+      return newPositions;
+    });
   };
 
   const resetConfigurator = () => {
@@ -185,6 +335,9 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     setSelectedModules(new Set());
     setSelectedCompleteSet(null);
     setSceneObjects([]);
+    setObjectRotations(new Map());
+    setObjectPositions(new Map());
+    setRotationControlIndex(null);
   };
 
   return (
@@ -203,7 +356,16 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         sceneObjects,
         addObjectToScene,
         removeObjectFromScene,
+        removeObjectByIndex,
         clearScene,
+        objectRotations,
+        setObjectRotation,
+        rotateObject,
+        updateObjectRotation,
+        objectPositions,
+        setObjectPosition,
+        rotationControlIndex,
+        setRotationControlIndex,
         resetConfigurator,
       }}
     >

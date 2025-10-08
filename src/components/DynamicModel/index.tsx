@@ -33,10 +33,44 @@ export function DynamicModel({
 
   const isSelected = selectedObjectId === objectId;
 
-  const moduleDefinition = availableModules.find((m) => m.id === objectId);
-  const completeSetDefinition = availableCompleteSets.find(
-    (s) => s.id === objectId,
-  );
+  // Extract base module ID (remove counter, timestamp and random suffix for duplicates)
+  // Format is: moduleId-counter-timestamp-randomstring
+  // We need to remove the last three segments if they match the pattern
+  const extractBaseModuleId = (id: string): string => {
+    const parts = id.split('-');
+    // If we have at least 4 parts and the last 3 look like counter-timestamp-random
+    if (parts.length >= 4) {
+      const lastPart = parts[parts.length - 1]; // random string
+      const secondLastPart = parts[parts.length - 2]; // timestamp
+      const thirdLastPart = parts[parts.length - 3]; // counter
+      
+      // Check if it matches: counter(digits)-timestamp(13 digits)-random(9 alphanumeric)
+      if (/^[a-z0-9]{9}$/.test(lastPart) && 
+          /^\d{13}$/.test(secondLastPart) && 
+          /^\d+$/.test(thirdLastPart)) {
+        return parts.slice(0, -3).join('-');
+      }
+    }
+    
+    // Fallback for old format: moduleId-timestamp-randomstring
+    if (parts.length >= 3) {
+      const lastPart = parts[parts.length - 1];
+      const secondLastPart = parts[parts.length - 2];
+      if (/^[a-z0-9]{9}$/.test(lastPart) && /^\d{13}$/.test(secondLastPart)) {
+        return parts.slice(0, -2).join('-');
+      }
+    }
+    
+    return id;
+  };
+  
+  const baseModuleId = extractBaseModuleId(objectId);
+  
+  // Try to find module definition using base ID first, then full ID
+  const moduleDefinition = availableModules.find((m) => m.id === baseModuleId) || 
+                           availableModules.find((m) => m.id === objectId);
+  const completeSetDefinition = availableCompleteSets.find((s) => s.id === baseModuleId) ||
+                                availableCompleteSets.find((s) => s.id === objectId);
   const modelDefinition = moduleDefinition || completeSetDefinition;
 
   const modelPath = modelDefinition?.modelPath || "/models/sofa3.glb";
@@ -52,8 +86,8 @@ export function DynamicModel({
         id: objectId,
         name: modelDefinition?.displayName || objectId,
         material: objectMaterial || {
-          name: "Granit 01",
-          diffuse: "/materials/the smallest granit/Granit_01_new_3.jpg",
+          name: "Granit 07",
+          diffuse: "/materials/the smallest granit/Granit_07_new_3.jpg",
           normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
         },
       });
@@ -73,6 +107,8 @@ export function DynamicModel({
       "/materials/the smallest granit/Granit_normal_map_5.jpg",
   ]);
 
+  const effectiveUvScale = modelPath === "/models/sofa3.glb" ? uvScale : 5;
+
   const customMaterial = useMemo(() => {
     const diffuse = diffuseMap.clone();
     const normal = normalMap.clone();
@@ -80,8 +116,8 @@ export function DynamicModel({
     diffuse.wrapS = diffuse.wrapT = THREE.RepeatWrapping;
     normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
 
-    diffuse.repeat.set(uvScale, uvScale);
-    normal.repeat.set(uvScale, uvScale);
+    diffuse.repeat.set(effectiveUvScale, effectiveUvScale);
+    normal.repeat.set(effectiveUvScale, effectiveUvScale);
 
     diffuse.anisotropy = 16;
     normal.anisotropy = 16;
@@ -109,7 +145,7 @@ export function DynamicModel({
   }, [
     diffuseMap,
     normalMap,
-    uvScale,
+    effectiveUvScale,
     normalScale,
     metalness,
     roughness,
@@ -118,14 +154,14 @@ export function DynamicModel({
 
   useEffect(() => {
     if (customMaterial.map) {
-      customMaterial.map.repeat.set(uvScale, uvScale);
+      customMaterial.map.repeat.set(effectiveUvScale, effectiveUvScale);
       customMaterial.map.needsUpdate = true;
     }
     if (customMaterial.normalMap) {
-      customMaterial.normalMap.repeat.set(uvScale, uvScale);
+      customMaterial.normalMap.repeat.set(effectiveUvScale, effectiveUvScale);
       customMaterial.normalMap.needsUpdate = true;
     }
-  }, [uvScale, customMaterial]);
+  }, [effectiveUvScale, customMaterial]);
 
   useEffect(() => {
     if (customMaterial.normalScale) {
@@ -158,6 +194,9 @@ export function DynamicModel({
     return null;
   }
 
+  // Clone the object for each instance to avoid sharing the same scene object
+  const clonedObject = useMemo(() => mainObject.clone(), [mainObject]);
+
   return (
     <group
       position={position}
@@ -170,10 +209,10 @@ export function DynamicModel({
         }
       }}
     >
-      <primitive object={mainObject} dispose={null} />
+      <primitive object={clonedObject} dispose={null} />
       {isSelected && (
         <primitive
-          object={mainObject.clone()}
+          object={clonedObject.clone()}
           scale={[1.02, 1.02, 1.02]}
           ref={(ref: THREE.Object3D) => {
             if (ref) {

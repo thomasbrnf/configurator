@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Thumbnail Generator</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #06402b;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #06402b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #084d35;
+        }
+        #canvas {
+            background: #f0f0f0;
+            border-radius: 8px;
+            display: block;
+            margin: 20px auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .thumbnail-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .thumbnail-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            background: #f0f0f0;
+        }
+        .thumbnail-item h3 {
+            margin: 10px 0 5px;
+            font-size: 14px;
+            color: #06402b;
+        }
+        .status {
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .progress {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #06402b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🖼️ Model Thumbnail Generator</h1>
+    
+    <div class="controls">
+        <button onclick="generateAllThumbnails()">Generate All Thumbnails</button>
+        <button onclick="downloadAll()">Download All</button>
+        <div class="status" id="status">Ready to generate thumbnails...</div>
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <canvas id="canvas" width="400" height="400"></canvas>
+    
+    <div class="thumbnail-grid" id="thumbnails"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const models = [
+            { id: "1-80-bb", path: "/models/[1(80)BB].glb", name: "[1(80)BB]" },
+            { id: "1-80-l", path: "/models/[1(80)L].glb", name: "[1(80)L]" },
+            { id: "1-80-p", path: "/models/gala_collezione_KARATO [1(80)P].glb", name: "[1(80)P]" },
+            { id: "1d-5-sl", path: "/models/[1D(5)SL].glb", name: "[1D(5)SL]" },
+            { id: "1d-5-sp", path: "/models/gala_collezione_KARATO [1D(5)SP].glb", name: "[1D(5)SP]" },
+            { id: "en-2", path: "/models/gala_collezione_KARATO [EN(2)].glb", name: "[EN(2)]" },
+            { id: "poduszka", path: "/models/gala_collezione_KARATO [PODUSZKA].glb", name: "[PODUSZKA]" },
+            { id: "complete-sofa-1", path: "/models/complete sofa.glb", name: "Complete Sofa" },
+            { id: "complete-sofa-2", path: "/models/complete sofa 2.glb", name: "Complete Sofa 2" },
+            { id: "complete-sofa-3", path: "/models/complete sofa 3.glb", name: "Complete Sofa 3" },
+            { id: "complete-sofa-4", path: "/models/sofa3.glb", name: "Complete Sofa 4" }
+        ];
+
+        const canvas = document.getElementById('canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf0f0f0);
+        
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+        camera.position.set(0, 2, 3);
+        
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+        renderer.setSize(400, 400);
+        renderer.shadowMap.enabled = true;
+        
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(-0.5, 1, 2);
+        scene.add(directionalLight);
+        
+        const loader = new GLTFLoader();
+        const textureLoader = new THREE.TextureLoader();
+        const thumbnails = {};
+        let granitTexture = null; // Declare texture variable
+        
+        // Load Granit texture once at startup
+        // URL encode spaces in path (files in public/ are served from root)
+        const texturePath = '/materials/the%20smallest%20club/club2_52_diffuse_4.jpg';
+        console.log('Attempting to load texture from:', texturePath);
+        
+        // Wrap texture loading in a Promise
+        const texturePromise = new Promise((resolve, reject) => {
+            textureLoader.load(
+                texturePath,
+                (texture) => {
+                    granitTexture = texture;
+                    granitTexture.wrapS = THREE.RepeatWrapping;
+                    granitTexture.wrapT = THREE.RepeatWrapping;
+                    granitTexture.repeat.set(20, 20);
+                    console.log('✅ Granit texture loaded successfully');
+                    resolve(texture);
+                },
+                undefined,
+                (error) => {
+                    console.error('❌ Failed to load Granit texture:', error);
+                    console.log('Tried path:', texturePath);
+                    console.log('Make sure the file exists at: public/materials/the smallest granit/Granit_07_new_3.jpg');
+                    // Set granitTexture to null so we know it failed
+                    granitTexture = null;
+                    reject(error);
+                }
+            );
+        });
+
+        async function loadAndCapture(modelInfo) {
+            return new Promise((resolve, reject) => {
+                // Clear scene
+                scene.children.forEach(child => {
+                    if (child.type === 'Group') {
+                        scene.remove(child);
+                    }
+                });
+
+                loader.load(
+                    modelInfo.path,
+                    (gltf) => {
+                        const model = gltf.scene;
+                        
+                        // Apply Granit material to all meshes if texture is loaded
+                        model.traverse((child) => {
+                            if (child.isMesh) {
+                                if (granitTexture) {
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        map: granitTexture,
+                                        roughness: 0.85,
+                                        metalness: 0.15,
+                                    });
+                                } else {
+                                    // Fallback to a simple gray material if texture isn't loaded
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        color: 0xcccccc,
+                                        roughness: 0.85,
+                                        metalness: 0.15,
+                                    });
+                                }
+                            }
+                        });
+                        
+                        scene.add(model);
+                        
+                        // Center and frame the model
+                        const box = new THREE.Box3().setFromObject(model);
+                        const center = box.getCenter(new THREE.Vector3());
+                        const size = box.getSize(new THREE.Vector3());
+                        
+                        model.position.sub(center);
+                        
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const distance = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
+                        
+                        // Move camera further back (increased from 1.2 to 1.8)
+                        camera.position.set(0, size.y * 0.3, distance * 1.8);
+                        camera.lookAt(0, 0, 0);
+                        
+                        // Render
+                        renderer.render(scene, camera);
+                        
+                        // Capture at lower resolution for fast loading
+                        const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        resolve({
+                            id: modelInfo.id,
+                            name: modelInfo.name,
+                            dataURL: dataURL
+                        });
+                    },
+                    undefined,
+                    (error) => {
+                        console.error('Error loading', modelInfo.path, error);
+                        reject(error);
+                    }
+                );
+            });
+        }
+
+        window.generateAllThumbnails = async function() {
+            const statusEl = document.getElementById('status');
+            const progressEl = document.getElementById('progress');
+            const thumbnailsEl = document.getElementById('thumbnails');
+            
+            thumbnailsEl.innerHTML = '';
+            
+            // Wait for texture to load before starting
+            statusEl.textContent = 'Loading Granit texture...';
+            try {
+                await texturePromise;
+                console.log('Texture ready, starting thumbnail generation');
+            } catch (error) {
+                statusEl.textContent = '❌ Failed to load texture. Using fallback material.';
+                console.error('Texture loading failed, will use fallback material');
+            }
+            
+            for (let i = 0; i < models.length; i++) {
+                const model = models[i];
+                statusEl.textContent = `Generating thumbnail for ${model.name}...`;
+                progressEl.textContent = `Progress: ${i + 1}/${models.length}`;
+                
+                try {
+                    const result = await loadAndCapture(model);
+                    thumbnails[result.id] = result.dataURL;
+                    
+                    // Display thumbnail
+                    const div = document.createElement('div');
+                    div.className = 'thumbnail-item';
+                    div.innerHTML = `
+                        <img src="${result.dataURL}" alt="${result.name}">
+                        <h3>${result.name}</h3>
+                        <small>${result.id}</small>
+                    `;
+                    thumbnailsEl.appendChild(div);
+                    
+                } catch (error) {
+                    console.error('Failed to generate thumbnail for', model.name, error);
+                }
+                
+                // Small delay to let the browser breathe
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            statusEl.textContent = `✅ Generated ${Object.keys(thumbnails).length} thumbnails!`;
+            progressEl.textContent = '';
+        };
+
+        window.downloadAll = function() {
+            Object.entries(thumbnails).forEach(([id, dataURL]) => {
+                const link = document.createElement('a');
+                link.download = `${id}-thumbnail.jpg`;
+                link.href = dataURL;
+                link.click();
+            });
+        };
+    </script>
+</body>
+</html>
