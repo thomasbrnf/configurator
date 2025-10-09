@@ -1045,7 +1045,7 @@ const Scene = () => {
       <Leva
         collapsed={true}
         oneLineLabels={true}
-        titleBar={{ position: { x: 420, y: 0 } }}
+        titleBar={{ position: { x: -390, y: 16 } }}
       />
       <Canvas
         camera={{ position: [0, 2, 2], fov: 60 }}

@@ -123,7 +123,7 @@ const ModuleSelectionStep: React.FC = () => {
 
   if (configurationType === "complete") {
     return (
-      <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[300] flex flex-col">
+      <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex flex-col">
         <div className="flex-1 overflow-y-auto pt-8">
           <div className="max-w-6xl mx-auto px-8">
             {/* Header */}
@@ -249,7 +249,7 @@ const ModuleSelectionStep: React.FC = () => {
 
   // Module selection interface
   return (
-    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[300] flex flex-col">
+    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-8 py-8">
           {/* Header */}
@@ -458,7 +458,7 @@ const ModuleSelectionStep: React.FC = () => {
       </div>
 
       {/* Footer Controls - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[310]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[1010]">
         <div className="max-w-6xl mx-auto px-6 py-3">
           <div className="flex flex-col items-center space-y-2">
             <div className="flex items-center space-x-3">

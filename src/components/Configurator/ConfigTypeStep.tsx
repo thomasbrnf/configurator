@@ -19,7 +19,7 @@ const ConfigTypeStep: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[300] flex items-center justify-center">
+    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex items-center justify-center">
       <div className="max-w-4xl mx-auto text-center px-8">
         <button
           onClick={handleBack}

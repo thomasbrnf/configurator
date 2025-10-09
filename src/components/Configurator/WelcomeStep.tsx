@@ -9,7 +9,7 @@ const WelcomeStep: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[300] flex items-center justify-center">
+    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex items-center justify-center">
       <div className="max-w-2xl mx-auto text-center px-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-black mb-4">

@@ -1,11 +1,12 @@
 import { useGLTF, useTexture } from "@react-three/drei";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 import { useMaterial } from "../../context/MaterialContext";
 import {
   availableModules,
   availableCompleteSets,
 } from "../../context/ConfiguratorContext";
+import { useLoaderStore } from "../../store/loaderStore";
 
 interface DynamicModelProps {
   objectId: string;
@@ -78,10 +79,14 @@ export function DynamicModel({
   const { nodes, materials } = useGLTF(modelPath);
 
   const objectMaterial = getObjectMaterial(objectId);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const objectExists = objects.some((obj) => obj.id === objectId);
     if (!objectExists) {
+      const { showLoader } = useLoaderStore.getState();
+      showLoader('Ładowanie obiektu...');
+      
       addObject({
         id: objectId,
         name: modelDefinition?.displayName || objectId,
@@ -106,6 +111,17 @@ export function DynamicModel({
     objectMaterial?.normal ||
       "/materials/the smallest granit/Granit_normal_map_5.jpg",
   ]);
+
+  // Hide loader when textures are loaded
+  useEffect(() => {
+    if (diffuseMap && normalMap && isLoading) {
+      const { hideLoader } = useLoaderStore.getState();
+      setTimeout(() => {
+        hideLoader();
+        setIsLoading(false);
+      }, 300); // Small delay to ensure smooth transition
+    }
+  }, [diffuseMap, normalMap, isLoading]);
 
   const effectiveUvScale =
     modelPath === "/models/sofa3.glb"
