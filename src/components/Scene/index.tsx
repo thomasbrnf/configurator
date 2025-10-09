@@ -1053,9 +1053,7 @@ const Scene = () => {
         style={{ width: "100%", height: "100%" }}
         gl={{ 
           antialias: true,
-          alpha: false,
           powerPreference: "high-performance",
-          stencil: false,
         }}
         dpr={[1, 2]}
       >
