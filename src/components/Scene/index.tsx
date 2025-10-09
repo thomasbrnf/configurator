@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, createContext, useContext, useMemo } from 
 import { useMaterial } from "../../context/MaterialContext";
 import { useConfigurator } from "../../context/ConfiguratorContext";
 
-// Create a context to share the recenter function
+
 interface SceneContextType {
   handleRecenter: () => void;
 }
@@ -135,19 +135,90 @@ function AutoCenterCamera({
   isDragging?: boolean;
   recenterTrigger?: number;
 }) {
+  const { camera } = useThree();
   const desiredTargetRef = useRef(new THREE.Vector3(0, 0.2, 0));
   const currentTargetRef = useRef(new THREE.Vector3(0, 0.2, 0));
   const initializedRef = useRef(false);
   const userHasInteractedRef = useRef(false);
   const previousSceneCountRef = useRef(0);
+  const isRecentering = useRef(false);
 
-  // Handle manual recenter trigger
+  // Handle manual recenter trigger - with camera repositioning
   useEffect(() => {
-    if (recenterTrigger > 0) {
+    // Don't recenter if currently dragging an object
+    if (recenterTrigger > 0 && sceneObjects.length > 0 && !isDragging) {
       userHasInteractedRef.current = false;
       currentTargetRef.current.copy(desiredTargetRef.current);
+      isRecentering.current = true;
+      
+      // Calculate bounds of all objects
+      let minX = Infinity, maxX = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      
+      sceneObjects.forEach((_, index) => {
+        const position = objectPositions.get(index) || [index * 1.4, 0, 0];
+        minX = Math.min(minX, position[0]);
+        maxX = Math.max(maxX, position[0]);
+        minZ = Math.min(minZ, position[2]);
+        maxZ = Math.max(maxZ, position[2]);
+      });
+      
+      const centerX = (minX + maxX) / 2;
+      const centerZ = (minZ + maxZ) / 2;
+      const sceneWidth = maxX - minX;
+      const sceneDepth = maxZ - minZ;
+      const sceneSize = Math.max(sceneWidth, sceneDepth);
+      
+      // Calculate optimal camera distance to see all objects
+      // Add padding factor to ensure all objects are visible
+      const paddingFactor = 1.5;
+      const distance = Math.max(sceneSize * paddingFactor, 3);
+      
+      // Position camera at an angle from above and behind
+      const cameraHeight = distance * 0.6; // Height from ground
+      const cameraBack = distance * 0.8; // Distance back from center
+      
+      // Set the center point where camera should look at
+      const centerPoint = new THREE.Vector3(centerX, 0.2, centerZ);
+      
+      // Update desired target to the center of objects
+      desiredTargetRef.current.copy(centerPoint);
+      currentTargetRef.current.copy(centerPoint);
+      
+      // Smooth transition to new camera position
+      const targetCameraPos = new THREE.Vector3(
+        centerX,
+        cameraHeight,
+        centerZ + cameraBack
+      );
+      
+      // Animate camera to new position and update orbit controls target
+      const animateCamera = () => {
+        if (camera && orbitControlsRef.current && isRecentering.current) {
+          camera.position.lerp(targetCameraPos, 0.1);
+          
+          // Also update the orbit controls target to look at the center
+          orbitControlsRef.current.target.lerp(centerPoint, 0.1);
+          orbitControlsRef.current.update();
+          
+          // Check if camera is close enough to target position
+          if (camera.position.distanceTo(targetCameraPos) < 0.1) {
+            isRecentering.current = false;
+          }
+        }
+      };
+      
+      // Start animation
+      const interval = setInterval(() => {
+        animateCamera();
+        if (!isRecentering.current) {
+          clearInterval(interval);
+        }
+      }, 16); // ~60fps
+      
+      return () => clearInterval(interval);
     }
-  }, [recenterTrigger]);
+  }, [recenterTrigger, sceneObjects, objectPositions, camera]);
 
   useEffect(() => {
     const controls = orbitControlsRef.current;
@@ -287,7 +358,7 @@ function ClickHandler({
   const mouseDownRef = useRef<{ x: number; y: number } | null>(null);
   const dragPlane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
   const dragOffset = useRef(new THREE.Vector3());
-  const SNAP_DISTANCE = 0.8; // Distance threshold for snapping
+  const SNAP_DISTANCE = 1.8; // Distance threshold for snapping
 
   useEffect(() => {
     function handleMouseDown(event: MouseEvent) {
@@ -381,24 +452,44 @@ function ClickHandler({
               // Apply the offset to maintain the original click position
               intersectionPoint.add(dragOffset.current);
               
-              // Check for nearby objects to snap to
+              // Helper function to check if object is PODUSZKA (pillow - no snapping)
+              const isPoduszka = (objectId: string): boolean => {
+                // Extract base module ID
+                const parts = objectId.split('-');
+                if (parts.length >= 4 && /^[a-z0-9]{9}$/.test(parts[parts.length - 1]) && 
+                    /^\d{13}$/.test(parts[parts.length - 2]) && /^\d+$/.test(parts[parts.length - 3])) {
+                  return parts.slice(0, -3).join('-') === 'poduszka';
+                }
+                return objectId === 'poduszka' || objectId.includes('PODUSZKA');
+              };
+              
+              // Check if dragged object is PODUSZKA - disable snapping for pillows
+              const draggedObjectId = sceneObjects[draggedObjectIndex];
+              const isDraggedPoduszka = isPoduszka(draggedObjectId);
+              
+              // Check for nearby objects to snap to (only if not dragging a pillow)
               let closestIndex: number | null = null;
               let closestDistance = SNAP_DISTANCE;
               
-              sceneObjects.forEach((_, index) => {
-                if (index !== draggedObjectIndex) {
-                  const targetPos = objectPositions.get(index) || [index * 1.4, 0, 0];
-                  const distance = Math.sqrt(
-                    Math.pow(intersectionPoint.x - targetPos[0], 2) +
-                    Math.pow(intersectionPoint.z - targetPos[2], 2)
-                  );
-                  
-                  if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestIndex = index;
+              if (!isDraggedPoduszka) {
+                sceneObjects.forEach((objectId, index) => {
+                  if (index !== draggedObjectIndex) {
+                    // Also check if target object is PODUSZKA - can't snap to pillows
+                    if (!isPoduszka(objectId)) {
+                      const targetPos = objectPositions.get(index) || [index * 1.4, 0, 0];
+                      const distance = Math.sqrt(
+                        Math.pow(intersectionPoint.x - targetPos[0], 2) +
+                        Math.pow(intersectionPoint.z - targetPos[2], 2)
+                      );
+                      
+                      if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestIndex = index;
+                      }
+                    }
                   }
-                }
-              });
+                });
+              }
               
               // Update snap target and preview
               setSnapTargetIndex(closestIndex);
@@ -489,10 +580,55 @@ function ClickHandler({
 
       // Handle snapping on drag release
       if (isDragging && draggedObjectIndex !== null && snapTargetIndex !== null) {
-        const targetPos = objectPositions.get(snapTargetIndex) || [snapTargetIndex * 1.4, 0, 0];
-        // Snap to position next to the target object (0.7 units to the right)
-        const snapPos: [number, number, number] = [targetPos[0] + 0.7, targetPos[1], targetPos[2]];
-        onDragUpdate(draggedObjectIndex, snapPos);
+        // Helper function to check if object is PODUSZKA (pillow - no snapping)
+        const isPoduszka = (objectId: string): boolean => {
+          const parts = objectId.split('-');
+          if (parts.length >= 4 && /^[a-z0-9]{9}$/.test(parts[parts.length - 1]) && 
+              /^\d{13}$/.test(parts[parts.length - 2]) && /^\d+$/.test(parts[parts.length - 3])) {
+            return parts.slice(0, -3).join('-') === 'poduszka';
+          }
+          return objectId === 'poduszka' || objectId.includes('PODUSZKA');
+        };
+        
+        const draggedObjectId = sceneObjects[draggedObjectIndex];
+        const targetObjectId = sceneObjects[snapTargetIndex];
+        
+        // Only snap if neither object is PODUSZKA
+        if (!isPoduszka(draggedObjectId) && !isPoduszka(targetObjectId)) {
+          const draggedPos = objectPositions.get(draggedObjectIndex) || [draggedObjectIndex * 1.4, 0, 0];
+          const targetPos = objectPositions.get(snapTargetIndex) || [snapTargetIndex * 1.4, 0, 0];
+          
+          // Calculate direction from target to dragged object
+          const dx = draggedPos[0] - targetPos[0];
+          const dz = draggedPos[2] - targetPos[2];
+          
+          // Determine primary snap axis (which direction has more movement)
+          const absX = Math.abs(dx);
+          const absZ = Math.abs(dz);
+          
+          // Snap distance from target object edge
+          const snapDistance = 0.79;
+          
+          let snapPos: [number, number, number];
+          
+          if (absX > absZ) {
+            // Snapping left-right: align Z axis (back edges align)
+            snapPos = [
+              targetPos[0] + (dx > 0 ? snapDistance : -snapDistance), // Position left or right
+              targetPos[1], // Same height
+              targetPos[2]  // ALIGNED Z-axis (back edges match)
+            ];
+          } else {
+            // Snapping front-back: align X axis (side edges align)
+            snapPos = [
+              targetPos[0],  // ALIGNED X-axis (side edges match)
+              targetPos[1],  // Same height
+              targetPos[2] + (dz > 0 ? snapDistance : -snapDistance) // Position front or back
+            ];
+          }
+          
+          onDragUpdate(draggedObjectIndex, snapPos);
+        }
       }
       
       mouseDownRef.current = null;
@@ -581,43 +717,74 @@ function SnapIndicator({
   fromPos: [number, number, number]; 
   toPos: [number, number, number];
 }) {
-  const linePoints = useMemo(() => {
-    return [
-      [fromPos[0], fromPos[1] + 0.3, fromPos[2]],
-      [toPos[0], toPos[1] + 0.3, toPos[2]],
-    ] as [number, number, number][];
+  const { fromEdge, toEdge } = useMemo(() => {
+    // Calculate the direction vector from dragged object to target
+    const dx = toPos[0] - fromPos[0];
+    const dz = toPos[2] - fromPos[2];
+    const distance = Math.sqrt(dx * dx + dz * dz);
+    
+    // Normalize direction
+    const dirX = dx / distance;
+    const dirZ = dz / distance;
+    
+    // Approximate object width (adjust based on your models)
+    const objectWidth = 0.4;
+    
+    // Calculate edge positions - where objects will connect
+    // For dragged object: edge closest to target
+    const fromEdgePos: [number, number, number] = [
+      fromPos[0] + dirX * objectWidth,
+      fromPos[1] + 0.3,
+      fromPos[2] + dirZ * objectWidth
+    ];
+    
+    // For target object: edge closest to dragged object
+    const toEdgePos: [number, number, number] = [
+      toPos[0] - dirX * objectWidth,
+      toPos[1] + 0.3,
+      toPos[2] - dirZ * objectWidth
+    ];
+    
+    return { fromEdge: fromEdgePos, toEdge: toEdgePos };
   }, [fromPos, toPos]);
+  
+  const linePoints = useMemo(() => {
+    return [fromEdge, toEdge] as [number, number, number][];
+  }, [fromEdge, toEdge]);
   
   return (
     <group>
-      {/* Line connecting the two snap points */}
+      {/* Line connecting the two snap points on edges */}
       <Line
         points={linePoints}
-        color="#10b981"
-        lineWidth={3}
+        color="#06402b"
+        lineWidth={1}
+        dashed={true}
+        dashSize={0.1}
+        gapSize={0.05}
       />
       
-      {/* Green circle with magnet icon at dragged object position */}
-      <group position={[fromPos[0], fromPos[1] + 0.3, fromPos[2]]}>
+      {/* Green circle with magnet icon at dragged object edge */}
+      <group position={fromEdge}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.08, 0.12, 32]} />
-          <meshBasicMaterial color="#10b981" transparent opacity={0.9} />
+          <ringGeometry args={[0.02, 0.03, 32]} />
+          <meshBasicMaterial color="#06402b"  />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.08, 32]} />
-          <meshBasicMaterial color="#10b981" transparent opacity={0.5} />
+          <circleGeometry args={[0.02, 32]} />
+          <meshBasicMaterial color="#06402b"   />
         </mesh>
       </group>
       
-      {/* Green circle with magnet icon at target object position */}
-      <group position={[toPos[0], toPos[1] + 0.3, toPos[2]]}>
+      {/* Green circle with magnet icon at target object edge */}
+      <group position={toEdge}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.08, 0.12, 32]} />
-          <meshBasicMaterial color="#10b981" transparent opacity={0.9} />
+          <ringGeometry args={[0.02, 0.03, 32]} />
+          <meshBasicMaterial color="#06402b"  />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.08, 32]} />
-          <meshBasicMaterial color="#10b981" transparent opacity={0.5} />
+          <circleGeometry args={[0.02, 32]} />
+          <meshBasicMaterial color="#06402b" />
         </mesh>
       </group>
     </group>
@@ -833,7 +1000,7 @@ const Scene = () => {
       background: { value: false },
       blur: { value: 0, min: 0, max: 1, step: 0.01 },
       environmentIntensity: { value: 1, min: 0, max: 5, step: 0.1 },
-      rotationY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      rotationY: { value: 4.25, min: -Math.PI, max: 6.28, step: 0.01 },
     },
     { collapsed: true },
   );
@@ -884,6 +1051,13 @@ const Scene = () => {
         camera={{ position: [0, 2, 2], fov: 60 }}
         shadows
         style={{ width: "100%", height: "100%" }}
+        gl={{ 
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+          stencil: false,
+        }}
+        dpr={[1, 2]}
       >
         <CameraController />
         <ToneMappingController />
@@ -924,7 +1098,7 @@ const Scene = () => {
           makeDefault
         />
 
-        <ambientLight intensity={lightControls.ambientIntensity} />
+        <ambientLight intensity={lightControls.ambientIntensity} color="#ffffff" />
         <directionalLight
           position={[
             lightControls.directionalX,
@@ -932,6 +1106,7 @@ const Scene = () => {
             lightControls.directionalZ,
           ]}
           intensity={lightControls.directionalIntensity}
+          color="#ffffff"
           castShadow
         />
 
@@ -945,7 +1120,8 @@ const Scene = () => {
             resolution={256}
             color="#000000"
           />
-  
+
+
 
         <group>
           <Environment

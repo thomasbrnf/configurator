@@ -65,11 +65,11 @@ const ControlsInfo = ({ onRecenter }: ControlsInfoProps) => {
            {onRecenter && (
         <button
           onClick={onRecenter}
-          className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all duration-300 shadow-lg"
+          className="w-10 h-10 bg-white border border-[#06402b]/20 hover:bg-[#06402b]/5 hover:border-[#06402b]/40 rounded-full flex items-center justify-center cursor-pointer  active:scale-95 transition-all duration-300 shadow-lg"
           title="Wyśrodkuj kamerę"
         >
           <svg
-            className="w-5 h-5 text-[#06402b]/70"
+            className="w-5 h-5 text-[#06402b]/60"
             width="1em"
             height="1em"
             viewBox="0 0 24 24"

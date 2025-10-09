@@ -107,7 +107,12 @@ export function DynamicModel({
       "/materials/the smallest granit/Granit_normal_map_5.jpg",
   ]);
 
-  const effectiveUvScale = modelPath === "/models/sofa3.glb" ? uvScale : 5;
+  const effectiveUvScale =
+    modelPath === "/models/sofa3.glb"
+      ? uvScale
+      : modelPath === "/models/gala_collezione_KARATO [PODUSZKA].glb"
+      ? 1
+      : 4.2;
 
   const customMaterial = useMemo(() => {
     const diffuse = diffuseMap.clone();
