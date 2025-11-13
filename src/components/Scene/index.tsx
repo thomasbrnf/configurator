@@ -973,10 +973,12 @@ const Scene = () => {
   const shadowControls = useControls(
     "Shadows",
     {
-      shadowOpacity: { value: 0.5, min: 0, max: 1, step: 0.01 },
-      shadowScale: { value: 10, min: 1, max: 50, step: 1 },
-      shadowBlur: { value: 1, min: 0, max: 10, step: 0.1 },
-      shadowFar: { value: 10, min: 1, max: 50, step: 1 },
+      shadowOpacity: { value: 0.46, min: 0, max: 1, step: 0.01 },
+      shadowScale: { value: 0.2, min: 0.1, max: 50, step: 0.1 },
+      shadowBlur: { value: 0.2, min: 0, max: 10, step: 0.1 },
+      shadowFar: { value: 21, min: 1, max: 50, step: 1 },
+      shadowsWidth: { value: 512, min: 128, max: 2048, step: 128 },
+      shadowsHeight: { value: 512, min: 128, max: 2048, step: 128 },
     },
     { collapsed: true },
   );
@@ -1118,7 +1120,9 @@ const Scene = () => {
             scale={shadowControls.shadowScale}
             blur={shadowControls.shadowBlur}
             far={shadowControls.shadowFar}
-            resolution={256}
+            resolution={2048}
+            width={shadowControls.shadowsWidth}
+            height={shadowControls.shadowsHeight}
             color="#000000"
           />
 
