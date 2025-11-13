@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface ContextMenuProps {
   x: number;
@@ -14,6 +15,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onDelete,
   onClose,
 }) => {
+  const { t } = useLanguage();
   const [position, setPosition] = useState({ x, y });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0, menuX: 0, menuY: 0 });
@@ -118,7 +120,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
             />
           </svg>
-          <span className="font-medium">Usuń</span>
+          <span className="font-medium">{t.delete}</span>
         </button>
       </div>
     </div>

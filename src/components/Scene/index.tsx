@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { useEffect, useRef, useState, createContext, useContext, useMemo } from "react";
 import { useMaterial } from "../../context/MaterialContext";
 import { useConfigurator } from "../../context/ConfiguratorContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 
 interface SceneContextType {
@@ -843,6 +844,7 @@ const Scene = () => {
     setObjectPosition,
     objectPositions,
   } = useConfigurator();
+  const { t } = useLanguage();
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -1037,7 +1039,7 @@ const Scene = () => {
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            <span>Zakończ Obracanie</span>
+            <span>{t.finishRotation}</span>
           </button>
         </div>
       )}
@@ -1105,8 +1107,9 @@ const Scene = () => {
           ]}
           intensity={lightControls.directionalIntensity}
           color="#ffffff"
-          castShadow
+      
         />
+        
 
         <SceneObjects snapPreview={snapPreview} />
 

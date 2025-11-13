@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { useMaterial } from "./MaterialContext";
+import { useLanguage } from "./LanguageContext";
 
 export type ConfigurationStep =
   | "welcome"
@@ -22,6 +23,12 @@ export interface CompleteSetDefinition {
   id: string;
   name: string;
   displayName: string;
+  translationKey: keyof {
+    completeSofa: string;
+    completeSofa2: string;
+    completeSofa3: string;
+    completeSofa4: string;
+  };
   modelPath: string;
   thumbnail?: string;
 }
@@ -84,6 +91,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     id: "complete-sofa-1",
     name: "Complete Sofa",
     displayName: "Kompletna Sofa",
+    translationKey: "completeSofa",
     modelPath: "/models/complete sofa.glb",
     thumbnail: "/models/thumbnails/complete sofa.jpg",
   },
@@ -91,6 +99,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     id: "complete-sofa-2",
     name: "Complete Sofa 2",
     displayName: "Kompletna Sofa 2",
+    translationKey: "completeSofa2",
     modelPath: "/models/complete sofa 2.glb",
     thumbnail: "/models/thumbnails/complete sofa 2.jpg",
   },
@@ -98,6 +107,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     id: "complete-sofa-3",
     name: "Complete Sofa 3",
     displayName: "Kompletna Sofa 3",
+    translationKey: "completeSofa3",
     modelPath: "/models/complete sofa 3.glb",
     thumbnail: "/models/thumbnails/complete sofa 3.jpg",
   },
@@ -105,6 +115,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     id: "complete-sofa-4",
     name: "Complete Sofa 4",
     displayName: "Kompletna Sofa 4",
+    translationKey: "completeSofa4",
     modelPath: "/models/sofa3.glb",
     thumbnail: "/models/thumbnails/sofa3.jpg",
   },

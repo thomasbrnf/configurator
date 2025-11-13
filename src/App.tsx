@@ -5,17 +5,20 @@ import Configurator from "./components/Configurator";
 import Spinner from "./components/Spinner";
 import { MaterialProvider } from "./context/MaterialContext";
 import { ConfiguratorProvider } from "./context/ConfiguratorContext";
+import { LanguageProvider } from "./context/LanguageContext";
 
 function App() {
   return (
-    <MaterialProvider>
-      <ConfiguratorProvider>
-        <Scene />
-        <ControlPanel />
-        <Configurator />
-        <Spinner />
-      </ConfiguratorProvider>
-    </MaterialProvider>
+    <LanguageProvider>
+      <MaterialProvider>
+        <ConfiguratorProvider>
+          <Scene />
+          <ControlPanel />
+          <Configurator />
+          <Spinner />
+        </ConfiguratorProvider>
+      </MaterialProvider>
+    </LanguageProvider>
   );
 }
 

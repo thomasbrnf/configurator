@@ -1,0 +1,243 @@
+import React, { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
+
+export type Language = "pl" | "en";
+
+interface Translations {
+  // Controls Info
+  controls: string;
+  clickToSelect: string;
+  mouseWheelZoom: string;
+  dragToRotate: string;
+  recenterCamera: string;
+
+  // Configurator
+  welcome: string;
+  welcomeSubtitle: string;
+  startConfiguration: string;
+  chooseConfigType: string;
+  configTypeSubtitle: string;
+  completeSets: string;
+  completeSetsDesc: string;
+  modules: string;
+  modulesDesc: string;
+  selectModules: string;
+  selectModulesSubtitle: string;
+  addToScene: string;
+  backToMenu: string;
+  back: string;
+  
+  // Module Selection
+  selectCompleteSet: string;
+  selectCompleteSetSubtitle: string;
+  clickToSelect2: string;
+  selectModulesMultiple: string;
+  buildOwnConfiguration: string;
+  clearSelection: string;
+  selected: string;
+  modulesCount: string;
+  
+  // Control Panel
+  controlPanel: string;
+  materials: string;
+  club: string;
+  granit: string;
+  addObject: string;
+  changeConfigType: string;
+  addModule: string;
+  material: string;
+  
+  // Context Menu
+  delete: string;
+  rotate: string;
+  
+  // Rotation Control
+  finishRotation: string;
+  
+  // Loader
+  loadingObject: string;
+  loadingMaterial: string;
+  changingMaterial: string;
+  loading: string;
+
+  // Complete Set Names
+  completeSofa: string;
+  completeSofa2: string;
+  completeSofa3: string;
+  completeSofa4: string;
+}
+
+const translations: Record<Language, Translations> = {
+  pl: {
+    // Controls Info
+    controls: "Sterowanie",
+    clickToSelect: "Kliknij obiekt, aby zaznaczyć",
+    mouseWheelZoom: "Kółko myszy – przybliż/oddal",
+    dragToRotate: "Przeciągnij w pustym miejscu – obróć kamerę",
+    recenterCamera: "Wyśrodkuj kamerę",
+
+    // Configurator
+    welcome: "Witamy w Konfiguratorze",
+    welcomeSubtitle: "Zaprojektuj swoją wymarzoną sofę",
+    startConfiguration: "Rozpocznij Konfigurację",
+    chooseConfigType: "Wybierz Typ Konfiguracji",
+    configTypeSubtitle: "Jak chciałbyś skonfigurować swoją sofę?",
+    completeSets: "Gotowe Zestawy",
+    completeSetsDesc: "Wybierz z gotowych konfiguracji",
+    modules: "Moduły",
+    modulesDesc: "Zbuduj swoją sofę z pojedynczych modułów",
+    selectModules: "Wybierz Moduły",
+    selectModulesSubtitle: "Wybierz moduły, które chcesz dodać do swojej sofy",
+    addToScene: "Dodaj do Sceny",
+    backToMenu: "Wróć do Menu",
+    back: "Wstecz",
+    
+    // Module Selection
+    selectCompleteSet: "Wybierz Kompletny Zestaw",
+    selectCompleteSetSubtitle: "Wybierz jeden z gotowych zestawów mebli",
+    clickToSelect2: "Kliknij, aby wybrać",
+    selectModulesMultiple: "Wybierz moduły (możesz wybrać wiele)",
+    buildOwnConfiguration: "Zbuduj własną konfigurację wybierając poszczególne moduły",
+    clearSelection: "Wyczyść wybór",
+    selected: "Wybrano",
+    modulesCount: "modułów",
+    
+    // Control Panel
+    controlPanel: "Panel Sterowania",
+    materials: "Materiały",
+    club: "Club",
+    granit: "Granit",
+    addObject: "Dodaj Obiekt",
+    changeConfigType: "Zmień Typ Konfiguracji",
+    addModule: "Dodaj Moduł",
+    material: "Materiał",
+    
+    // Context Menu
+    delete: "Usuń",
+    rotate: "Obróć",
+    
+    // Rotation Control
+    finishRotation: "Zakończ Obracanie",
+    
+    // Loader
+    loadingObject: "Ładowanie obiektu...",
+    loadingMaterial: "Ładowanie materiału...",
+    changingMaterial: "Zmienianie materiału...",
+    loading: "Ładowanie...",
+
+    // Complete Set Names
+    completeSofa: "Kompletna Sofa",
+    completeSofa2: "Kompletna Sofa 2",
+    completeSofa3: "Kompletna Sofa 3",
+    completeSofa4: "Kompletna Sofa 4",
+  },
+  en: {
+    // Controls Info
+    controls: "Controls",
+    clickToSelect: "Click object to select",
+    mouseWheelZoom: "Mouse wheel – zoom in/out",
+    dragToRotate: "Drag in empty space – rotate camera",
+    recenterCamera: "Recenter Camera",
+
+    // Configurator
+    welcome: "Welcome to the Configurator",
+    welcomeSubtitle: "Design your dream sofa",
+    startConfiguration: "Start Configuration",
+    chooseConfigType: "Choose Configuration Type",
+    configTypeSubtitle: "How would you like to configure your sofa?",
+    completeSets: "Complete Sets",
+    completeSetsDesc: "Choose from ready-made configurations",
+    modules: "Modules",
+    modulesDesc: "Build your sofa from individual modules",
+    selectModules: "Select Modules",
+    selectModulesSubtitle: "Choose modules to add to your sofa",
+    addToScene: "Add to Scene",
+    backToMenu: "Back to Menu",
+    back: "Back",
+    
+    // Module Selection
+    selectCompleteSet: "Select Complete Set",
+    selectCompleteSetSubtitle: "Choose one of the ready-made furniture sets",
+    clickToSelect2: "Click to select",
+    selectModulesMultiple: "Select modules (you can select multiple)",
+    buildOwnConfiguration: "Build your own configuration by selecting individual modules",
+    clearSelection: "Clear selection",
+    selected: "Selected",
+    modulesCount: "modules",
+    
+    // Control Panel
+    controlPanel: "Control Panel",
+    materials: "Materials",
+    club: "Club",
+    granit: "Granit",
+    addObject: "Add Object",
+    changeConfigType: "Change Configuration Type",
+    addModule: "Add Module",
+    material: "Material",
+    
+    // Context Menu
+    delete: "Delete",
+    rotate: "Rotate",
+    
+    // Rotation Control
+    finishRotation: "Finish Rotation",
+    
+    // Loader
+    loadingObject: "Loading object...",
+    loadingMaterial: "Loading material...",
+    changingMaterial: "Changing material...",
+    loading: "Loading...",
+
+    // Complete Set Names
+    completeSofa: "Complete Sofa",
+    completeSofa2: "Complete Sofa 2",
+    completeSofa3: "Complete Sofa 3",
+    completeSofa4: "Complete Sofa 4",
+  },
+};
+
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: Translations;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+);
+
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  // Initialize language from localStorage, fallback to "pl"
+  const [language, setLanguage] = useState<Language>(() => {
+    const savedLanguage = localStorage.getItem("configurator-language");
+    return (savedLanguage === "pl" || savedLanguage === "en") ? savedLanguage : "pl";
+  });
+
+  // Update localStorage whenever language changes
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem("configurator-language", lang);
+  };
+
+  return (
+    <LanguageContext.Provider
+      value={{
+        language,
+        setLanguage: handleSetLanguage,
+        t: translations[language],
+      }}
+    >
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
+};

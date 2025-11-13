@@ -1,8 +1,10 @@
 import React from "react";
 import { useConfigurator } from "../../context/ConfiguratorContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 const ConfigTypeStep: React.FC = () => {
   const { setCurrentStep, setConfigurationType } = useConfigurator();
+  const { t } = useLanguage();
 
   const handleCompleteSetSelection = () => {
     setConfigurationType("complete");
@@ -43,17 +45,17 @@ const ConfigTypeStep: React.FC = () => {
 
         <div className="mb-12">
           <h1 className="text-3xl font-bold text-black mb-4">
-            Wybierz Typ Konfiguracji
+            {t.chooseConfigType}
           </h1>
           <p className="text-lg text-gray-600">
-            Rozpocznij od wyboru sposobu konfiguracji swojego mebla
+            {t.configTypeSubtitle}
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Complete Set Option */}
           <div className="bg-white rounded-2xl border-2 border-gray-200 hover:border-[#06402b]/40 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden group">
-            <div className="p-8">
+            <div className="p-8 h-full flex flex-col justify-between items-stretch">
               <div className="w-20 h-20 mx-auto bg-gradient-to-br from-[#06402b] to-[#0a5a38] rounded-xl flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
                 <svg
                   className="w-10 h-10 text-white"
@@ -70,17 +72,16 @@ const ConfigTypeStep: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Wybierz Zestaw
+                {t.completeSets}
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Wybierz gotowy zestaw mebli, który został zaprojektowany przez
-                naszych ekspertów
+                {t.completeSetsDesc}
               </p>
               <button
                 onClick={handleCompleteSetSelection}
-                className="cursor-pointer w-full px-6 py-3 bg-[#06402b] text-white font-semibold rounded-lg hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200"
+                className="mt-auto cursor-pointer w-full px-6 py-3 bg-[#06402b] text-white font-semibold rounded-lg hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200"
               >
-                Wybierz Zestaw
+                {t.completeSets}
               </button>
             </div>
           </div>
@@ -104,17 +105,16 @@ const ConfigTypeStep: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Wybierz Moduł
+                {t.modules}
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Zbuduj własną konfigurację wybierając poszczególne moduły i
-                komponenty
+                {t.modulesDesc}
               </p>
               <button
                 onClick={handleModuleSelection}
                 className="cursor-pointer w-full px-6 py-3 bg-[#06402b] text-white font-semibold rounded-lg hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200"
               >
-                Wybierz Moduł
+                {t.modules}
               </button>
             </div>
           </div>

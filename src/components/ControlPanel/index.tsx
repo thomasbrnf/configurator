@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMaterial, availableMaterials } from "../../context/MaterialContext";
 import { useConfigurator } from "../../context/ConfiguratorContext";
+import { useLanguage } from "../../context/LanguageContext";
 import type { MaterialDefinition } from "../../context/MaterialContext";
 
 interface MaterialGroup {
@@ -23,6 +24,7 @@ const materialGroups: MaterialGroup[] = [
 ];
 
 export const TopLeftButtons: React.FC = () => {
+  const { t } = useLanguage();
   const { setCurrentStep, resetConfigurator, setConfigurationType, configurationType } =
     useConfigurator();
 
@@ -44,7 +46,7 @@ export const TopLeftButtons: React.FC = () => {
         onClick={handleChangeConfigType}
         className="h-11 px-5 bg-white text-black text-sm font-medium rounded-xl border border-[#06402b]/20 hover:border-[#06402b]/40 hover:bg-[#06402b]/5 active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-sm"
       >
-        Zmień Typ Konfiguracji
+        {t.changeConfigType}
       </button>
       
       {/* Add Module Button - Hidden if configurationType is "complete" */}
@@ -69,7 +71,7 @@ export const TopLeftButtons: React.FC = () => {
           />
         </svg>
         <span className="relative z-10 text-sm font-medium whitespace-nowrap max-w-0 group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 overflow-hidden opacity-0 group-hover:opacity-100">
-          Dodaj Moduł
+          {t.addModule}
         </span>
       </button>
       )}
@@ -78,6 +80,7 @@ export const TopLeftButtons: React.FC = () => {
 };
 
 export const SelectedObjectInfo: React.FC = () => {
+  const { t } = useLanguage();
   const { selectedObjectId, objects } = useMaterial();
   const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
 
@@ -104,7 +107,7 @@ export const SelectedObjectInfo: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[10px] font-bold text-black/50 uppercase tracking-widest mb-1">
-                Materiał
+                {t.material}
               </div>
               <div className="text-sm font-semibold text-black truncate">
                 {selectedObject.material.name}
@@ -119,6 +122,7 @@ export const SelectedObjectInfo: React.FC = () => {
 
 // Materials Modal Component
 export const MaterialsModal: React.FC = () => {
+  const { t } = useLanguage();
   const { setCurrentMaterial, currentMaterial, selectedObjectId } =
     useMaterial();
   const [isModalOpen, setIsModalOpen] = useState(true);
@@ -153,7 +157,7 @@ export const MaterialsModal: React.FC = () => {
           onClick={toggleModal}
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-black">Materiały</h3>
+            <h3 className="text-sm font-semibold text-black">{t.materials}</h3>
             <div
               className={`w-5 h-5 rounded-md bg-[#06402b]/20 flex items-center justify-center text-black/70 text-sm font-medium transition-transform duration-200 ${isModalOpen ? "rotate-180" : ""}`}
             >

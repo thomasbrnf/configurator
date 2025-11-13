@@ -4,8 +4,10 @@ import {
   availableModules,
   availableCompleteSets,
 } from "../../context/ConfiguratorContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 const ModuleSelectionStep: React.FC = () => {
+  const { t } = useLanguage();
   const {
     configurationType,
     selectedCompleteSet,
@@ -146,14 +148,14 @@ const ModuleSelectionStep: React.FC = () => {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  Wstecz
+                  {t.back}
                 </button>
                 <div>
                   <h1 className="text-lg font-bold text-black">
-                    Wybierz Kompletny Zestaw
+                    {t.selectCompleteSet}
                   </h1>
                   <p className="text-sm text-gray-600">
-                    Wybierz jeden z gotowych zestawów mebli
+                    {t.selectCompleteSetSubtitle}
                   </p>
                 </div>
               </div>
@@ -215,9 +217,9 @@ const ModuleSelectionStep: React.FC = () => {
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-gray-900 mb-2">
-                      {set.displayName}
+                      {t[set.translationKey as keyof typeof t]}
                     </h3>
-                    <p className="text-sm text-gray-600">Kliknij, aby wybrać</p>
+                    <p className="text-sm text-gray-600">{t.clickToSelect2}</p>
                   </div>
                   {selectedCompleteSet === set.id && (
                     <div className="absolute top-3 right-3">
@@ -272,14 +274,14 @@ const ModuleSelectionStep: React.FC = () => {
                     d="M15 19l-7-7 7-7"
                   />
                 </svg>
-                Wstecz
+                {t.back}
               </button>
               <div>
                 <h1 className="text-lg font-bold text-black">
-                  Wybierz moduły (możesz wybrać wiele)
+                  {t.selectModulesMultiple}
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Zbuduj własną konfigurację wybierając poszczególne moduły
+                  {t.buildOwnConfiguration}
                 </p>
               </div>
             </div>
@@ -355,7 +357,7 @@ const ModuleSelectionStep: React.FC = () => {
                           {module.displayName}
                         </h3>
                         <p className="text-xs text-gray-600">
-                          Kliknij, aby wybrać
+                          {t.clickToSelect2}
                         </p>
                       </div>
                       {isSelected && (
@@ -471,7 +473,7 @@ const ModuleSelectionStep: React.FC = () => {
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
-                Dodaj do Sceny
+                {t.addToScene}
               </button>
               <button
                 onClick={clearModules}
@@ -481,7 +483,7 @@ const ModuleSelectionStep: React.FC = () => {
                     ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                     : "bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-600 cursor-pointer"
                 }`}
-                title="Wyczyść wybór"
+                title={t.clearSelection}
               >
                 <svg
                   className="w-4 h-4"
@@ -499,7 +501,7 @@ const ModuleSelectionStep: React.FC = () => {
               </button>
             </div>
             <div className="text-xs text-black/35">
-              Wybrano: {Array.from(moduleCounts.values()).reduce((sum, count) => sum + count, 0)} modułów
+              {t.selected}: {Array.from(moduleCounts.values()).reduce((sum, count) => sum + count, 0)} {t.modulesCount}
             </div>
           </div>
         </div>

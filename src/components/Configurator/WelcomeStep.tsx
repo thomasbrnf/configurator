@@ -1,8 +1,10 @@
 import React from "react";
 import { useConfigurator } from "../../context/ConfiguratorContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 const WelcomeStep: React.FC = () => {
   const { setCurrentStep } = useConfigurator();
+  const { t } = useLanguage();
 
   const handleStartConfiguration = () => {
     setCurrentStep("config-type");
@@ -13,10 +15,10 @@ const WelcomeStep: React.FC = () => {
       <div className="max-w-2xl mx-auto text-center px-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-black mb-4">
-            Konfigurator Sofy
+            {t.welcome}
           </h1>
           <p className="text-lg text-gray-600 leading-relaxed">
-            Rozpocznij konfigurację i stwórz sofę idealną dla Ciebie
+            {t.welcomeSubtitle}
           </p>
         </div>
 
@@ -24,7 +26,7 @@ const WelcomeStep: React.FC = () => {
           onClick={handleStartConfiguration}
           className="cursor-pointer inline-flex items-center px-8 py-4 bg-[#06402b] text-white text-lg font-semibold rounded-xl hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200 shadow-lg hover:shadow-xl"
         >
-          <span>Konfiguruj Sofę</span>
+          <span>{t.startConfiguration}</span>
           <svg
             className="ml-3 w-5 h-5"
             fill="none"
