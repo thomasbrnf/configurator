@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { useMaterial } from "./MaterialContext";
-import { useLanguage } from "./LanguageContext";
 
 export type ConfigurationStep =
   | "welcome"
