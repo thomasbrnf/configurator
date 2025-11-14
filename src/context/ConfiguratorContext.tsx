@@ -93,41 +93,90 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: "/models/thumbnails/gala_collezione_KARATO [PODUSZKA].jpg",
     snappingSides: "none", // Pillow - no snapping
   },
+
+  {
+    id: "sofa part middle",
+    name: "Sofa Part Middle",
+    displayName: "Sofa Part Middle",
+    modelPath: "/models/sofa part middle.glb",
+    thumbnail: "/models/thumbnails/sofa middlee part.png",
+    snappingSides: "both", 
+  },
+  // {
+  //   id: "sofa part left",
+  //   name: "Sofa Part Left",
+  //   displayName: "Sofa Part Left",
+  //   modelPath: "/models/sofa part left.glb",
+  //   thumbnail: "/models/thumbnails/sofa part left.jpg",
+  //   snappingSides: "right", 
+  // },
+  // {
+  //   id: "sofa part right",
+  //   name: "Sofa Part Right",
+  //   displayName: "Sofa Part Right",
+  //   modelPath: "/models/sofa part right.glb",
+  //   thumbnail: "/models/thumbnails/sofa part right.jpg",
+  //   snappingSides: "left", 
+  // }
 ];
 
 export const availableCompleteSets: CompleteSetDefinition[] = [
+  // {
+  //   id: "complete-sofa-1",
+  //   name: "Complete Sofa",
+  //   displayName: "Kompletna Sofa",
+  //   translationKey: "completeSofa",
+  //   modelPath: "/models/complete sofa.glb",
+  //   thumbnail: "/models/thumbnails/complete sofa.jpg",
+  // },
+  // {
+  //   id: "complete-sofa-2",
+  //   name: "Complete Sofa 2",
+  //   displayName: "Kompletna Sofa 2",
+  //   translationKey: "completeSofa2",
+  //   modelPath: "/models/complete sofa 2.glb",
+  //   thumbnail: "/models/thumbnails/complete sofa 2.jpg",
+  // },
+  // {
+  //   id: "complete-sofa-3",
+  //   name: "Complete Sofa 3",
+  //   displayName: "Kompletna Sofa 3",
+  //   translationKey: "completeSofa3",
+  //   modelPath: "/models/complete sofa 3.glb",
+  //   thumbnail: "/models/thumbnails/complete sofa 3.jpg",
+  // },
+  // {
+  //   id: "complete-sofa-4",
+  //   name: "Complete Sofa 4",
+  //   displayName: "Kompletna Sofa 4",
+  //   translationKey: "completeSofa4",
+  //   modelPath: "/models/sofa3.glb",
+  //   thumbnail: "/models/thumbnails/sofa3.jpg",
+  // },
   {
-    id: "complete-sofa-1",
-    name: "Complete Sofa",
-    displayName: "Kompletna Sofa",
-    translationKey: "completeSofa",
-    modelPath: "/models/complete sofa.glb",
-    thumbnail: "/models/thumbnails/complete sofa.jpg",
-  },
-  {
-    id: "complete-sofa-2",
-    name: "Complete Sofa 2",
-    displayName: "Kompletna Sofa 2",
-    translationKey: "completeSofa2",
-    modelPath: "/models/complete sofa 2.glb",
-    thumbnail: "/models/thumbnails/complete sofa 2.jpg",
-  },
-  {
-    id: "complete-sofa-3",
-    name: "Complete Sofa 3",
-    displayName: "Kompletna Sofa 3",
-    translationKey: "completeSofa3",
-    modelPath: "/models/complete sofa 3.glb",
-    thumbnail: "/models/thumbnails/complete sofa 3.jpg",
-  },
-  {
-    id: "complete-sofa-4",
-    name: "Complete Sofa 4",
-    displayName: "Kompletna Sofa 4",
+    id: "sofa-1",
+    name: "Sofa 1",
+    displayName: " Sofa 1",
     translationKey: "completeSofa4",
-    modelPath: "/models/sofa3.glb",
-    thumbnail: "/models/thumbnails/sofa3.jpg",
+    modelPath: "/models/sofa 1.glb",
+    thumbnail: "/models/thumbnails/sofa 1.png",
   },
+  {
+    id: "sofa-2",
+    name: "Sofa 2",
+    displayName: "Sofa 2",
+    translationKey: "completeSofa4",
+    modelPath: "/models/sofa 2.glb",
+    thumbnail: "/models/thumbnails/sofa 2.png",
+  },
+    {
+    id: "sofa-3",
+    name: "Sofa 3",
+    displayName: "Sofa 3",
+    translationKey: "completeSofa4",
+    modelPath: "/models/sofa 3.glb",
+    thumbnail: "/models/thumbnails/sofa 3.png",
+  }
 ];
 
 // Helper function to get snapping configuration for a module
