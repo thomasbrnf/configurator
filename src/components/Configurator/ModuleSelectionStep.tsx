@@ -7,7 +7,7 @@ import {
 import { useLanguage } from "../../context/LanguageContext";
 
 const ModuleSelectionStep: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const {
     configurationType,
     selectedCompleteSet,
@@ -123,6 +123,10 @@ const ModuleSelectionStep: React.FC = () => {
     return getModuleCount(moduleId) > 0;
   };
 
+  const toggleLanguage = () => {
+    setLanguage(language === "pl" ? "en" : "pl");
+  };
+
   if (configurationType === "complete") {
     return (
       <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex flex-col">
@@ -159,24 +163,32 @@ const ModuleSelectionStep: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleClose}
-                className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleLanguage}
+                  className="cursor-pointer px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                  {language === "pl" ? "EN" : "PL"}
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Complete Sets Grid */}
@@ -285,24 +297,32 @@ const ModuleSelectionStep: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleClose}
-              className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleLanguage}
+                className="cursor-pointer px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                {language === "pl" ? "EN" : "PL"}
+              </button>
+              <button
+                onClick={handleClose}
+                className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Main Content Area with Filters */}

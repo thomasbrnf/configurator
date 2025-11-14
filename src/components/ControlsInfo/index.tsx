@@ -2,13 +2,25 @@ import { useLanguage } from "../../context/LanguageContext";
 
 interface ControlsInfoProps {
   onRecenter?: () => void;
+  isAutoCenterEnabled?: boolean;
+  onToggleAutoCenter?: (enabled: boolean) => void;
 }
 
-const ControlsInfo = ({ onRecenter }: ControlsInfoProps) => {
+const ControlsInfo = ({ onRecenter, isAutoCenterEnabled = false, onToggleAutoCenter }: ControlsInfoProps) => {
   const { language, setLanguage, t } = useLanguage();
 
   const toggleLanguage = () => {
     setLanguage(language === "pl" ? "en" : "pl");
+  };
+
+  const toggleAutoCenter = () => {
+    if (onToggleAutoCenter) {
+      onToggleAutoCenter(!isAutoCenterEnabled);
+    }
+    // Also trigger recenter when toggling
+    if (onRecenter) {
+      onRecenter();
+    }
   };
 
   return (
@@ -80,12 +92,16 @@ const ControlsInfo = ({ onRecenter }: ControlsInfoProps) => {
 
         {onRecenter && (
           <button
-            onClick={onRecenter}
-            className="w-10 h-10 bg-white border border-[#06402b]/20 hover:bg-[#06402b]/5 hover:border-[#06402b]/40 rounded-full flex items-center justify-center cursor-pointer  active:scale-95 transition-all duration-300 shadow-lg"
-            title={t.recenterCamera}
+            onClick={toggleAutoCenter}
+            className={`w-auto h-10 px-3 border rounded-full flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all duration-300 shadow-lg ${
+              isAutoCenterEnabled 
+                ? 'bg-[#06402b] border-[#06402b] text-white hover:bg-[#06402b]/90' 
+                : 'bg-white border-[#06402b]/20 text-[#06402b]/60 hover:bg-[#06402b]/5 hover:border-[#06402b]/40'
+            }`}
+            title={isAutoCenterEnabled ? t.recenterCamera : t.recenterCamera}
           >
             <svg
-              className="w-5 h-5 text-[#06402b]/60"
+              className="w-5 h-5"
               width="1em"
               height="1em"
               viewBox="0 0 24 24"
@@ -97,6 +113,9 @@ const ControlsInfo = ({ onRecenter }: ControlsInfoProps) => {
                 fill="currentColor"
               />
             </svg>
+            <span className="text-xs font-bold whitespace-nowrap">
+              {isAutoCenterEnabled ? 'ON' : 'OFF'}
+            </span>
           </button>
         )}
       </div>

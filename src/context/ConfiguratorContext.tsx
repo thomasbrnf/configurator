@@ -9,6 +9,8 @@ export type ConfigurationStep =
   | "scene";
 export type ConfigurationType = "complete" | "modules" | null;
 
+export type SnappingSide = "left" | "right" | "both" | "none";
+
 export interface ModuleDefinition {
   id: string;
   name: string;
@@ -16,6 +18,7 @@ export interface ModuleDefinition {
   modelPath: string;
   thumbnail?: string;
   category?: string;
+  snappingSides?: SnappingSide; // Which sides can snap to other modules
 }
 
 export interface CompleteSetDefinition {
@@ -40,6 +43,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "[1(80)BB]",
     modelPath: "/models/[1(80)BB].glb",
     thumbnail: "/models/thumbnails/[1(80)BB].jpg",
+    snappingSides: "both", // Middle part - can snap on both sides
   },
   {
     id: "1-80-l",
@@ -47,6 +51,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "[1(80)L]",
     modelPath: "/models/[1(80)L].glb",
     thumbnail: "/models/thumbnails/[1(80)L].jpg",
+    snappingSides: "right", // Left corner - can only snap on right side
   },
   {
     id: "1-80-p",
@@ -54,6 +59,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "[1(80)P]",
     modelPath: "/models/gala_collezione_KARATO [1(80)P].glb",
     thumbnail: "/models/thumbnails/gala_collezione_KARATO [1(80)P].jpg",
+    snappingSides: "left", // Right corner - can only snap on left side
   },
   {
     id: "1d-5-sl",
@@ -61,6 +67,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "[1D(5)SL]",
     modelPath: "/models/[1D(5)SL].glb",
     thumbnail: "/models/thumbnails/[1D(5)SL].jpg",
+    snappingSides: "right", // Left corner - can only snap on right side
   },
   {
     id: "1d-5-sp",
@@ -68,6 +75,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "[1D(5)SP]",
     modelPath: "/models/gala_collezione_KARATO [1D(5)SP].glb",
     thumbnail: "/models/thumbnails/gala_collezione_KARATO [1D(5)SP].jpg",
+    snappingSides: "left", // Right corner - can only snap on left side
   },
   {
     id: "en-2",
@@ -75,6 +83,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "[EN(2)]",
     modelPath: "/models/gala_collezione_KARATO [EN(2)].glb",
     thumbnail: "/models/thumbnails/gala_collezione_KARATO [EN(2)].jpg",
+    snappingSides: "left", // Right corner - can only snap on left side
   },
   {
     id: "poduszka",
@@ -82,6 +91,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "[PODUSZKA]",
     modelPath: "/models/gala_collezione_KARATO [PODUSZKA].glb",
     thumbnail: "/models/thumbnails/gala_collezione_KARATO [PODUSZKA].jpg",
+    snappingSides: "none", // Pillow - no snapping
   },
 ];
 
@@ -119,6 +129,42 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     thumbnail: "/models/thumbnails/sofa3.jpg",
   },
 ];
+
+// Helper function to get snapping configuration for a module
+export const getModuleSnappingConfig = (objectId: string): SnappingSide => {
+  // Extract base module ID (remove counter, timestamp and random suffix)
+  const extractBaseModuleId = (id: string): string => {
+    const parts = id.split('-');
+    // If we have at least 4 parts and the last 3 look like counter-timestamp-random
+    if (parts.length >= 4) {
+      const lastPart = parts[parts.length - 1];
+      const secondLastPart = parts[parts.length - 2];
+      const thirdLastPart = parts[parts.length - 3];
+      
+      if (/^[a-z0-9]{9}$/.test(lastPart) && 
+          /^\d{13}$/.test(secondLastPart) && 
+          /^\d+$/.test(thirdLastPart)) {
+        return parts.slice(0, -3).join('-');
+      }
+    }
+    
+    // Fallback for old format
+    if (parts.length >= 3) {
+      const lastPart = parts[parts.length - 1];
+      const secondLastPart = parts[parts.length - 2];
+      if (/^[a-z0-9]{9}$/.test(lastPart) && /^\d{13}$/.test(secondLastPart)) {
+        return parts.slice(0, -2).join('-');
+      }
+    }
+    
+    return id;
+  };
+  
+  const baseModuleId = extractBaseModuleId(objectId);
+  const module = availableModules.find((m) => m.id === baseModuleId);
+  
+  return module?.snappingSides || "both"; // Default to "both" for unknown modules
+};
 
 interface ConfiguratorContextType {
   // Step management

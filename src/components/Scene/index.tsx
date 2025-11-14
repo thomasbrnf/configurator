@@ -7,12 +7,14 @@ import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
 import { useEffect, useRef, useState, createContext, useContext, useMemo } from "react";
 import { useMaterial } from "../../context/MaterialContext";
-import { useConfigurator } from "../../context/ConfiguratorContext";
+import { useConfigurator, getModuleSnappingConfig } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 
 interface SceneContextType {
   handleRecenter: () => void;
+  isAutoCenterEnabled: boolean;
+  setIsAutoCenterEnabled: (enabled: boolean) => void;
 }
 
 const SceneContext = createContext<SceneContextType | null>(null);
@@ -27,8 +29,15 @@ export const useScene = () => {
 
 // Internal component that uses the scene context
 function SceneControls() {
-  const { handleRecenter } = useScene();
-  return <ControlsInfo onRecenter={handleRecenter} />;
+  const { handleRecenter, isAutoCenterEnabled, setIsAutoCenterEnabled } = useScene();
+  
+  return (
+    <ControlsInfo 
+      onRecenter={handleRecenter} 
+      isAutoCenterEnabled={isAutoCenterEnabled}
+      onToggleAutoCenter={setIsAutoCenterEnabled}
+    />
+  );
 }
 
 function CameraController() {
@@ -453,30 +462,21 @@ function ClickHandler({
               // Apply the offset to maintain the original click position
               intersectionPoint.add(dragOffset.current);
               
-              // Helper function to check if object is PODUSZKA (pillow - no snapping)
-              const isPoduszka = (objectId: string): boolean => {
-                // Extract base module ID
-                const parts = objectId.split('-');
-                if (parts.length >= 4 && /^[a-z0-9]{9}$/.test(parts[parts.length - 1]) && 
-                    /^\d{13}$/.test(parts[parts.length - 2]) && /^\d+$/.test(parts[parts.length - 3])) {
-                  return parts.slice(0, -3).join('-') === 'poduszka';
-                }
-                return objectId === 'poduszka' || objectId.includes('PODUSZKA');
-              };
-              
-              // Check if dragged object is PODUSZKA - disable snapping for pillows
+              // Get snapping configuration for dragged object
               const draggedObjectId = sceneObjects[draggedObjectIndex];
-              const isDraggedPoduszka = isPoduszka(draggedObjectId);
+              const draggedSnapping = getModuleSnappingConfig(draggedObjectId);
               
-              // Check for nearby objects to snap to (only if not dragging a pillow)
+              // Check for nearby objects to snap to (only if dragged object can snap)
               let closestIndex: number | null = null;
               let closestDistance = SNAP_DISTANCE;
               
-              if (!isDraggedPoduszka) {
+              if (draggedSnapping !== "none") {
                 sceneObjects.forEach((objectId, index) => {
                   if (index !== draggedObjectIndex) {
-                    // Also check if target object is PODUSZKA - can't snap to pillows
-                    if (!isPoduszka(objectId)) {
+                    const targetSnapping = getModuleSnappingConfig(objectId);
+                    
+                    // Only consider snapping if target object can also snap
+                    if (targetSnapping !== "none") {
                       const targetPos = objectPositions.get(index) || [index * 1.4, 0, 0];
                       const distance = Math.sqrt(
                         Math.pow(intersectionPoint.x - targetPos[0], 2) +
@@ -581,53 +581,86 @@ function ClickHandler({
 
       // Handle snapping on drag release
       if (isDragging && draggedObjectIndex !== null && snapTargetIndex !== null) {
-        // Helper function to check if object is PODUSZKA (pillow - no snapping)
-        const isPoduszka = (objectId: string): boolean => {
-          const parts = objectId.split('-');
-          if (parts.length >= 4 && /^[a-z0-9]{9}$/.test(parts[parts.length - 1]) && 
-              /^\d{13}$/.test(parts[parts.length - 2]) && /^\d+$/.test(parts[parts.length - 3])) {
-            return parts.slice(0, -3).join('-') === 'poduszka';
-          }
-          return objectId === 'poduszka' || objectId.includes('PODUSZKA');
-        };
-        
         const draggedObjectId = sceneObjects[draggedObjectIndex];
         const targetObjectId = sceneObjects[snapTargetIndex];
         
-        // Only snap if neither object is PODUSZKA
-        if (!isPoduszka(draggedObjectId) && !isPoduszka(targetObjectId)) {
-          const draggedPos = objectPositions.get(draggedObjectIndex) || [draggedObjectIndex * 1.4, 0, 0];
-          const targetPos = objectPositions.get(snapTargetIndex) || [snapTargetIndex * 1.4, 0, 0];
+        // Get snapping configuration for both objects
+        const draggedSnapping = getModuleSnappingConfig(draggedObjectId);
+        const targetSnapping = getModuleSnappingConfig(targetObjectId);
+        
+        // Don't snap if either object has "none" snapping
+        if (draggedSnapping === "none" || targetSnapping === "none") {
+          mouseDownRef.current = null;
+          setIsRotating(false);
+          if (isDragging) {
+            onDragStateChange(false);
+            onSnapPreview(null);
+          }
+          setIsDragging(false);
+          setDraggedObjectIndex(null);
+          setSnapTargetIndex(null);
+          return;
+        }
+        
+        const draggedPos = objectPositions.get(draggedObjectIndex) || [draggedObjectIndex * 1.4, 0, 0];
+        const targetPos = objectPositions.get(snapTargetIndex) || [snapTargetIndex * 1.4, 0, 0];
+        
+        // Calculate direction from target to dragged object
+        const dx = draggedPos[0] - targetPos[0];
+        const dz = draggedPos[2] - targetPos[2];
+        
+        // Determine primary snap axis (which direction has more movement)
+        const absX = Math.abs(dx);
+        const absZ = Math.abs(dz);
+        
+        // Snap distance from target object edge
+        const snapDistance = 0.79;
+        
+        let snapPos: [number, number, number] | null = null;
+        
+        if (absX > absZ) {
+          // Snapping left-right
+          const isSnappingToRight = dx > 0; // Dragged object is to the RIGHT of target
           
-          // Calculate direction from target to dragged object
-          const dx = draggedPos[0] - targetPos[0];
-          const dz = draggedPos[2] - targetPos[2];
+          // Check if dragged object can snap on the side it's approaching from
+          // If dragged is to the RIGHT of target, it's using its LEFT side to connect
+          // If dragged is to the LEFT of target, it's using its RIGHT side to connect
+          const draggedSideUsed = isSnappingToRight ? "left" : "right";
+          const targetSideUsed = isSnappingToRight ? "right" : "left";
           
-          // Determine primary snap axis (which direction has more movement)
-          const absX = Math.abs(dx);
-          const absZ = Math.abs(dz);
+          const canDraggedSnap = draggedSnapping === "both" || draggedSnapping === draggedSideUsed;
+          const canTargetSnap = targetSnapping === "both" || targetSnapping === targetSideUsed;
           
-          // Snap distance from target object edge
-          const snapDistance = 0.79;
-          
-          let snapPos: [number, number, number];
-          
-          if (absX > absZ) {
-            // Snapping left-right: align Z axis (back edges align)
+          if (canDraggedSnap && canTargetSnap) {
             snapPos = [
               targetPos[0] + (dx > 0 ? snapDistance : -snapDistance), // Position left or right
               targetPos[1], // Same height
               targetPos[2]  // ALIGNED Z-axis (back edges match)
             ];
-          } else {
-            // Snapping front-back: align X axis (side edges align)
+          }
+        } else {
+          // Snapping front-back
+          const isSnappingToBack = dz > 0; // Dragged object is to the BACK of target (positive Z)
+          
+          // When snapping front-back, we need to determine which side connects
+          // This depends on the orientation - for now we'll allow if either object allows both sides
+          // or we could map front/back to left/right based on orientation
+          const draggedSideUsed = isSnappingToBack ? "left" : "right";
+          const targetSideUsed = isSnappingToBack ? "right" : "left";
+          
+          const canDraggedSnap = draggedSnapping === "both" || draggedSnapping === draggedSideUsed;
+          const canTargetSnap = targetSnapping === "both" || targetSnapping === targetSideUsed;
+          
+          if (canDraggedSnap && canTargetSnap) {
             snapPos = [
               targetPos[0],  // ALIGNED X-axis (side edges match)
               targetPos[1],  // Same height
               targetPos[2] + (dz > 0 ? snapDistance : -snapDistance) // Position front or back
             ];
           }
-          
+        }
+        
+        if (snapPos) {
           onDragUpdate(draggedObjectIndex, snapPos);
         }
       }
@@ -855,6 +888,7 @@ const Scene = () => {
 
   const [isDraggingObject, setIsDraggingObject] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
+  const [isAutoCenterEnabled, setIsAutoCenterEnabled] = useState(false);
   const [snapPreview, setSnapPreview] = useState<{ 
     fromIndex: number; 
     toIndex: number; 
@@ -1010,7 +1044,7 @@ const Scene = () => {
   );
 
   return (
-    <SceneContext.Provider value={{ handleRecenter }}>
+    <SceneContext.Provider value={{ handleRecenter, isAutoCenterEnabled, setIsAutoCenterEnabled }}>
       <div style={{ width: "100vw", height: "100vh", cursor: "grab" }}>
         {contextMenu && (
           <ContextMenu
@@ -1069,7 +1103,7 @@ const Scene = () => {
           orbitControlsRef={orbitControlsRef}
           objectPositions={objectPositions}
           sceneObjects={sceneObjects}
-          enabled={rotationControlIndex === null}
+          enabled={rotationControlIndex === null && !isAutoCenterEnabled}
           isDragging={isDraggingObject}
           recenterTrigger={recenterTrigger}
         />

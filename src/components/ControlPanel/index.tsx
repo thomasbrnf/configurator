@@ -39,7 +39,7 @@ export const TopLeftButtons: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-6 left-6 z-[200] flex items-center gap-3">
+    <div className="fixed top-6 left-6 z-[200] flex flex-col items-start gap-3">
       {/* Change Config Type Button */}
       <button
         id="changeConfigType"
@@ -70,7 +70,7 @@ export const TopLeftButtons: React.FC = () => {
             d="M12 4v16m8-8H4"
           />
         </svg>
-        <span className="relative z-10 text-sm font-medium whitespace-nowrap max-w-0 group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 overflow-hidden opacity-0 group-hover:opacity-100">
+        <span className="relative z-10 text-sm font-medium whitespace-nowrap  max-w-xs ml-2 transition-all duration-300 overflow-hidden  opacity-100">
           {t.addModule}
         </span>
       </button>

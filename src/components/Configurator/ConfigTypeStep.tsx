@@ -4,7 +4,7 @@ import { useLanguage } from "../../context/LanguageContext";
 
 const ConfigTypeStep: React.FC = () => {
   const { setCurrentStep, setConfigurationType } = useConfigurator();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   const handleCompleteSetSelection = () => {
     setConfigurationType("complete");
@@ -18,6 +18,10 @@ const ConfigTypeStep: React.FC = () => {
 
   const handleBack = () => {
     setCurrentStep("welcome");
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(language === "pl" ? "en" : "pl");
   };
 
   return (
@@ -40,7 +44,15 @@ const ConfigTypeStep: React.FC = () => {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          Wstecz
+          {t.back}
+        </button>
+
+        {/* Language Switcher */}
+        <button
+          onClick={toggleLanguage}
+          className="cursor-pointer absolute top-8 right-8 px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
+        >
+          {language === "pl" ? "EN" : "PL"}
         </button>
 
         <div className="mb-12">

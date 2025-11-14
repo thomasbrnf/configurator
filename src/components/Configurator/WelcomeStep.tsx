@@ -4,14 +4,26 @@ import { useLanguage } from "../../context/LanguageContext";
 
 const WelcomeStep: React.FC = () => {
   const { setCurrentStep } = useConfigurator();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   const handleStartConfiguration = () => {
     setCurrentStep("config-type");
   };
 
+  const toggleLanguage = () => {
+    setLanguage(language === "pl" ? "en" : "pl");
+  };
+
   return (
     <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex items-center justify-center">
+      {/* Language Switcher */}
+      <button
+        onClick={toggleLanguage}
+        className="cursor-pointer absolute top-8  px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
+      >
+        {language === "pl" ? "EN" : " PL"}
+      </button>
+
       <div className="max-w-2xl mx-auto text-center px-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-black mb-4">
