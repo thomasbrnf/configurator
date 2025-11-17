@@ -128,7 +128,7 @@ export function DynamicModel({
       ? uvScale
       : modelPath === "/models/gala_collezione_KARATO [PODUSZKA].glb"
       ? 1
-      : 4.2;
+      : 1.2;
 
   const customMaterial = useMemo(() => {
     const diffuse = diffuseMap.clone();
