@@ -90,7 +90,7 @@ function ToneMappingController() {
     "Tone Mapping",
     {
       toneMapping: {
-        value: "ACESFilmicToneMapping",
+        value: "CineonToneMapping",
         options: {
           "No Tone Mapping": "NoToneMapping",
           Linear: "LinearToneMapping",
@@ -101,7 +101,7 @@ function ToneMappingController() {
           Neutral: "NeutralToneMapping",
         },
       },
-      exposure: { value: 1, min: 0.1, max: 3, step: 0.1 },
+      exposure: { value: 0.4, min: 0.1, max: 3, step: 0.1 },
     },
     { collapsed: true },
   );
