@@ -1,4 +1,5 @@
 import { useLanguage } from "../../context/LanguageContext";
+import { useEffect } from "react";
 
 interface ControlsInfoProps {
   onRecenter?: () => void;
@@ -6,8 +7,18 @@ interface ControlsInfoProps {
   onToggleAutoCenter?: (enabled: boolean) => void;
 }
 
-const ControlsInfo = ({ onRecenter, isAutoCenterEnabled = false, onToggleAutoCenter }: ControlsInfoProps) => {
+const ControlsInfo = ({ onRecenter, isAutoCenterEnabled = true, onToggleAutoCenter }: ControlsInfoProps) => {
   const { language, setLanguage, t } = useLanguage();
+
+  useEffect(() => {
+    if (onToggleAutoCenter) {
+      onToggleAutoCenter(true);
+           if (onRecenter) {
+      onRecenter();
+    }
+
+    }
+  }, []);
 
   const toggleLanguage = () => {
     setLanguage(language === "pl" ? "en" : "pl");

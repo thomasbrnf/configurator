@@ -909,7 +909,7 @@ const Scene = () => {
 
   const [isDraggingObject, setIsDraggingObject] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
-  const [isAutoCenterEnabled, setIsAutoCenterEnabled] = useState(false);
+  const [isAutoCenterEnabled, setIsAutoCenterEnabled] = useState(true);
   const [snapPreview, setSnapPreview] = useState<{ 
     fromIndex: number; 
     toIndex: number; 

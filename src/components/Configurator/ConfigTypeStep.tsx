@@ -3,21 +3,27 @@ import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 const ConfigTypeStep: React.FC = () => {
-  const { setCurrentStep, setConfigurationType } = useConfigurator();
+  const { setCurrentStep, setConfigurationType, clearScene } = useConfigurator();
   const { t, language, setLanguage } = useLanguage();
 
   const handleCompleteSetSelection = () => {
+    clearScene();
     setConfigurationType("complete");
     setCurrentStep("module-selection");
   };
 
   const handleModuleSelection = () => {
+    clearScene();
     setConfigurationType("modules");
     setCurrentStep("module-selection");
   };
 
   const handleBack = () => {
     setCurrentStep("welcome");
+  };
+
+  const handleClose = () => {
+    setCurrentStep("scene");
   };
 
   const toggleLanguage = () => {
@@ -47,13 +53,33 @@ const ConfigTypeStep: React.FC = () => {
           {t.back}
         </button>
 
-        {/* Language Switcher */}
-        <button
-          onClick={toggleLanguage}
-          className="cursor-pointer absolute top-8 right-8 px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
-        >
-          {language === "pl" ? "EN" : "PL"}
-        </button>
+        {/* Language Switcher and Close Button */}
+        <div className="absolute top-8 right-8 flex items-center gap-2">
+          <button
+            onClick={toggleLanguage}
+            className="cursor-pointer px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
+          >
+            {language === "pl" ? "EN" : "PL"}
+          </button>
+          <button
+            onClick={handleClose}
+            className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
 
         <div className="mb-12">
           <h1 className="text-3xl font-bold text-black mb-4">
