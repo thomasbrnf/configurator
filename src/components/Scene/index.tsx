@@ -623,10 +623,18 @@ function ClickHandler({
           snapDistance = 1.18;
         } else if (draggedIsLong || targetIsLong) {
           // One module is "long", the other is not
-          snapDistance = 1.05;
+          snapDistance = 1.03;
         } else {
           // Neither module is "long"
           snapDistance = 1.02;
+        }
+        
+       
+        let zShift = 0;
+        if (draggedIsLong && !targetIsLong) {
+          zShift = 0.319;
+        } else if (!draggedIsLong && targetIsLong) {
+          zShift = -0.319;
         }
         
         let snapPos: [number, number, number] | null = null;
@@ -648,7 +656,7 @@ function ClickHandler({
             snapPos = [
               targetPos[0] + (dx > 0 ? snapDistance : -snapDistance), // Position left or right
               targetPos[1], // Same height
-              targetPos[2]  // ALIGNED Z-axis (back edges match)
+              targetPos[2] + zShift  // ALIGNED Z-axis with shift for mixed long/regular modules
             ];
           }
         } else {
@@ -666,7 +674,7 @@ function ClickHandler({
           
           if (canDraggedSnap && canTargetSnap) {
             snapPos = [
-              targetPos[0],  // ALIGNED X-axis (side edges match)
+              targetPos[0] + zShift,  // ALIGNED X-axis with shift for mixed long/regular modules
               targetPos[1],  // Same height
               targetPos[2] + (dz > 0 ? snapDistance : -snapDistance) // Position front or back
             ];

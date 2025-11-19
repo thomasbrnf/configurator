@@ -37,21 +37,14 @@ export interface CompleteSetDefinition {
 
 export const availableModules: ModuleDefinition[] = [
 
-  {
-    id: "sofa part middle",
-    name: "Sofa Part Middle",
-    displayName: "Sofa Part Middle",
-    modelPath: "/models/sofa part middle.glb",
-    thumbnail: "/models/thumbnails/sofa part middle.png",
-    snappingSides: "both", 
-  },
+
 
   {
     id: "sofa part left",
     name: "Sofa Part Left",
     displayName: "Sofa Part Left",
     modelPath: "/models/sofa part left.glb",
-    thumbnail: "/models/thumbnails/sofa part left.jpg",
+    thumbnail: "/models/thumbnails/sofa part left.png",
     snappingSides: "right", 
   },
     {
@@ -59,15 +52,23 @@ export const availableModules: ModuleDefinition[] = [
     name: "Sofa Long Part Left",
     displayName: "Sofa Long Part Left",
     modelPath: "/models/sofa long part left.glb",
-    thumbnail: "/models/thumbnails/sofa long part left.jpg",
+    thumbnail: "/models/thumbnails/sofa long part left.png",
     snappingSides: "right", 
+  },
+    {
+    id: "sofa part middle",
+    name: "Sofa Part Middle",
+    displayName: "Sofa Part Middle",
+    modelPath: "/models/sofa part middle.glb",
+    thumbnail: "/models/thumbnails/sofa part middle.png",
+    snappingSides: "both", 
   },
   {
     id: "sofa part right",
     name: "Sofa Part Right",
     displayName: "Sofa Part Right",
     modelPath: "/models/sofa part right.glb",
-    thumbnail: "/models/thumbnails/sofa part right.jpg",
+    thumbnail: "/models/thumbnails/sofa part right.png",
     snappingSides: "left", 
   },
     {
@@ -75,7 +76,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "Sofa Long Part Right",
     displayName: "Sofa Long Part Right",
     modelPath: "/models/sofa long part right.glb",
-    thumbnail: "/models/thumbnails/sofa long part right.jpg",
+    thumbnail: "/models/thumbnails/sofa long part right.png",
     snappingSides: "left", 
   }
 ];
