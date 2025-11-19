@@ -31,6 +31,7 @@ interface Translations {
   selectCompleteSet: string;
   selectCompleteSetSubtitle: string;
   clickToSelect2: string;
+  alreadyInScene: string;
   selectModulesMultiple: string;
   buildOwnConfiguration: string;
   clearSelection: string;
@@ -45,6 +46,7 @@ interface Translations {
   addObject: string;
   changeConfigType: string;
   addModule: string;
+  addCompleteSet: string;
   material: string;
   
   // Context Menu
@@ -96,6 +98,7 @@ const translations: Record<Language, Translations> = {
     selectCompleteSet: "Wybierz Kompletny Zestaw",
     selectCompleteSetSubtitle: "Wybierz jeden z gotowych zestawów mebli",
     clickToSelect2: "Kliknij, aby wybrać",
+    alreadyInScene: "Już dodany do sceny",
     selectModulesMultiple: "Wybierz moduły (możesz wybrać wiele)",
     buildOwnConfiguration: "Zbuduj własną konfigurację wybierając poszczególne moduły",
     clearSelection: "Wyczyść wybór",
@@ -110,6 +113,7 @@ const translations: Record<Language, Translations> = {
     addObject: "Dodaj Obiekt",
     changeConfigType: "Zmień Typ Konfiguracji",
     addModule: "Dodaj Moduł",
+    addCompleteSet: "Dodaj Zestaw",
     material: "Materiał",
     
     // Context Menu
@@ -159,6 +163,7 @@ const translations: Record<Language, Translations> = {
     selectCompleteSet: "Select Complete Set",
     selectCompleteSetSubtitle: "Choose one of the ready-made furniture sets",
     clickToSelect2: "Click to select",
+    alreadyInScene: "Already in scene",
     selectModulesMultiple: "Select modules (you can select multiple)",
     buildOwnConfiguration: "Build your own configuration by selecting individual modules",
     clearSelection: "Clear selection",
@@ -173,6 +178,7 @@ const translations: Record<Language, Translations> = {
     addObject: "Add Object",
     changeConfigType: "Change Configuration Type",
     addModule: "Add Module",
+    addCompleteSet: "Add Set",
     material: "Material",
     
     // Context Menu

@@ -25,11 +25,10 @@ const materialGroups: MaterialGroup[] = [
 
 export const TopLeftButtons: React.FC = () => {
   const { t } = useLanguage();
-  const { setCurrentStep, setConfigurationType, configurationType } =
+  const { setCurrentStep, configurationType } =
     useConfigurator();
 
   const handleAddModule = () => {
-    setConfigurationType("modules");
     setCurrentStep("module-selection");
   };
 
@@ -48,9 +47,8 @@ export const TopLeftButtons: React.FC = () => {
         {t.changeConfigType}
       </button>
       
-      {/* Add Module Button - Hidden if configurationType is "complete" */}
-      {configurationType !== "complete" && (
-        <button
+      {/* Add Module/Complete Set Button */}
+      <button
         id="addModel"
         onClick={handleAddModule}
         className="group h-11 px-4 bg-gradient-to-br from-[#06402b] to-[#084d35] text-white rounded-xl hover:shadow-xl active:scale-95 transition-all duration-300 cursor-pointer shadow-lg backdrop-blur-sm flex items-center gap-0 overflow-hidden relative"
@@ -70,10 +68,9 @@ export const TopLeftButtons: React.FC = () => {
           />
         </svg>
         <span className="relative z-10 text-sm font-medium whitespace-nowrap  max-w-xs ml-2 transition-all duration-300 overflow-hidden  opacity-100">
-          {t.addModule}
+          {configurationType === "complete" ? t.addCompleteSet : t.addModule}
         </span>
       </button>
-      )}
     </div>
   );
 };

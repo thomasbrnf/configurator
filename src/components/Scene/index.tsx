@@ -584,6 +584,24 @@ function ClickHandler({
         const draggedObjectId = sceneObjects[draggedObjectIndex];
         const targetObjectId = sceneObjects[snapTargetIndex];
         
+        // Check if either object is a complete set (contains "sofa-" prefix)
+        const draggedIsCompleteSet = draggedObjectId.startsWith("sofa-");
+        const targetIsCompleteSet = targetObjectId.startsWith("sofa-");
+        
+        // Don't snap if both are complete sets
+        if (draggedIsCompleteSet && targetIsCompleteSet) {
+          mouseDownRef.current = null;
+          setIsRotating(false);
+          if (isDragging) {
+            onDragStateChange(false);
+            onSnapPreview(null);
+          }
+          setIsDragging(false);
+          setDraggedObjectIndex(null);
+          setSnapTargetIndex(null);
+          return;
+        }
+        
         // Get snapping configuration for both objects
         const draggedSnapping = getModuleSnappingConfig(draggedObjectId);
         const targetSnapping = getModuleSnappingConfig(targetObjectId);
@@ -616,9 +634,14 @@ function ClickHandler({
         // Determine snap distance based on module names
         const draggedIsLong = draggedObjectId.toLowerCase().includes('long');
         const targetIsLong = targetObjectId.toLowerCase().includes('long');
+        const draggedIsMiddle = draggedObjectId.toLowerCase().includes('middle');
+        const targetIsMiddle = targetObjectId.toLowerCase().includes('middle');
         
         let snapDistance: number;
-        if (draggedIsLong && targetIsLong) {
+        if (draggedIsMiddle && targetIsMiddle) {
+          // Both modules are "middle"
+          snapDistance = 0.9;
+        } else if (draggedIsLong && targetIsLong) {
           // Both modules are "long"
           snapDistance = 1.18;
         } else if (draggedIsLong || targetIsLong) {
@@ -632,9 +655,9 @@ function ClickHandler({
        
         let zShift = 0;
         if (draggedIsLong && !targetIsLong) {
-          zShift = 0.319;
+          zShift = 0.323;
         } else if (!draggedIsLong && targetIsLong) {
-          zShift = -0.319;
+          zShift = -0.323;
         }
         
         let snapPos: [number, number, number] | null = null;

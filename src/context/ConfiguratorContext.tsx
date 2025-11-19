@@ -258,6 +258,43 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addObjectToScene = (objectId: string) => {
+    const isCompleteSet = objectId.startsWith("sofa-");
+    
+    // If it's a complete set and there are already objects in the scene
+    if (isCompleteSet && sceneObjects.length > 0) {
+      // Find the latest complete set and its position
+      let latestCompleteSetIndex = -1;
+      for (let i = sceneObjects.length - 1; i >= 0; i--) {
+        if (sceneObjects[i].startsWith("sofa-")) {
+          latestCompleteSetIndex = i;
+          break;
+        }
+      }
+      
+      const newIndex = sceneObjects.length;
+      const gap = 3; // Bigger gap for complete sets
+      
+      if (latestCompleteSetIndex !== -1) {
+        // Get the position of the latest complete set
+        const latestPos = objectPositions.get(latestCompleteSetIndex) || [latestCompleteSetIndex * 1.4, 0, 0];
+        // Place new set with gap from the latest set
+        const xOffset = latestPos[0] + gap;
+        
+        setObjectPositions((prev) => {
+          const newPositions = new Map(prev);
+          newPositions.set(newIndex, [xOffset, 0, 0]);
+          return newPositions;
+        });
+      } else {
+        // No previous complete set found, place with default gap
+        setObjectPositions((prev) => {
+          const newPositions = new Map(prev);
+          newPositions.set(newIndex, [gap, 0, 0]);
+          return newPositions;
+        });
+      }
+    }
+    
     setSceneObjects((prev) => [...prev, objectId]);
     // Select the added object
     setSelectedObjectId(objectId);

@@ -15,6 +15,7 @@ const ModuleSelectionStep: React.FC = () => {
     setCurrentStep,
     addObjectToScene,
     clearScene,
+    sceneObjects,
   } = useConfigurator();
 
   // Local state for module counts (moduleId -> count)
@@ -193,25 +194,30 @@ const ModuleSelectionStep: React.FC = () => {
 
             {/* Complete Sets Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {availableCompleteSets.map((set) => (
-                <div
-                  key={set.id}
-                  className={`bg-white rounded-xl border-2 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden cursor-pointer group ${
-                    selectedCompleteSet === set.id
-                      ? "border-[#06402b] ring-2 ring-[#06402b]/20"
-                      : "border-gray-200 hover:border-[#06402b]/40"
-                  }`}
-                  onClick={() => handleCompleteSetSelect(set.id)}
-                >
-                  <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
-                    {set.thumbnail ? (
-                      <img
-                        src={set.thumbnail}
-                        alt={set.displayName}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
+              {availableCompleteSets.map((set) => {
+                const isAlreadyInScene = sceneObjects.some(obj => obj === set.id);
+                
+                return (
+                  <div
+                    key={set.id}
+                    className={`bg-white rounded-xl border-2 transition-all duration-300 shadow-lg overflow-hidden relative ${
+                      isAlreadyInScene 
+                        ? "opacity-50 cursor-not-allowed border-gray-300" 
+                        : selectedCompleteSet === set.id
+                          ? "border-[#06402b] ring-2 ring-[#06402b]/20 cursor-pointer hover:shadow-xl"
+                          : "border-gray-200 hover:border-[#06402b]/40 cursor-pointer hover:shadow-xl"
+                    } group`}
+                    onClick={() => !isAlreadyInScene && handleCompleteSetSelect(set.id)}
+                  >
+                    <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+                      {set.thumbnail ? (
+                        <img
+                          src={set.thumbnail}
+                          alt={set.displayName}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
                       <svg
                         className="w-16 h-16 text-gray-400 group-hover:text-black transition-colors duration-300"
                         fill="none"
@@ -231,9 +237,30 @@ const ModuleSelectionStep: React.FC = () => {
                     <h3 className="font-bold text-gray-900 mb-2">
                       {t[set.translationKey as keyof typeof t]}
                     </h3>
-                    <p className="text-sm text-gray-600">{t.clickToSelect2}</p>
+                    <p className="text-sm text-gray-600">
+                      {isAlreadyInScene ? t.alreadyInScene : t.clickToSelect2}
+                    </p>
                   </div>
-                  {selectedCompleteSet === set.id && (
+                  {isAlreadyInScene && (
+                    <div className="absolute top-3 right-3">
+                      <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                  {!isAlreadyInScene && selectedCompleteSet === set.id && (
                     <div className="absolute top-3 right-3">
                       <div className="w-6 h-6 bg-[#06402b] rounded-full flex items-center justify-center">
                         <svg
@@ -253,7 +280,8 @@ const ModuleSelectionStep: React.FC = () => {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
         </div>
