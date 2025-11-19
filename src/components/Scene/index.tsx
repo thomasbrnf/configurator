@@ -613,8 +613,21 @@ function ClickHandler({
         const absX = Math.abs(dx);
         const absZ = Math.abs(dz);
         
-        // Snap distance from target object edge
-        const snapDistance = 0.79;
+        // Determine snap distance based on module names
+        const draggedIsLong = draggedObjectId.toLowerCase().includes('long');
+        const targetIsLong = targetObjectId.toLowerCase().includes('long');
+        
+        let snapDistance: number;
+        if (draggedIsLong && targetIsLong) {
+          // Both modules are "long"
+          snapDistance = 1.18;
+        } else if (draggedIsLong || targetIsLong) {
+          // One module is "long", the other is not
+          snapDistance = 1.05;
+        } else {
+          // Neither module is "long"
+          snapDistance = 1.02;
+        }
         
         let snapPos: [number, number, number] | null = null;
         

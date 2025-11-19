@@ -200,6 +200,13 @@ export function DynamicModel({
   const applyMaterials = (object: THREE.Object3D) => {
     object.traverse((child) => {
       if (child instanceof THREE.Mesh && !child.userData.isSelectionOutline) {
+        // Skip applying custom material to sofa_legs - keep original material
+        if (child.name && child.name.includes('sofa_legs')) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          return;
+        }
+        
         child.material = customMaterial;
         child.castShadow = true;
         child.receiveShadow = true;
