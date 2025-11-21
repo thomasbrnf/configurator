@@ -975,7 +975,7 @@ function SceneObjects({ snapPreview }: { snapPreview: {
   return (
     <>
       {sceneObjects.map((objectId, index) => {
-        const position = objectPositions.get(index) || [index * 1.4, 0, 0];
+        const position = objectPositions.get(index) || [index * 1.9, 0, 0];
         return (
           <group key={`${objectId}-${index}`}>
             <DynamicModel
