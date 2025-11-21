@@ -119,6 +119,7 @@ export const availableModules: ModuleDefinition[] = [
     displayName: "Poduszka",
     modelPath: "/models/gala_collezione_KARATO [PODUSZKA].glb",
     thumbnail: "/models/thumbnails/gala_collezione_KARATO [PODUSZKA].png",
+    snappingSides: "none",
   },
 
 

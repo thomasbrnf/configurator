@@ -758,10 +758,7 @@ function ClickHandler({
         } else if (draggedIsWide && targetIsWide) {
           // Both modules are "wide"
           snapDistance = 1.57;
-        } else if (draggedIsWide || targetIsWide) {
-          // One module is "wide", the other is not
-          snapDistance = 1.05;
-        }
+        } 
         
      
         console.log('Snap Distance:', snapDistance, targetIsLong, targetIsMiddle, draggedIsMiddle, draggedIsLong);
