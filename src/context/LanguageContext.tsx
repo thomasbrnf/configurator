@@ -31,6 +31,7 @@ interface Translations {
   selectCompleteSet: string;
   selectCompleteSetSubtitle: string;
   clickToSelect2: string;
+  alreadyInScene: string;
   selectModulesMultiple: string;
   buildOwnConfiguration: string;
   clearSelection: string;
@@ -45,6 +46,7 @@ interface Translations {
   addObject: string;
   changeConfigType: string;
   addModule: string;
+  addCompleteSet: string;
   material: string;
   
   // Context Menu
@@ -61,10 +63,10 @@ interface Translations {
   loading: string;
 
   // Complete Set Names
-  completeSofa: string;
-  completeSofa2: string;
-  completeSofa3: string;
-  completeSofa4: string;
+  "Sofa 1": string;
+  "Sofa 2": string;
+  "Sofa 3": string;
+  "Sofa 4": string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -96,6 +98,7 @@ const translations: Record<Language, Translations> = {
     selectCompleteSet: "Wybierz Kompletny Zestaw",
     selectCompleteSetSubtitle: "Wybierz jeden z gotowych zestawów mebli",
     clickToSelect2: "Kliknij, aby wybrać",
+    alreadyInScene: "Już dodany do sceny",
     selectModulesMultiple: "Wybierz moduły (możesz wybrać wiele)",
     buildOwnConfiguration: "Zbuduj własną konfigurację wybierając poszczególne moduły",
     clearSelection: "Wyczyść wybór",
@@ -110,6 +113,7 @@ const translations: Record<Language, Translations> = {
     addObject: "Dodaj Obiekt",
     changeConfigType: "Zmień Typ Konfiguracji",
     addModule: "Dodaj Moduł",
+    addCompleteSet: "Dodaj Zestaw",
     material: "Materiał",
     
     // Context Menu
@@ -126,10 +130,10 @@ const translations: Record<Language, Translations> = {
     loading: "Ładowanie...",
 
     // Complete Set Names
-    completeSofa: "Kompletna Sofa",
-    completeSofa2: "Kompletna Sofa 2",
-    completeSofa3: "Kompletna Sofa 3",
-    completeSofa4: "Kompletna Sofa 4",
+    "Sofa 1": "Kompletna Sofa",
+    "Sofa 2": "Kompletna Sofa 2",
+    "Sofa 3": "Kompletna Sofa 3",
+    "Sofa 4": "Kompletna Sofa 4",
   },
   en: {
     // Controls Info
@@ -159,6 +163,7 @@ const translations: Record<Language, Translations> = {
     selectCompleteSet: "Select Complete Set",
     selectCompleteSetSubtitle: "Choose one of the ready-made furniture sets",
     clickToSelect2: "Click to select",
+    alreadyInScene: "Already in scene",
     selectModulesMultiple: "Select modules (you can select multiple)",
     buildOwnConfiguration: "Build your own configuration by selecting individual modules",
     clearSelection: "Clear selection",
@@ -173,6 +178,7 @@ const translations: Record<Language, Translations> = {
     addObject: "Add Object",
     changeConfigType: "Change Configuration Type",
     addModule: "Add Module",
+    addCompleteSet: "Add Set",
     material: "Material",
     
     // Context Menu
@@ -189,10 +195,10 @@ const translations: Record<Language, Translations> = {
     loading: "Loading...",
 
     // Complete Set Names
-    completeSofa: "Complete Sofa",
-    completeSofa2: "Complete Sofa 2",
-    completeSofa3: "Complete Sofa 3",
-    completeSofa4: "Complete Sofa 4",
+    "Sofa 1": "Sofa 1",
+    "Sofa 2": "Sofa 2",
+    "Sofa 3": "Sofa 3",
+    "Sofa 4": "Sofa 4",
   },
 };
 

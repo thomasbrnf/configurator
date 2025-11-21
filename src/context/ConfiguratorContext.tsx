@@ -26,108 +26,94 @@ export interface CompleteSetDefinition {
   name: string;
   displayName: string;
   translationKey: keyof {
-    completeSofa: string;
-    completeSofa2: string;
-    completeSofa3: string;
-    completeSofa4: string;
+    "Sofa 1": string;
+    "Sofa 2": string;
+    "Sofa 3": string;
+    "Sofa 4": string;
   };
   modelPath: string;
   thumbnail?: string;
 }
 
-// Available models based on the GLB files provided
 export const availableModules: ModuleDefinition[] = [
+
+
+
   {
-    id: "1-80-bb",
-    name: "[1(80)BB]",
-    displayName: "[1(80)BB]",
-    modelPath: "/models/[1(80)BB].glb",
-    thumbnail: "/models/thumbnails/[1(80)BB].jpg",
-    snappingSides: "both", // Middle part - can snap on both sides
+    id: "sofa part left",
+    name: "Sofa Part Left",
+    displayName: "Sofa Part Left",
+    modelPath: "/models/sofa part left.glb",
+    thumbnail: "/models/thumbnails/sofa part left.png",
+    snappingSides: "right", 
+  },
+    {
+    id: "sofa long part left",
+    name: "Sofa Long Part Left",
+    displayName: "Sofa Long Part Left",
+    modelPath: "/models/sofa long part left.glb",
+    thumbnail: "/models/thumbnails/sofa long part left.png",
+    snappingSides: "right", 
+  },
+    {
+    id: "sofa part middle",
+    name: "Sofa Part Middle",
+    displayName: "Sofa Part Middle",
+    modelPath: "/models/sofa part middle.glb",
+    thumbnail: "/models/thumbnails/sofa part middle.png",
+    snappingSides: "both", 
   },
   {
-    id: "1-80-l",
-    name: "[1(80)L]",
-    displayName: "[1(80)L]",
-    modelPath: "/models/[1(80)L].glb",
-    thumbnail: "/models/thumbnails/[1(80)L].jpg",
-    snappingSides: "right", // Left corner - can only snap on right side
+    id: "sofa part right",
+    name: "Sofa Part Right",
+    displayName: "Sofa Part Right",
+    modelPath: "/models/sofa part right.glb",
+    thumbnail: "/models/thumbnails/sofa part right.png",
+    snappingSides: "left", 
   },
-  {
-    id: "1-80-p",
-    name: "[1(80)P]",
-    displayName: "[1(80)P]",
-    modelPath: "/models/gala_collezione_KARATO [1(80)P].glb",
-    thumbnail: "/models/thumbnails/gala_collezione_KARATO [1(80)P].jpg",
-    snappingSides: "left", // Right corner - can only snap on left side
-  },
-  {
-    id: "1d-5-sl",
-    name: "[1D(5)SL]",
-    displayName: "[1D(5)SL]",
-    modelPath: "/models/[1D(5)SL].glb",
-    thumbnail: "/models/thumbnails/[1D(5)SL].jpg",
-    snappingSides: "right", // Left corner - can only snap on right side
-  },
-  {
-    id: "1d-5-sp",
-    name: "[1D(5)SP]",
-    displayName: "[1D(5)SP]",
-    modelPath: "/models/gala_collezione_KARATO [1D(5)SP].glb",
-    thumbnail: "/models/thumbnails/gala_collezione_KARATO [1D(5)SP].jpg",
-    snappingSides: "left", // Right corner - can only snap on left side
-  },
-  {
-    id: "en-2",
-    name: "[EN(2)]",
-    displayName: "[EN(2)]",
-    modelPath: "/models/gala_collezione_KARATO [EN(2)].glb",
-    thumbnail: "/models/thumbnails/gala_collezione_KARATO [EN(2)].jpg",
-    snappingSides: "left", // Right corner - can only snap on left side
-  },
-  {
-    id: "poduszka",
-    name: "[PODUSZKA]",
-    displayName: "[PODUSZKA]",
-    modelPath: "/models/gala_collezione_KARATO [PODUSZKA].glb",
-    thumbnail: "/models/thumbnails/gala_collezione_KARATO [PODUSZKA].jpg",
-    snappingSides: "none", // Pillow - no snapping
-  },
+    {
+    id: "sofa long part right",
+    name: "Sofa Long Part Right",
+    displayName: "Sofa Long Part Right",
+    modelPath: "/models/sofa long part right.glb",
+    thumbnail: "/models/thumbnails/sofa long part right.png",
+    snappingSides: "left", 
+  }
 ];
 
 export const availableCompleteSets: CompleteSetDefinition[] = [
   {
-    id: "complete-sofa-1",
-    name: "Complete Sofa",
-    displayName: "Kompletna Sofa",
-    translationKey: "completeSofa",
-    modelPath: "/models/complete sofa.glb",
-    thumbnail: "/models/thumbnails/complete sofa.jpg",
+    id: "sofa-1",
+    name: "Sofa 1",
+    displayName: " Sofa 1",
+    translationKey: "Sofa 1",
+    modelPath: "/models/sofa 1.glb",
+    thumbnail: "/models/thumbnails/sofa 1.png",
   },
   {
-    id: "complete-sofa-2",
-    name: "Complete Sofa 2",
-    displayName: "Kompletna Sofa 2",
-    translationKey: "completeSofa2",
-    modelPath: "/models/complete sofa 2.glb",
-    thumbnail: "/models/thumbnails/complete sofa 2.jpg",
+    id: "sofa-2",
+    name: "Sofa 2",
+    displayName: "Sofa 2",
+    translationKey: "Sofa 2",
+    modelPath: "/models/sofa 2.glb",
+    thumbnail: "/models/thumbnails/sofa 2.png",
   },
-  {
-    id: "complete-sofa-3",
-    name: "Complete Sofa 3",
-    displayName: "Kompletna Sofa 3",
-    translationKey: "completeSofa3",
-    modelPath: "/models/complete sofa 3.glb",
-    thumbnail: "/models/thumbnails/complete sofa 3.jpg",
+    {
+    id: "sofa-3",
+    name: "Sofa 3",
+    displayName: "Sofa 3",
+    translationKey: "Sofa 3",
+    modelPath: "/models/sofa 3.glb",
+    thumbnail: "/models/thumbnails/sofa 3.png",
   },
-  {
-    id: "complete-sofa-4",
-    name: "Complete Sofa 4",
-    displayName: "Kompletna Sofa 4",
-    translationKey: "completeSofa4",
+      {
+    id: "sofa-4",
+    name: "Sofa 4",
+    displayName: "Sofa 4",
+    translationKey: "Sofa 4",
     modelPath: "/models/sofa3.glb",
     thumbnail: "/models/thumbnails/sofa3.jpg",
-  },
+  }
 ];
 
 // Helper function to get snapping configuration for a module
@@ -272,6 +258,43 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addObjectToScene = (objectId: string) => {
+    const isCompleteSet = objectId.startsWith("sofa-");
+    
+    // If it's a complete set and there are already objects in the scene
+    if (isCompleteSet && sceneObjects.length > 0) {
+      // Find the latest complete set and its position
+      let latestCompleteSetIndex = -1;
+      for (let i = sceneObjects.length - 1; i >= 0; i--) {
+        if (sceneObjects[i].startsWith("sofa-")) {
+          latestCompleteSetIndex = i;
+          break;
+        }
+      }
+      
+      const newIndex = sceneObjects.length;
+      const gap = 3; // Bigger gap for complete sets
+      
+      if (latestCompleteSetIndex !== -1) {
+        // Get the position of the latest complete set
+        const latestPos = objectPositions.get(latestCompleteSetIndex) || [latestCompleteSetIndex * 1.4, 0, 0];
+        // Place new set with gap from the latest set
+        const xOffset = latestPos[0] + gap;
+        
+        setObjectPositions((prev) => {
+          const newPositions = new Map(prev);
+          newPositions.set(newIndex, [xOffset, 0, 0]);
+          return newPositions;
+        });
+      } else {
+        // No previous complete set found, place with default gap
+        setObjectPositions((prev) => {
+          const newPositions = new Map(prev);
+          newPositions.set(newIndex, [gap, 0, 0]);
+          return newPositions;
+        });
+      }
+    }
+    
     setSceneObjects((prev) => [...prev, objectId]);
     // Select the added object
     setSelectedObjectId(objectId);
