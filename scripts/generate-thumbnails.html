@@ -112,11 +112,18 @@
             { id: "sofa-1", path: "/models/sofa 1.glb", name: "Sofa 1" },
             { id: "sofa-2", path: "/models/sofa 2.glb", name: "Sofa 2" },
             { id: "sofa-3", path: "/models/sofa 3.glb", name: "Sofa 3" },
+             { id: "sofa-4", path: "/models/sofa3.glb", name: "Sofa 4" },
             { id: "sofa part middle", path: "/models/sofa part middle.glb", name: "Sofa Part Middle" },
             { id: "sofa long part left", path: "/models/sofa long part left.glb", name: "Sofa Long Part Left" },
             { id: "sofa long part right", path: "/models/sofa long part right.glb", name: "Sofa Long Part Right" },
             { id: "sofa part left", path: "/models/sofa part left.glb", name: "Sofa Part Left" },
             { id: "sofa part right", path: "/models/sofa part right.glb", name: "Sofa Part Right" },
+            { id: "sofa part right exp", path: "/models/sofa part right exp.glb", name: "Sofa Part Right Expanded" },
+            { id: "sofa part left exp", path: "/models/sofa part left exp.glb", name: "Sofa Part Left Expanded" },
+            { id: "sofa middle part wide", path: "/models/sofa middle part wide.glb", name: "Sofa Part Middle Wide" },
+            { id: "sofa part right corner", path: "/models/sofa part right corner.glb", name: "Sofa Part Right Corner" },
+            { id: "gala_collezione_KARATO [PODUSZKA]", path: "/models/gala_collezione_KARATO [PODUSZKA].glb", name: "Gala Collezione KARATO [PODUSZKA]" },
+
         ];
 
         const canvas = document.getElementById('canvas');
@@ -144,7 +151,7 @@
         
         // Load Granit texture once at startup
         // URL encode spaces in path (files in public/ are served from root)
-        const texturePath = '/materials/the%20smallest%20club/club2_52_diffuse_4.jpg';
+        const texturePath = '/materials/the%20smallest%20granit/Granit_07_new_3.jpg';
         console.log('Attempting to load texture from:', texturePath);
         
         // Wrap texture loading in a Promise
@@ -185,9 +192,16 @@
                     (gltf) => {
                         const model = gltf.scene;
                         
-                        // Apply Granit material to all meshes if texture is loaded
+                        // Apply Granit material to all meshes if texture is loaded (except sofa_legs)
                         model.traverse((child) => {
                             if (child.isMesh) {
+                                // Skip meshes with geometry name "sofa_legs"
+                                const geometryName = child.geometry?.name?.toLowerCase() || '';
+                                if (geometryName.includes('sofa_legs')) {
+                                    console.log('Skipping texture for sofa_legs geometry');
+                                    return;
+                                }
+                                
                                 if (granitTexture) {
                                     child.material = new THREE.MeshStandardMaterial({
                                         map: granitTexture,

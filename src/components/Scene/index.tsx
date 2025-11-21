@@ -634,8 +634,12 @@ function ClickHandler({
         // Determine snap distance based on module names
         const draggedIsLong = draggedObjectId.toLowerCase().includes('long');
         const targetIsLong = targetObjectId.toLowerCase().includes('long');
-        const draggedIsMiddle = draggedObjectId.toLowerCase().includes('middle');
-        const targetIsMiddle = targetObjectId.toLowerCase().includes('middle');
+        const draggedIsMiddle = draggedObjectId.toLowerCase().includes('middle') && !draggedObjectId.toLowerCase().includes('wide');
+        const targetIsMiddle = targetObjectId.toLowerCase().includes('middle') && !targetObjectId.toLowerCase().includes('wide');
+        const draggedIsExpanded = draggedObjectId.toLowerCase().includes('exp');
+        const targetIsExpanded = targetObjectId.toLowerCase().includes('exp');
+        const draggedIsWide = draggedObjectId.toLowerCase().includes('wide');
+        const targetIsWide = targetObjectId.toLowerCase().includes('wide');
         
         let snapDistance: number;
         if (draggedIsMiddle && targetIsMiddle) {
@@ -644,21 +648,70 @@ function ClickHandler({
         } else if (draggedIsLong && targetIsLong) {
           // Both modules are "long"
           snapDistance = 1.18;
+        } else if (
+          draggedIsMiddle &&
+          !targetIsMiddle &&
+          !targetIsLong &&
+          !targetIsExpanded &&
+          !targetIsWide
+        ) {
+          // Middle to not middle, not long, not expanded, not wide
+          snapDistance = 0.92;
+        } else if (
+          targetIsMiddle &&
+          !draggedIsMiddle &&
+          !draggedIsLong &&
+          !draggedIsExpanded &&
+          !draggedIsWide
+        ) {
+          // Not middle, not long, not expanded, not wide to middle
+          snapDistance = 0.9;
         } else if (draggedIsLong || targetIsLong) {
           // One module is "long", the other is not
-          snapDistance = 1.03;
+          snapDistance = 1.05;
+        } else if ((draggedIsWide || targetIsWide) && (draggedIsExpanded || targetIsExpanded)) {
+          // Either is wide AND either is expanded
+          snapDistance = 1.69;
+        } else if (draggedIsExpanded && targetIsExpanded) {
+          // Both modules are "expanded"
+          snapDistance = 1.825;
+        } else if ((draggedIsExpanded && targetIsMiddle) || (targetIsExpanded && draggedIsMiddle)) {
+          // One is expanded, the other is middle (but not middle exp)
+          snapDistance = 1.305;
+        } else if ((draggedIsExpanded && !targetIsMiddle) || (targetIsExpanded && !draggedIsMiddle)) {
+          // One is expanded, the other is not middle
+          console.log('Expanded to Non-Middle Snap');
+          snapDistance = 1.43;
+        } else if ((draggedIsWide && targetIsMiddle) || (targetIsWide && draggedIsMiddle)) {
+          snapDistance = 1.18;
+        } else if (draggedIsWide || targetIsWide) {
+          // One module is "wide", the other is not
+          snapDistance = 1.30;
+        } else if (draggedIsWide && targetIsWide) {
+          // Both modules are "wide"
+          snapDistance = 1.20;
         } else {
           // Neither module is "long"
-          snapDistance = 1.02;
+          snapDistance = 1.03;
         }
+        console.log('Snap Distance:', snapDistance, draggedIsWide, targetIsWide);
         
        
         let zShift = 0;
-        if (draggedIsLong && !targetIsLong) {
-          zShift = 0.323;
-        } else if (!draggedIsLong && targetIsLong) {
-          zShift = -0.323;
+        if (draggedIsLong && !targetIsLong && !(targetIsExpanded || targetIsWide)) {
+          zShift = 0.415;
+        } else if (!draggedIsLong && targetIsLong && !(draggedIsExpanded || draggedIsWide)) {
+          zShift = -0.415;
         }
+       else if ((draggedIsExpanded || draggedIsWide) && !(targetIsExpanded || targetIsWide || targetIsLong)) {
+          zShift = 0.323;
+        } else if (!(draggedIsExpanded || draggedIsWide || draggedIsLong) && (targetIsExpanded || targetIsWide)) {
+          zShift = -0.323;
+        }  else if ((draggedIsExpanded || draggedIsWide) && targetIsLong) {
+          zShift =  -0.09;
+        } else if (draggedIsLong && (targetIsExpanded || targetIsWide)) {
+          zShift = 0.09;
+        } 
         
         let snapPos: [number, number, number] | null = null;
         
@@ -673,6 +726,45 @@ function ClickHandler({
           const targetSideUsed = isSnappingToRight ? "right" : "left";
           
           const canDraggedSnap = draggedSnapping === "both" || draggedSnapping === draggedSideUsed;
+        if (draggedIsMiddle && targetIsMiddle) {
+          // Both modules are "middle"
+          snapDistance = 0.79;
+        } else if (draggedIsLong && targetIsLong) {
+          // Both modules are "long"
+          snapDistance = 1.05;
+        } else if ((draggedIsWide || targetIsWide) && (draggedIsLong || targetIsLong)) {
+          // One is wide or expanded, the other is long
+          snapDistance = 1.31;
+        } else if (( draggedIsExpanded || targetIsExpanded) && (draggedIsLong || targetIsLong)) {
+          // One is wide or expanded, the other is long
+          snapDistance = 1.43;
+        } else if ((draggedIsLong && targetIsMiddle) || (targetIsLong && draggedIsMiddle)) {
+          // One is long, the other is middle (but not middle exp)
+          snapDistance = 0.92;
+        } 
+        
+       else if ((draggedIsWide || targetIsWide) && (draggedIsExpanded || targetIsExpanded)) {
+          // Either is wide AND either is expanded
+          snapDistance = 1.69;
+        } else if (draggedIsExpanded && targetIsExpanded) {
+          // Both modules are "expanded"
+          snapDistance = 1.825;
+        } else if ((draggedIsExpanded && targetIsMiddle) || (targetIsExpanded && draggedIsMiddle)) {
+          // One is expanded, the other is middle (but not middle exp)
+          snapDistance = 1.305;
+        } else if ((draggedIsExpanded && !targetIsMiddle) || (targetIsExpanded && !draggedIsMiddle)) {
+          // One is expanded, the other is not middle
+          snapDistance = 1.5;
+        } else if (draggedIsWide && targetIsWide) {
+          // Both modules are "wide"
+          snapDistance = 1.57;
+        } else if (draggedIsWide || targetIsWide) {
+          // One module is "wide", the other is not
+          snapDistance = 1.05;
+        }
+        
+     
+        console.log('Snap Distance:', snapDistance, targetIsLong, targetIsMiddle, draggedIsMiddle, draggedIsLong);
           const canTargetSnap = targetSnapping === "both" || targetSnapping === targetSideUsed;
           
           if (canDraggedSnap && canTargetSnap) {
@@ -1005,7 +1097,7 @@ const Scene = () => {
     "Material",
     {
       uvScale: {
-        value: 10.5,
+        value: 2.4,
         min: 0.1,
         max: 20,
         step: 0.1,

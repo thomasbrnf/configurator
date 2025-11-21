@@ -125,10 +125,10 @@ export function DynamicModel({
 
   const effectiveUvScale =
     modelPath === "/models/sofa3.glb"
-      ? uvScale
+      ? 10.5
       : modelPath === "/models/gala_collezione_KARATO [PODUSZKA].glb"
-      ? 1
-      : 1.2;
+      ? 0.5
+      : uvScale;
 
   const customMaterial = useMemo(() => {
     const diffuse = diffuseMap.clone();

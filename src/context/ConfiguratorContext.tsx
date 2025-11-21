@@ -55,6 +55,15 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: "/models/thumbnails/sofa long part left.png",
     snappingSides: "right", 
   },
+      {
+    id: "sofa part left exp",
+    name: "Sofa Part Left Expanded",
+    displayName: "Sofa Part Left Expanded",
+    modelPath: "/models/sofa part left exp.glb",
+    thumbnail: "/models/thumbnails/sofa part left exp.png",
+    snappingSides: "right", 
+  },
+
     {
     id: "sofa part middle",
     name: "Sofa Part Middle",
@@ -63,6 +72,15 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: "/models/thumbnails/sofa part middle.png",
     snappingSides: "both", 
   },
+     {
+    id: "sofa part middle wide",
+    name: "Sofa Part Middle Wide",
+    displayName: "Sofa Part Middle Wide",
+    modelPath: "/models/sofa middle part wide.glb",
+    thumbnail: "/models/thumbnails/sofa middle part wide.png",
+    snappingSides: "both", 
+  },
+
   {
     id: "sofa part right",
     name: "Sofa Part Right",
@@ -78,7 +96,32 @@ export const availableModules: ModuleDefinition[] = [
     modelPath: "/models/sofa long part right.glb",
     thumbnail: "/models/thumbnails/sofa long part right.png",
     snappingSides: "left", 
-  }
+  },
+    {
+    id: "sofa part right exp",
+    name: "Sofa Part Right Expanded",
+    displayName: "Sofa Part Right Expanded",
+    modelPath: "/models/sofa part right exp.glb",
+    thumbnail: "/models/thumbnails/sofa part right exp.png",
+    snappingSides: "left", 
+  },
+     {
+    id: "sofa part right corner",
+    name: "Sofa Part Right Corner",
+    displayName: "Sofa Part Right Corner",
+    modelPath: "/models/sofa part right corner.glb",
+    thumbnail: "/models/thumbnails/sofa part right corner.png",
+    snappingSides: "left", 
+  },
+     {
+    id: "poduszka",
+    name: "Poduszka",
+    displayName: "Poduszka",
+    modelPath: "/models/gala_collezione_KARATO [PODUSZKA].glb",
+    thumbnail: "/models/thumbnails/gala_collezione_KARATO [PODUSZKA].png",
+  },
+
+
 ];
 
 export const availableCompleteSets: CompleteSetDefinition[] = [
@@ -112,7 +155,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "Sofa 4",
     translationKey: "Sofa 4",
     modelPath: "/models/sofa3.glb",
-    thumbnail: "/models/thumbnails/sofa3.jpg",
+    thumbnail: "/models/thumbnails/sofa3.png",
   }
 ];
 
