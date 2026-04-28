@@ -14,6 +14,8 @@ import type { JSX } from "react/jsx-runtime";
 import * as THREE from "three";
 import { useMaterial } from "../../context/MaterialContext";
 
+const BASE = import.meta.env.BASE_URL;
+
 export function Model(
   props: JSX.IntrinsicAttributes &
     Mutable<
@@ -36,7 +38,7 @@ export function Model(
       >
     > & { objectId?: string },
 ) {
-  const { nodes, materials } = useGLTF("/models/sofa3.glb");
+  const { nodes, materials } = useGLTF(`${BASE}models/sofa3.glb`);
   const {
     getObjectMaterial,
     selectedObjectId,
@@ -52,9 +54,9 @@ export function Model(
 
   const [diffuseMap, normalMap] = useTexture([
     objectMaterial?.diffuse ||
-      "/materials/the smallest granit/Granit_01_new_3.jpg",
+      `${BASE}materials/the smallest granit/Granit_01_new_3.jpg`,
     objectMaterial?.normal ||
-      "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
   ]);
 
   const customMaterial = useMemo(() => {
@@ -215,4 +217,4 @@ export function Model(
   );
 }
 
-useGLTF.preload("/sofa3.glb");
+useGLTF.preload(`${BASE}models/sofa3.glb`);

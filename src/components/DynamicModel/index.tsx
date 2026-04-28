@@ -8,6 +8,8 @@ import {
 } from "../../context/ConfiguratorContext";
 import { useLoaderStore } from "../../store/loaderStore";
 
+const BASE = import.meta.env.BASE_URL;
+
 interface DynamicModelProps {
   objectId: string;
   position?: [number, number, number];
@@ -44,15 +46,15 @@ export function DynamicModel({
       const lastPart = parts[parts.length - 1]; // random string
       const secondLastPart = parts[parts.length - 2]; // timestamp
       const thirdLastPart = parts[parts.length - 3]; // counter
-      
+
       // Check if it matches: counter(digits)-timestamp(13 digits)-random(9 alphanumeric)
-      if (/^[a-z0-9]{9}$/.test(lastPart) && 
-          /^\d{13}$/.test(secondLastPart) && 
+      if (/^[a-z0-9]{9}$/.test(lastPart) &&
+          /^\d{13}$/.test(secondLastPart) &&
           /^\d+$/.test(thirdLastPart)) {
         return parts.slice(0, -3).join('-');
       }
     }
-    
+
     // Fallback for old format: moduleId-timestamp-randomstring
     if (parts.length >= 3) {
       const lastPart = parts[parts.length - 1];
@@ -61,20 +63,20 @@ export function DynamicModel({
         return parts.slice(0, -2).join('-');
       }
     }
-    
+
     return id;
   };
-  
+
   const baseModuleId = extractBaseModuleId(objectId);
-  
+
   // Try to find module definition using base ID first, then full ID
-  const moduleDefinition = availableModules.find((m) => m.id === baseModuleId) || 
+  const moduleDefinition = availableModules.find((m) => m.id === baseModuleId) ||
                            availableModules.find((m) => m.id === objectId);
   const completeSetDefinition = availableCompleteSets.find((s) => s.id === baseModuleId) ||
                                 availableCompleteSets.find((s) => s.id === objectId);
   const modelDefinition = moduleDefinition || completeSetDefinition;
 
-  const modelPath = modelDefinition?.modelPath || "/models/sofa3.glb";
+  const modelPath = modelDefinition?.modelPath || `${BASE}models/sofa3.glb`;
 
   const { nodes, materials } = useGLTF(modelPath);
 
@@ -86,14 +88,14 @@ export function DynamicModel({
     if (!objectExists) {
       const { showLoader } = useLoaderStore.getState();
       showLoader('Ładowanie obiektu...');
-      
+
       addObject({
         id: objectId,
         name: modelDefinition?.displayName || objectId,
         material: objectMaterial || {
           name: "Granit 07",
-          diffuse: "/materials/the smallest granit/Granit_07_new_3.jpg",
-          normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+          diffuse: `${BASE}materials/the smallest granit/Granit_07_new_3.jpg`,
+          normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
         },
       });
     }
@@ -107,9 +109,9 @@ export function DynamicModel({
 
   const [diffuseMap, normalMap] = useTexture([
     objectMaterial?.diffuse ||
-      "/materials/the smallest granit/Granit_01_new_3.jpg",
+      `${BASE}materials/the smallest granit/Granit_01_new_3.jpg`,
     objectMaterial?.normal ||
-      "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
   ]);
 
   // Hide loader when textures are loaded
@@ -124,13 +126,13 @@ export function DynamicModel({
   }, [diffuseMap, normalMap, isLoading]);
 
   const effectiveUvScale =
-    modelPath === "/models/sofa3.glb"
+    modelPath.endsWith("models/sofa3.glb")
       ? 10.5
-      : modelPath === "/models/gala_collezione_KARATO [PODUSZKA].glb"
+      : modelPath.endsWith("models/gala_collezione_KARATO [PODUSZKA].glb")
       ? 0.5
       : uvScale;
 
-  const customMaterial = useMemo(() => {
+  const customMaterials = useMemo(() => {
     const diffuse = diffuseMap.clone();
     const normal = normalMap.clone();
 
@@ -148,21 +150,38 @@ export function DynamicModel({
     diffuse.needsUpdate = true;
     normal.needsUpdate = true;
 
-    const originalMaterial = materials[
-      "Material #2 1"
-    ] as THREE.MeshStandardMaterial;
-    const aoMap = originalMaterial?.aoMap || null;
+    const fabricMaterial = materials["Sofa_fabric"] as THREE.MeshStandardMaterial;
+    const aoMap = fabricMaterial?.aoMap || null;
 
-    return new THREE.MeshStandardMaterial({
+    const woodTopMaterial = materials["Sofa_Wood_top"] as THREE.MeshStandardMaterial;
+    const woodAoMap = woodTopMaterial?.aoMap || null;
+
+    const diffuseWood = diffuse.clone();
+    const normalWood = normal.clone();
+
+    const base = new THREE.MeshStandardMaterial({
       map: diffuse,
       normalMap: normal,
       normalScale: new THREE.Vector2(normalScale, normalScale),
       aoMap: aoMap,
-      aoMapIntensity: aoMap ? 1.0 : 0,
+      aoMapIntensity: aoMap ? 1 : 0,
       roughness: roughness,
       metalness: metalness,
       envMapIntensity: 0.5,
     });
+
+    const woodTop = new THREE.MeshStandardMaterial({
+      map: diffuseWood,
+      normalMap: normalWood,
+      normalScale: new THREE.Vector2(normalScale, normalScale),
+      aoMap: woodAoMap,
+      aoMapIntensity: woodAoMap ? 1 : 0,
+      roughness: roughness,
+      metalness: metalness,
+      envMapIntensity: 0.5,
+    });
+
+    return { base, woodTop };
   }, [
     diffuseMap,
     normalMap,
@@ -174,40 +193,51 @@ export function DynamicModel({
   ]);
 
   useEffect(() => {
-    if (customMaterial.map) {
-      customMaterial.map.repeat.set(effectiveUvScale, effectiveUvScale);
-      customMaterial.map.needsUpdate = true;
+    for (const mat of [customMaterials.base, customMaterials.woodTop]) {
+      if (mat.map) {
+        mat.map.repeat.set(effectiveUvScale, effectiveUvScale);
+        mat.map.needsUpdate = true;
+      }
+      if (mat.normalMap) {
+        mat.normalMap.repeat.set(effectiveUvScale, effectiveUvScale);
+        mat.normalMap.needsUpdate = true;
+      }
     }
-    if (customMaterial.normalMap) {
-      customMaterial.normalMap.repeat.set(effectiveUvScale, effectiveUvScale);
-      customMaterial.normalMap.needsUpdate = true;
-    }
-  }, [effectiveUvScale, customMaterial]);
+  }, [effectiveUvScale, customMaterials]);
 
   useEffect(() => {
-    if (customMaterial.normalScale) {
-      customMaterial.normalScale.set(normalScale, normalScale);
-      customMaterial.needsUpdate = true;
+    for (const mat of [customMaterials.base, customMaterials.woodTop]) {
+      if (mat.normalScale) {
+        mat.normalScale.set(normalScale, normalScale);
+        mat.needsUpdate = true;
+      }
     }
-  }, [normalScale, customMaterial]);
+  }, [normalScale, customMaterials]);
 
   useEffect(() => {
-    customMaterial.metalness = metalness;
-    customMaterial.roughness = roughness;
-    customMaterial.needsUpdate = true;
-  }, [metalness, roughness, customMaterial]);
+    for (const mat of [customMaterials.base, customMaterials.woodTop]) {
+      mat.metalness = metalness;
+      mat.roughness = roughness;
+      mat.needsUpdate = true;
+    }
+  }, [metalness, roughness, customMaterials]);
 
   const applyMaterials = (object: THREE.Object3D) => {
     object.traverse((child) => {
       if (child instanceof THREE.Mesh && !child.userData.isSelectionOutline) {
         // Skip applying custom material to sofa_legs - keep original material
-        if (child.name && child.name.includes('sofa_legs')) {
+        const shadowKeywords = ['table_top', 'lamp_and_usb', 'legs', 'Sofa_top', 'Sofa_lamp', 'Sofa_mattress', 'Sofa_Bed_Metal', 'Sofa_technical_fabric'];
+        const shouldShadow = shadowKeywords.some(part => child.name.includes(part));
+        if (shouldShadow) {
           child.castShadow = true;
           child.receiveShadow = true;
           return;
         }
-        
-        child.material = customMaterial;
+
+        // Use woodTop material (with its AO map) for Sofa_Wood_top meshes
+        const originalMat = child.material as THREE.MeshStandardMaterial;
+        const isWoodTop = originalMat?.name === "Sofa_Wood_top";
+        child.material = isWoodTop ? customMaterials.woodTop : customMaterials.base;
         child.castShadow = true;
         child.receiveShadow = true;
       }
@@ -275,4 +305,4 @@ availableCompleteSets.forEach((set) => {
 });
 
 // Keep the original sofa preload for backwards compatibility
-useGLTF.preload("/models/sofa3.glb");
+useGLTF.preload(`${BASE}models/sofa3.glb`);

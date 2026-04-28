@@ -46,59 +46,61 @@ const MaterialContext = createContext<MaterialContextType | undefined>(
   undefined,
 );
 
+const BASE = import.meta.env.BASE_URL;
+
 export const availableMaterials: MaterialLibrary = {
   club: [
     {
       name: "Club 07",
-      diffuse: "/materials/the smallest club/club2_07_diffuse_4.jpg",
-      normal: "/materials/the smallest club/club2_normal_map_m.jpg",
+      diffuse: `${BASE}materials/the smallest club/club2_07_diffuse_4.jpg`,
+      normal: `${BASE}materials/the smallest club/club2_normal_map_m.jpg`,
     },
     {
       name: "Club 51",
-      diffuse: "/materials/the smallest club/club2_51_diffuse_4.jpg",
-      normal: "/materials/the smallest club/club2_normal_map_m.jpg",
+      diffuse: `${BASE}materials/the smallest club/club2_51_diffuse_4.jpg`,
+      normal: `${BASE}materials/the smallest club/club2_normal_map_m.jpg`,
     },
     {
       name: "Club 52",
-      diffuse: "/materials/the smallest club/club2_52_diffuse_4.jpg",
-      normal: "/materials/the smallest club/club2_normal_map_m.jpg",
+      diffuse: `${BASE}materials/the smallest club/club2_52_diffuse_4.jpg`,
+      normal: `${BASE}materials/the smallest club/club2_normal_map_m.jpg`,
     },
     {
       name: "Club 54",
-      diffuse: "/materials/the smallest club/club2_54_diffuse_4.jpg",
-      normal: "/materials/the smallest club/club2_normal_map_m.jpg",
+      diffuse: `${BASE}materials/the smallest club/club2_54_diffuse_4.jpg`,
+      normal: `${BASE}materials/the smallest club/club2_normal_map_m.jpg`,
     },
   ],
   granit: [
     {
       name: "Granit 01",
-      diffuse: "/materials/the smallest granit/Granit_01_new_3.jpg",
-      normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      diffuse: `${BASE}materials/the smallest granit/Granit_01_new_3.jpg`,
+      normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
     },
     {
       name: "Granit 05",
-      diffuse: "/materials/the smallest granit/Granit_05_new_3.jpg",
-      normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      diffuse: `${BASE}materials/the smallest granit/Granit_05_new_3.jpg`,
+      normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
     },
     {
       name: "Granit 07",
-      diffuse: "/materials/the smallest granit/Granit_07_new_3.jpg",
-      normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      diffuse: `${BASE}materials/the smallest granit/Granit_07_new_3.jpg`,
+      normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
     },
     {
       name: "Granit 26",
-      diffuse: "/materials/the smallest granit/Granit_26_new_4.jpg",
-      normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      diffuse: `${BASE}materials/the smallest granit/Granit_26_new_4.jpg`,
+      normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
     },
     {
       name: "Granit 51",
-      diffuse: "/materials/the smallest granit/Granit_51_new_3.jpg",
-      normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      diffuse: `${BASE}materials/the smallest granit/Granit_51_new_3.jpg`,
+      normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
     },
     {
       name: "Granit 54",
-      diffuse: "/materials/the smallest granit/Granit_54_new_4.jpg",
-      normal: "/materials/the smallest granit/Granit_normal_map_5.jpg",
+      diffuse: `${BASE}materials/the smallest granit/Granit_54_new_4.jpg`,
+      normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
     },
   ],
 };
