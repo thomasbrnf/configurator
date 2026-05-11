@@ -6,6 +6,11 @@ export default {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
+      colors: {
+        brand: {
+          DEFAULT: "#06402b",
+        },
+      },
     },
   },
   plugins: [],

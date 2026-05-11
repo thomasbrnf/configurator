@@ -7,6 +7,7 @@ import {
   availableCompleteSets,
 } from "../../context/ConfiguratorContext";
 import { useLoaderStore } from "../../store/loaderStore";
+import { extractBaseModuleId } from "../../utils/moduleId";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -35,37 +36,6 @@ export function DynamicModel({
   } = useMaterial();
 
   const isSelected = selectedObjectId === objectId;
-
-  // Extract base module ID (remove counter, timestamp and random suffix for duplicates)
-  // Format is: moduleId-counter-timestamp-randomstring
-  // We need to remove the last three segments if they match the pattern
-  const extractBaseModuleId = (id: string): string => {
-    const parts = id.split('-');
-    // If we have at least 4 parts and the last 3 look like counter-timestamp-random
-    if (parts.length >= 4) {
-      const lastPart = parts[parts.length - 1]; // random string
-      const secondLastPart = parts[parts.length - 2]; // timestamp
-      const thirdLastPart = parts[parts.length - 3]; // counter
-
-      // Check if it matches: counter(digits)-timestamp(13 digits)-random(9 alphanumeric)
-      if (/^[a-z0-9]{9}$/.test(lastPart) &&
-          /^\d{13}$/.test(secondLastPart) &&
-          /^\d+$/.test(thirdLastPart)) {
-        return parts.slice(0, -3).join('-');
-      }
-    }
-
-    // Fallback for old format: moduleId-timestamp-randomstring
-    if (parts.length >= 3) {
-      const lastPart = parts[parts.length - 1];
-      const secondLastPart = parts[parts.length - 2];
-      if (/^[a-z0-9]{9}$/.test(lastPart) && /^\d{13}$/.test(secondLastPart)) {
-        return parts.slice(0, -2).join('-');
-      }
-    }
-
-    return id;
-  };
 
   const baseModuleId = extractBaseModuleId(objectId);
 
@@ -125,12 +95,7 @@ export function DynamicModel({
     }
   }, [diffuseMap, normalMap, isLoading]);
 
-  const effectiveUvScale =
-    modelPath.endsWith("models/sofa3.glb")
-      ? 10.5
-      : modelPath.endsWith("models/gala_collezione_KARATO [PODUSZKA].glb")
-      ? 0.5
-      : uvScale;
+  const effectiveUvScale = modelDefinition?.uvScale ?? uvScale;
 
   const customMaterials = useMemo(() => {
     const diffuse = diffuseMap.clone();
@@ -222,19 +187,19 @@ export function DynamicModel({
     }
   }, [metalness, roughness, customMaterials]);
 
+  const defaultPreserveMeshNames = ['table_top', 'lamp_and_usb', 'legs', 'Sofa_top', 'Sofa_lamp', 'Sofa_mattress', 'Sofa_Bed_Metal', 'Sofa_technical_fabric'];
+  const preserveMeshNames = modelDefinition?.preserveMeshNames ?? defaultPreserveMeshNames;
+
   const applyMaterials = (object: THREE.Object3D) => {
     object.traverse((child) => {
       if (child instanceof THREE.Mesh && !child.userData.isSelectionOutline) {
-        // Skip applying custom material to sofa_legs - keep original material
-        const shadowKeywords = ['table_top', 'lamp_and_usb', 'legs', 'Sofa_top', 'Sofa_lamp', 'Sofa_mattress', 'Sofa_Bed_Metal', 'Sofa_technical_fabric'];
-        const shouldShadow = shadowKeywords.some(part => child.name.includes(part));
-        if (shouldShadow) {
+        const shouldPreserve = preserveMeshNames.some((name: string) => child.name.includes(name));
+        if (shouldPreserve) {
           child.castShadow = true;
           child.receiveShadow = true;
           return;
         }
 
-        // Use woodTop material (with its AO map) for Sofa_Wood_top meshes
         const originalMat = child.material as THREE.MeshStandardMaterial;
         const isWoodTop = originalMat?.name === "Sofa_Wood_top";
         child.material = isWoodTop ? customMaterials.woodTop : customMaterials.base;

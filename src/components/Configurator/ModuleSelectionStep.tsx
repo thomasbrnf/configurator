@@ -5,6 +5,7 @@ import {
   availableCompleteSets,
 } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { generateInstanceId } from "../../utils/moduleId";
 
 const ModuleSelectionStep: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
@@ -104,14 +105,10 @@ const ModuleSelectionStep: React.FC = () => {
   };
 
   const addModulesToScene = () => {
-    // Add each module the specified number of times with unique IDs
     let counter = 0;
     moduleCounts.forEach((count, moduleId) => {
       for (let i = 0; i < count; i++) {
-        // Generate unique ID by appending counter, timestamp and random string
-        // Counter ensures uniqueness even if timestamp is the same
-        const uniqueId = `${moduleId}-${counter}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-        addObjectToScene(uniqueId);
+        addObjectToScene(generateInstanceId(moduleId, counter));
         counter++;
       }
     });
@@ -195,7 +192,7 @@ const ModuleSelectionStep: React.FC = () => {
             {/* Complete Sets Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableCompleteSets.map((set) => {
-                const isAlreadyInScene = sceneObjects.some(obj => obj === set.id);
+                const isAlreadyInScene = sceneObjects.some(inst => inst.instanceId === set.id);
                 
                 return (
                   <div

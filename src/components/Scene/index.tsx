@@ -7,8 +7,10 @@ import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
 import { useEffect, useRef, useState, createContext, useContext, useMemo } from "react";
 import { useMaterial } from "../../context/MaterialContext";
-import { useConfigurator, getModuleSnappingConfig } from "../../context/ConfiguratorContext";
+import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useObjectSelection } from "../../hooks/useObjectSelection";
+import { useDragAndSnap } from "../../hooks/useDragAndSnap";
 
 
 interface SceneContextType {
@@ -130,17 +132,17 @@ function ToneMappingController() {
 }
 
 // Auto Center Camera Component
-function AutoCenterCamera({ 
+function AutoCenterCamera({
   orbitControlsRef,
   objectPositions,
   sceneObjects,
   enabled = true,
   isDragging = false,
   recenterTrigger = 0,
-}: { 
+}: {
   orbitControlsRef: React.MutableRefObject<any>;
-  objectPositions: Map<number, [number, number, number]>;
-  sceneObjects: string[];
+  objectPositions: Map<string, [number, number, number]>;
+  sceneObjects: { instanceId: string }[];
   enabled?: boolean;
   isDragging?: boolean;
   recenterTrigger?: number;
@@ -165,8 +167,8 @@ function AutoCenterCamera({
       let minX = Infinity, maxX = -Infinity;
       let minZ = Infinity, maxZ = -Infinity;
       
-      sceneObjects.forEach((_, index) => {
-        const position = objectPositions.get(index) || [index * 1.4, 0, 0];
+      sceneObjects.forEach((inst, index) => {
+        const position = objectPositions.get(inst.instanceId) || [index * 1.4, 0, 0];
         minX = Math.min(minX, position[0]);
         maxX = Math.max(maxX, position[0]);
         minZ = Math.min(minZ, position[2]);
@@ -273,8 +275,8 @@ function AutoCenterCamera({
     let totalZ = 0;
     let count = 0;
 
-    sceneObjects.forEach((_, index) => {
-      const position = objectPositions.get(index) || [index * 3, 0, 0];
+    sceneObjects.forEach((inst, index) => {
+      const position = objectPositions.get(inst.instanceId) || [index * 3, 0, 0];
       totalX += position[0];
       totalY += position[1];
       totalZ += position[2];
@@ -337,7 +339,7 @@ function PanConstraint({
   return null;
 }
 
-// Click Handler Component with Raycaster
+// Thin coordinator — delegates to useObjectSelection and useDragAndSnap hooks
 function ClickHandler({
   onContextMenu,
   sceneObjects,
@@ -345,496 +347,90 @@ function ClickHandler({
   onDragStateChange,
   onSnapPreview,
 }: {
-  onContextMenu: (
-    x: number,
-    y: number,
-    objectId: string,
-    index: number,
-  ) => void;
-  sceneObjects: string[];
-  onDragUpdate: (index: number, position: [number, number, number]) => void;
+  onContextMenu: (x: number, y: number, objectId: string) => void;
+  sceneObjects: { instanceId: string }[];
+  onDragUpdate: (instanceId: string, position: [number, number, number]) => void;
   onDragStateChange: (isDragging: boolean) => void;
-  onSnapPreview: (snapInfo: { fromIndex: number; toIndex: number; fromPos: [number, number, number]; toPos: [number, number, number] } | null) => void;
+  onSnapPreview: (snapInfo: { fromId: string; toId: string; fromPos: [number, number, number]; toPos: [number, number, number] } | null) => void;
 }) {
-  const { camera, scene, gl } = useThree();
+  const { gl, scene } = useThree();
   const { selectedObjectId, setSelectedObjectId } = useMaterial();
   const { objectPositions } = useConfigurator();
-  const raycaster = useRef(new THREE.Raycaster());
-  const mouse = useRef(new THREE.Vector2());
-  const [isRotating, setIsRotating] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedObjectIndex, setDraggedObjectIndex] = useState<number | null>(null);
-  const [snapTargetIndex, setSnapTargetIndex] = useState<number | null>(null);
+
+  const isRotatingRef = useRef(false);
   const mouseDownRef = useRef<{ x: number; y: number } | null>(null);
-  const dragPlane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
-  const dragOffset = useRef(new THREE.Vector3());
-  const SNAP_DISTANCE = 1.8; // Distance threshold for snapping
+
+  const { handleClick, getRaycasterIntersects, resolveObjectId } = useObjectSelection({
+    onSelect: (objectId, x, y) => {
+      setSelectedObjectId(objectId);
+      onContextMenu(x, y, objectId);
+    },
+    onDeselect: () => setSelectedObjectId(null),
+  });
+
+  const drag = useDragAndSnap({
+    sceneObjects,
+    objectPositions,
+    onDragUpdate,
+    onSnapPreview,
+    onDragStateChange,
+  });
 
   useEffect(() => {
-    function handleMouseDown(event: MouseEvent) {
-      // Ignore right clicks
-      if (event.button === 2) return;
+    const canvas = gl.domElement;
 
+    function onMouseDown(event: MouseEvent) {
+      if (event.button === 2) return;
       mouseDownRef.current = { x: event.clientX, y: event.clientY };
-      setIsRotating(false);
-      setIsDragging(false);
+      isRotatingRef.current = false;
 
       if (selectedObjectId) {
-        const rect = gl.domElement.getBoundingClientRect();
-        mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        raycaster.current.setFromCamera(mouse.current, camera);
-        const intersects = raycaster.current.intersectObjects(
-          scene.children,
-          true,
-        );
-
-        if (intersects.length > 0) {
-          let objectId = null;
-          for (const intersect of intersects) {
-            let obj = intersect.object;
-            while (obj && obj.parent) {
-              if (obj.userData?.objectId) {
-                objectId = obj.userData.objectId;
-                break;
-              }
-              obj = obj.parent;
-            }
-            if (objectId) break;
-          }
-
-          // If clicked on the selected object, prepare for dragging
-          if (objectId === selectedObjectId) {
-            const index = sceneObjects.findIndex((id) => id === objectId);
-            setDraggedObjectIndex(index);
-
-            // Calculate intersection point with drag plane
-            const intersectionPoint = new THREE.Vector3();
-            raycaster.current.ray.intersectPlane(
-              dragPlane.current,
-              intersectionPoint,
-            );
-
-            // Find the actual object in the scene to get its world position
-            let actualObject = intersects[0].object;
-            while (actualObject && !actualObject.userData?.objectId) {
-              actualObject = actualObject.parent as THREE.Object3D;
-            }
-
-            if (actualObject) {
-              const worldPosition = new THREE.Vector3();
-              actualObject.getWorldPosition(worldPosition);
-              dragOffset.current.copy(worldPosition).sub(intersectionPoint);
-            }
-          }
+        const rect = canvas.getBoundingClientRect();
+        const intersects = getRaycasterIntersects(event, rect);
+        const objectId = resolveObjectId(intersects);
+        if (objectId === selectedObjectId) {
+          drag.startDrag(objectId, intersects, rect, event);
         }
       }
     }
 
-    function handleContextMenu(event: MouseEvent) {
-      // Prevent default right-click menu
+    function onMouseMove(event: MouseEvent) {
+      if (!mouseDownRef.current) return;
+      const dx = Math.abs(event.clientX - mouseDownRef.current.x);
+      const dy = Math.abs(event.clientY - mouseDownRef.current.y);
+      if (dx <= 5 && dy <= 5) return;
+
+      if (drag.draggedInstanceId !== null) {
+        drag.updateDrag(event, canvas.getBoundingClientRect());
+      } else {
+        isRotatingRef.current = true;
+      }
+    }
+
+    function onMouseUp(event: MouseEvent) {
+      if (!isRotatingRef.current && !drag.isDragging && mouseDownRef.current) {
+        handleClick(event, canvas.getBoundingClientRect(), selectedObjectId);
+      }
+      drag.endDrag();
+      mouseDownRef.current = null;
+      isRotatingRef.current = false;
+    }
+
+    function onContextMenuNative(event: MouseEvent) {
       event.preventDefault();
     }
 
-    function handleMouseMove(event: MouseEvent) {
-      if (mouseDownRef.current) {
-        const deltaX = Math.abs(event.clientX - mouseDownRef.current.x);
-        const deltaY = Math.abs(event.clientY - mouseDownRef.current.y);
-
-        // If mouse moved more than 5 pixels
-        if (deltaX > 5 || deltaY > 5) {
-          // If dragging a selected object, update its position
-          if (draggedObjectIndex !== null) {
-            if (!isDragging) {
-              setIsDragging(true);
-              onDragStateChange(true);
-            }
-
-            const rect = gl.domElement.getBoundingClientRect();
-            mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-            raycaster.current.setFromCamera(mouse.current, camera);
-
-            const intersectionPoint = new THREE.Vector3();
-            if (raycaster.current.ray.intersectPlane(dragPlane.current, intersectionPoint)) {
-              // Apply the offset to maintain the original click position
-              intersectionPoint.add(dragOffset.current);
-              
-              // Get snapping configuration for dragged object
-              const draggedObjectId = sceneObjects[draggedObjectIndex];
-              const draggedSnapping = getModuleSnappingConfig(draggedObjectId);
-              
-              // Check for nearby objects to snap to (only if dragged object can snap)
-              let closestIndex: number | null = null;
-              let closestDistance = SNAP_DISTANCE;
-              
-              if (draggedSnapping !== "none") {
-                sceneObjects.forEach((objectId, index) => {
-                  if (index !== draggedObjectIndex) {
-                    const targetSnapping = getModuleSnappingConfig(objectId);
-                    
-                    // Only consider snapping if target object can also snap
-                    if (targetSnapping !== "none") {
-                      const targetPos = objectPositions.get(index) || [index * 1.4, 0, 0];
-                      const distance = Math.sqrt(
-                        Math.pow(intersectionPoint.x - targetPos[0], 2) +
-                        Math.pow(intersectionPoint.z - targetPos[2], 2)
-                      );
-                      
-                      if (distance < closestDistance) {
-                        closestDistance = distance;
-                        closestIndex = index;
-                      }
-                    }
-                  }
-                });
-              }
-              
-              // Update snap target and preview
-              setSnapTargetIndex(closestIndex);
-              if (closestIndex !== null) {
-                const targetPos = objectPositions.get(closestIndex) || [closestIndex * 1.4, 0, 0];
-                onSnapPreview({
-                  fromIndex: draggedObjectIndex,
-                  toIndex: closestIndex,
-                  fromPos: [intersectionPoint.x, intersectionPoint.y, intersectionPoint.z],
-                  toPos: targetPos as [number, number, number],
-                });
-              } else {
-                onSnapPreview(null);
-              }
-              
-              onDragUpdate(draggedObjectIndex, [
-                intersectionPoint.x,
-                intersectionPoint.y,
-                intersectionPoint.z,
-              ]);
-            }
-          } else {
-            // Otherwise, it's a camera rotation
-            setIsRotating(true);
-          }
-        }
-      }
-    }
-
-    function handleMouseUp(event: MouseEvent) {
-      // Only process click if we weren't rotating or dragging
-      if (!isRotating && !isDragging && mouseDownRef.current) {
-        // Calculate mouse position in normalized device coordinates
-        const rect = gl.domElement.getBoundingClientRect();
-        mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        // Update the picking ray with the camera and mouse position
-        raycaster.current.setFromCamera(mouse.current, camera);
-
-        // Calculate objects intersecting the picking ray
-        const intersects = raycaster.current.intersectObjects(
-          scene.children,
-          true,
-        );
-
-        if (intersects.length > 0) {
-          // Find the first intersected object that has a name or parent with userData.objectId
-          let targetObject = null;
-          let objectId = null;
-
-          for (const intersect of intersects) {
-            let obj = intersect.object;
-
-            // Traverse up the hierarchy to find an object with objectId
-            while (obj && obj.parent) {
-              if (obj.userData?.objectId) {
-                targetObject = obj;
-                objectId = obj.userData.objectId;
-                break;
-              }
-              obj = obj.parent;
-            }
-
-            if (targetObject) break;
-          }
-
-          if (objectId) {
-            // If object is already selected, deselect it
-            if (selectedObjectId === objectId) {
-              setSelectedObjectId(null);
-            } else {
-              // Select the object and show context menu on the left side
-              setSelectedObjectId(objectId);
-              const index = sceneObjects.findIndex((id) => id === objectId);
-              const leftX = 220; // 220px from left edge (below controls)
-              onContextMenu(leftX, event.clientY, objectId, index);
-            }
-          } else {
-            // Clicked on object but no objectId found, deselect current selection
-            setSelectedObjectId(null);
-          }
-        } else {
-          // Clicked on empty space, deselect current selection
-          setSelectedObjectId(null);
-        }
-      }
-
-      // Handle snapping on drag release
-      if (isDragging && draggedObjectIndex !== null && snapTargetIndex !== null) {
-        const draggedObjectId = sceneObjects[draggedObjectIndex];
-        const targetObjectId = sceneObjects[snapTargetIndex];
-        
-        // Check if either object is a complete set (contains "sofa-" prefix)
-        const draggedIsCompleteSet = draggedObjectId.startsWith("sofa-");
-        const targetIsCompleteSet = targetObjectId.startsWith("sofa-");
-        
-        // Don't snap if both are complete sets
-        if (draggedIsCompleteSet && targetIsCompleteSet) {
-          mouseDownRef.current = null;
-          setIsRotating(false);
-          if (isDragging) {
-            onDragStateChange(false);
-            onSnapPreview(null);
-          }
-          setIsDragging(false);
-          setDraggedObjectIndex(null);
-          setSnapTargetIndex(null);
-          return;
-        }
-        
-        // Get snapping configuration for both objects
-        const draggedSnapping = getModuleSnappingConfig(draggedObjectId);
-        const targetSnapping = getModuleSnappingConfig(targetObjectId);
-        
-        // Don't snap if either object has "none" snapping
-        if (draggedSnapping === "none" || targetSnapping === "none") {
-          mouseDownRef.current = null;
-          setIsRotating(false);
-          if (isDragging) {
-            onDragStateChange(false);
-            onSnapPreview(null);
-          }
-          setIsDragging(false);
-          setDraggedObjectIndex(null);
-          setSnapTargetIndex(null);
-          return;
-        }
-        
-        const draggedPos = objectPositions.get(draggedObjectIndex) || [draggedObjectIndex * 1.4, 0, 0];
-        const targetPos = objectPositions.get(snapTargetIndex) || [snapTargetIndex * 1.4, 0, 0];
-        
-        // Calculate direction from target to dragged object
-        const dx = draggedPos[0] - targetPos[0];
-        const dz = draggedPos[2] - targetPos[2];
-        
-        // Determine primary snap axis (which direction has more movement)
-        const absX = Math.abs(dx);
-        const absZ = Math.abs(dz);
-        
-        // Determine snap distance based on module names
-        const draggedIsLong = draggedObjectId.toLowerCase().includes('long');
-        const targetIsLong = targetObjectId.toLowerCase().includes('long');
-        const draggedIsMiddle = draggedObjectId.toLowerCase().includes('middle') && !draggedObjectId.toLowerCase().includes('wide');
-        const targetIsMiddle = targetObjectId.toLowerCase().includes('middle') && !targetObjectId.toLowerCase().includes('wide');
-        const draggedIsExpanded = draggedObjectId.toLowerCase().includes('exp');
-        const targetIsExpanded = targetObjectId.toLowerCase().includes('exp');
-        const draggedIsWide = draggedObjectId.toLowerCase().includes('wide');
-        const targetIsWide = targetObjectId.toLowerCase().includes('wide');
-        
-        let snapDistance: number;
-        if (draggedIsMiddle && targetIsMiddle) {
-          // Both modules are "middle"
-          snapDistance = 0.9;
-        } else if (draggedIsLong && targetIsLong) {
-          // Both modules are "long"
-          snapDistance = 1.18;
-        } else if (
-          draggedIsMiddle &&
-          !targetIsMiddle &&
-          !targetIsLong &&
-          !targetIsExpanded &&
-          !targetIsWide
-        ) {
-          // Middle to not middle, not long, not expanded, not wide
-          snapDistance = 0.92;
-        } else if (
-          targetIsMiddle &&
-          !draggedIsMiddle &&
-          !draggedIsLong &&
-          !draggedIsExpanded &&
-          !draggedIsWide
-        ) {
-          // Not middle, not long, not expanded, not wide to middle
-          snapDistance = 0.9;
-        } else if (draggedIsLong || targetIsLong) {
-          // One module is "long", the other is not
-          snapDistance = 1.05;
-        } else if ((draggedIsWide || targetIsWide) && (draggedIsExpanded || targetIsExpanded)) {
-          // Either is wide AND either is expanded
-          snapDistance = 1.69;
-        } else if (draggedIsExpanded && targetIsExpanded) {
-          // Both modules are "expanded"
-          snapDistance = 1.825;
-        } else if ((draggedIsExpanded && targetIsMiddle) || (targetIsExpanded && draggedIsMiddle)) {
-          // One is expanded, the other is middle (but not middle exp)
-          snapDistance = 1.305;
-        } else if ((draggedIsExpanded && !targetIsMiddle) || (targetIsExpanded && !draggedIsMiddle)) {
-          // One is expanded, the other is not middle
-          console.log('Expanded to Non-Middle Snap');
-          snapDistance = 1.43;
-        } else if ((draggedIsWide && targetIsMiddle) || (targetIsWide && draggedIsMiddle)) {
-          snapDistance = 1.18;
-        } else if (draggedIsWide || targetIsWide) {
-          // One module is "wide", the other is not
-          snapDistance = 1.30;
-        } else if (draggedIsWide && targetIsWide) {
-          // Both modules are "wide"
-          snapDistance = 1.20;
-        } else {
-          // Neither module is "long"
-          snapDistance = 1.03;
-        }
-        console.log('Snap Distance:', snapDistance, draggedIsWide, targetIsWide);
-        
-       
-        let zShift = 0;
-        if (draggedIsLong && !targetIsLong && !(targetIsExpanded || targetIsWide)) {
-          zShift = 0.415;
-        } else if (!draggedIsLong && targetIsLong && !(draggedIsExpanded || draggedIsWide)) {
-          zShift = -0.415;
-        }
-       else if ((draggedIsExpanded || draggedIsWide) && !(targetIsExpanded || targetIsWide || targetIsLong)) {
-          zShift = 0.323;
-        } else if (!(draggedIsExpanded || draggedIsWide || draggedIsLong) && (targetIsExpanded || targetIsWide)) {
-          zShift = -0.323;
-        }  else if ((draggedIsExpanded || draggedIsWide) && targetIsLong) {
-          zShift =  -0.09;
-        } else if (draggedIsLong && (targetIsExpanded || targetIsWide)) {
-          zShift = 0.09;
-        } 
-        
-        let snapPos: [number, number, number] | null = null;
-        
-        if (absX > absZ) {
-          // Snapping left-right
-          const isSnappingToRight = dx > 0; // Dragged object is to the RIGHT of target
-          
-          // Check if dragged object can snap on the side it's approaching from
-          // If dragged is to the RIGHT of target, it's using its LEFT side to connect
-          // If dragged is to the LEFT of target, it's using its RIGHT side to connect
-          const draggedSideUsed = isSnappingToRight ? "left" : "right";
-          const targetSideUsed = isSnappingToRight ? "right" : "left";
-          
-          const canDraggedSnap = draggedSnapping === "both" || draggedSnapping === draggedSideUsed;
-        if (draggedIsMiddle && targetIsMiddle) {
-          // Both modules are "middle"
-          snapDistance = 0.79;
-        } else if (draggedIsLong && targetIsLong) {
-          // Both modules are "long"
-          snapDistance = 1.05;
-        } else if ((draggedIsWide || targetIsWide) && (draggedIsLong || targetIsLong)) {
-          // One is wide or expanded, the other is long
-          snapDistance = 1.31;
-        } else if (( draggedIsExpanded || targetIsExpanded) && (draggedIsLong || targetIsLong)) {
-          // One is wide or expanded, the other is long
-          snapDistance = 1.43;
-        } else if ((draggedIsLong && targetIsMiddle) || (targetIsLong && draggedIsMiddle)) {
-          // One is long, the other is middle (but not middle exp)
-          snapDistance = 0.92;
-        } 
-        
-       else if ((draggedIsWide || targetIsWide) && (draggedIsExpanded || targetIsExpanded)) {
-          // Either is wide AND either is expanded
-          snapDistance = 1.69;
-        } else if (draggedIsExpanded && targetIsExpanded) {
-          // Both modules are "expanded"
-          snapDistance = 1.825;
-        } else if ((draggedIsExpanded && targetIsMiddle) || (targetIsExpanded && draggedIsMiddle)) {
-          // One is expanded, the other is middle (but not middle exp)
-          snapDistance = 1.305;
-        } else if ((draggedIsExpanded && !targetIsMiddle) || (targetIsExpanded && !draggedIsMiddle)) {
-          // One is expanded, the other is not middle
-          snapDistance = 1.5;
-        } else if (draggedIsWide && targetIsWide) {
-          // Both modules are "wide"
-          snapDistance = 1.57;
-        } 
-        
-     
-        console.log('Snap Distance:', snapDistance, targetIsLong, targetIsMiddle, draggedIsMiddle, draggedIsLong);
-          const canTargetSnap = targetSnapping === "both" || targetSnapping === targetSideUsed;
-          
-          if (canDraggedSnap && canTargetSnap) {
-            snapPos = [
-              targetPos[0] + (dx > 0 ? snapDistance : -snapDistance), // Position left or right
-              targetPos[1], // Same height
-              targetPos[2] + zShift  // ALIGNED Z-axis with shift for mixed long/regular modules
-            ];
-          }
-        } else {
-          // Snapping front-back
-          const isSnappingToBack = dz > 0; // Dragged object is to the BACK of target (positive Z)
-          
-          // When snapping front-back, we need to determine which side connects
-          // This depends on the orientation - for now we'll allow if either object allows both sides
-          // or we could map front/back to left/right based on orientation
-          const draggedSideUsed = isSnappingToBack ? "left" : "right";
-          const targetSideUsed = isSnappingToBack ? "right" : "left";
-          
-          const canDraggedSnap = draggedSnapping === "both" || draggedSnapping === draggedSideUsed;
-          const canTargetSnap = targetSnapping === "both" || targetSnapping === targetSideUsed;
-          
-          if (canDraggedSnap && canTargetSnap) {
-            snapPos = [
-              targetPos[0] + zShift,  // ALIGNED X-axis with shift for mixed long/regular modules
-              targetPos[1],  // Same height
-              targetPos[2] + (dz > 0 ? snapDistance : -snapDistance) // Position front or back
-            ];
-          }
-        }
-        
-        if (snapPos) {
-          onDragUpdate(draggedObjectIndex, snapPos);
-        }
-      }
-      
-      mouseDownRef.current = null;
-      setIsRotating(false);
-      if (isDragging) {
-        onDragStateChange(false);
-        onSnapPreview(null); // Clear snap preview
-      }
-      setIsDragging(false);
-      setDraggedObjectIndex(null);
-      setSnapTargetIndex(null);
-    }
-
-    const canvas = gl.domElement;
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mouseup", handleMouseUp);
-    canvas.addEventListener("contextmenu", handleContextMenu);
-
+    canvas.addEventListener("mousedown", onMouseDown);
+    canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("mouseup", onMouseUp);
+    canvas.addEventListener("contextmenu", onContextMenuNative);
     return () => {
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("mouseup", handleMouseUp);
-      canvas.removeEventListener("contextmenu", handleContextMenu);
+      canvas.removeEventListener("mousedown", onMouseDown);
+      canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("mouseup", onMouseUp);
+      canvas.removeEventListener("contextmenu", onContextMenuNative);
     };
-  }, [
-    camera,
-    scene,
-    gl,
-    selectedObjectId,
-    setSelectedObjectId,
-    isRotating,
-    isDragging,
-    draggedObjectIndex,
-    sceneObjects,
-    onContextMenu,
-    onDragUpdate,
-    onDragStateChange,
-  ]);
+  }, [gl, scene, selectedObjectId, setSelectedObjectId, drag, handleClick, getRaycasterIntersects, resolveObjectId, onContextMenu]);
 
   return null;
 }
@@ -842,28 +438,23 @@ function ClickHandler({
 // Camera animation component for rotation mode
 function RotationModeCamera() {
   const { camera } = useThree();
-  const { rotationControlIndex } = useConfigurator();
+  const { rotationControlId, objectPositions } = useConfigurator();
   const savedCameraPosition = useRef<THREE.Vector3 | null>(null);
 
   useFrame(() => {
-    if (rotationControlIndex !== null && camera) {
-      // Save original camera position on first activation
+    if (rotationControlId !== null && camera) {
       if (!savedCameraPosition.current) {
         savedCameraPosition.current = camera.position.clone();
       }
 
-      // Calculate the position of the object being rotated
-      const objectX = rotationControlIndex * 3;
-      const targetPosition = new THREE.Vector3(objectX, 0, 0);
-
-      // Position camera directly above the object
-      const topViewPosition = new THREE.Vector3(objectX, 5, 0);
+      const objPos = objectPositions.get(rotationControlId) || [0, 0, 0];
+      const targetPosition = new THREE.Vector3(objPos[0], 0, objPos[2]);
+      const topViewPosition = new THREE.Vector3(objPos[0], 5, objPos[2]);
 
       // Smoothly animate camera to top view
       camera.position.lerp(topViewPosition, 0.1);
       camera.lookAt(targetPosition);
     } else if (savedCameraPosition.current) {
-      // Restore camera position when exiting rotation mode
       camera.position.lerp(savedCameraPosition.current, 0.1);
 
       // Check if camera is close enough to saved position
@@ -959,10 +550,10 @@ function SnapIndicator({
 }
 
 // Component to render all objects in the scene
-function SceneObjects({ snapPreview }: { snapPreview: { 
-  fromIndex: number; 
-  toIndex: number; 
-  fromPos: [number, number, number]; 
+function SceneObjects({ snapPreview }: { snapPreview: {
+  fromId: string;
+  toId: string;
+  fromPos: [number, number, number];
   toPos: [number, number, number];
 } | null }) {
   const {
@@ -974,16 +565,15 @@ function SceneObjects({ snapPreview }: { snapPreview: {
 
   return (
     <>
-      {sceneObjects.map((objectId, index) => {
-        const position = objectPositions.get(index) || [index * 1.9, 0, 0];
+      {sceneObjects.map((inst, index) => {
+        const position = objectPositions.get(inst.instanceId) || [index * 1.9, 0, 0];
         return (
-          <group key={`${objectId}-${index}`}>
+          <group key={inst.instanceId}>
             <DynamicModel
-              objectId={objectId}
+              objectId={inst.instanceId}
               position={position as [number, number, number]}
-              rotation={objectRotations.get(index) || [0, 0, 0]}
+              rotation={objectRotations.get(inst.instanceId) || [0, 0, 0]}
             />
-      
           </group>
         );
       })}
@@ -1004,9 +594,9 @@ const Scene = () => {
     useMaterial();
   const {
     sceneObjects,
-    removeObjectByIndex,
-    rotationControlIndex,
-    setRotationControlIndex,
+    removeObjectById,
+    rotationControlId,
+    setRotationControlId,
     setObjectPosition,
     objectPositions,
   } = useConfigurator();
@@ -1016,16 +606,15 @@ const Scene = () => {
     x: number;
     y: number;
     objectId: string;
-    index: number;
   } | null>(null);
 
   const [isDraggingObject, setIsDraggingObject] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
   const [isAutoCenterEnabled, setIsAutoCenterEnabled] = useState(true);
-  const [snapPreview, setSnapPreview] = useState<{ 
-    fromIndex: number; 
-    toIndex: number; 
-    fromPos: [number, number, number]; 
+  const [snapPreview, setSnapPreview] = useState<{
+    fromId: string;
+    toId: string;
+    fromPos: [number, number, number];
     toPos: [number, number, number];
   } | null>(null);
   const orbitControlsRef = useRef<any>(null);
@@ -1044,14 +633,9 @@ const Scene = () => {
     previousSceneObjectsLength.current = sceneObjects.length;
 
     if (sceneIncreased && selectedObjectId) {
-      // Find the index of the newly selected object
-      const index = sceneObjects.findIndex((id) => id === selectedObjectId);
-      if (index !== -1) {
-        // Position the context menu on the left side of the screen
-        const leftX = 220; // 220px from left edge (below controls)
-        const centerY = window.innerHeight / 2;
-        handleContextMenu(leftX, centerY, selectedObjectId, index);
-      }
+      const leftX = 220;
+      const centerY = window.innerHeight / 2;
+      handleContextMenu(leftX, centerY, selectedObjectId);
     }
   }, [sceneObjects, selectedObjectId]);
 
@@ -1059,31 +643,26 @@ const Scene = () => {
     setRecenterTrigger(prev => prev + 1);
   };
 
-  const handleContextMenu = (
-    x: number,
-    y: number,
-    objectId: string,
-    index: number,
-  ) => {
-    setContextMenu({ x, y, objectId, index });
+  const handleContextMenu = (x: number, y: number, objectId: string) => {
+    setContextMenu({ x, y, objectId });
   };
 
   const handleDelete = () => {
     if (contextMenu) {
-      removeObjectByIndex(contextMenu.index);
+      removeObjectById(contextMenu.objectId);
       setContextMenu(null);
     }
   };
 
   const handleRotate = () => {
     if (contextMenu) {
-      setRotationControlIndex(contextMenu.index);
+      setRotationControlId(contextMenu.objectId);
       setContextMenu(null);
     }
   };
 
-  const handleDragUpdate = (index: number, position: [number, number, number]) => {
-    setObjectPosition(index, position);
+  const handleDragUpdate = (instanceId: string, position: [number, number, number]) => {
+    setObjectPosition(instanceId, position);
   };
 
   const handleDragStateChange = (isDragging: boolean) => {
@@ -1189,10 +768,10 @@ const Scene = () => {
           />
         )}
 
-        {rotationControlIndex !== null && (
+        {rotationControlId !== null && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[200]">
           <button
-            onClick={() => setRotationControlIndex(null)}
+            onClick={() => setRotationControlId(null)}
             className="px-6 py-3 bg-[#06402b] text-white font-medium rounded-full hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-sm flex items-center gap-2"
           >
             <svg
@@ -1213,11 +792,13 @@ const Scene = () => {
         </div>
       )}
 
-      <Leva
-        collapsed={true}
-        oneLineLabels={true}
-        titleBar={{ position: { x: -390, y: 16 } }}
-      />
+      {import.meta.env.DEV && (
+        <Leva
+          collapsed={true}
+          oneLineLabels={true}
+          titleBar={{ position: { x: -390, y: 16 } }}
+        />
+      )}
       <Canvas
         camera={{ position: [0, 2, 2], fov: 60 }}
         shadows
@@ -1232,11 +813,11 @@ const Scene = () => {
         <ToneMappingController />
         <RotationModeCamera />
         <PanConstraint orbitControlsRef={orbitControlsRef} />
-        <AutoCenterCamera 
+        <AutoCenterCamera
           orbitControlsRef={orbitControlsRef}
           objectPositions={objectPositions}
           sceneObjects={sceneObjects}
-          enabled={rotationControlIndex === null && !isAutoCenterEnabled}
+          enabled={rotationControlId === null && !isAutoCenterEnabled}
           isDragging={isDraggingObject}
           recenterTrigger={recenterTrigger}
         />
@@ -1250,9 +831,9 @@ const Scene = () => {
 
         <OrbitControls
           ref={orbitControlsRef}
-          enableZoom={rotationControlIndex === null && !isDraggingObject}
+          enableZoom={rotationControlId === null && !isDraggingObject}
           enablePan={true}
-          enableRotate={rotationControlIndex === null && !isDraggingObject}
+          enableRotate={rotationControlId === null && !isDraggingObject}
           target={[0, 0.2, 0]}
           minDistance={1}
           maxDistance={50}
@@ -1263,7 +844,7 @@ const Scene = () => {
           rotateSpeed={0.3}
           zoomSpeed={0.3}
           zoomToCursor={false}
-          enabled={rotationControlIndex === null}
+          enabled={rotationControlId === null}
           makeDefault
         />
 
