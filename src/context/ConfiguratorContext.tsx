@@ -36,12 +36,7 @@ export interface CompleteSetDefinition {
   id: string;
   name: string;
   displayName: string;
-  translationKey: keyof {
-    "Sofa 1": string;
-    "Sofa 2": string;
-    "Sofa 3": string;
-    "Sofa 4": string;
-  };
+  translationKey: string;
   modelPath: string;
   thumbnail?: string;
   /** Override the global uvScale slider for this model */
@@ -53,138 +48,33 @@ export interface CompleteSetDefinition {
 const BASE = import.meta.env.BASE_URL;
 
 export const availableModules: ModuleDefinition[] = [
-
-
-
-  {
-    id: "sofa part left",
-    name: "Sofa Part Left",
-    displayName: "Sofa Part Left",
-    modelPath: `${BASE}models/sofa part left.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part left.png`,
-    category: "standard",
-    snappingSides: "right",
-  },
-  {
-    id: "sofa long part left",
-    name: "Sofa Long Part Left",
-    displayName: "Sofa Long Part Left",
-    modelPath: `${BASE}models/sofa long part left.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa long part left.png`,
-    category: "long",
-    snappingSides: "right",
-  },
-  {
-    id: "sofa part left exp",
-    name: "Sofa Part Left Expanded",
-    displayName: "Sofa Part Left Expanded",
-    modelPath: `${BASE}models/sofa part left exp.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part left exp.png`,
-    category: "expanded",
-    snappingSides: "right",
-  },
-  {
-    id: "sofa part middle",
-    name: "Sofa Part Middle",
-    displayName: "Sofa Part Middle",
-    modelPath: `${BASE}models/sofa part middle.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part middle.png`,
-    category: "middle",
-    snappingSides: "both",
-  },
-  {
-    id: "sofa part middle wide",
-    name: "Sofa Part Middle Wide",
-    displayName: "Sofa Part Middle Wide",
-    modelPath: `${BASE}models/sofa middle part wide.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa middle part wide.png`,
-    category: "wide",
-    snappingSides: "both",
-  },
-  {
-    id: "sofa part right",
-    name: "Sofa Part Right",
-    displayName: "Sofa Part Right",
-    modelPath: `${BASE}models/sofa part right.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part right.png`,
-    category: "standard",
-    snappingSides: "left",
-  },
-  {
-    id: "sofa long part right",
-    name: "Sofa Long Part Right",
-    displayName: "Sofa Long Part Right",
-    modelPath: `${BASE}models/sofa long part right.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa long part right.png`,
-    category: "long",
-    snappingSides: "left",
-  },
-  {
-    id: "sofa part right exp",
-    name: "Sofa Part Right Expanded",
-    displayName: "Sofa Part Right Expanded",
-    modelPath: `${BASE}models/sofa part right exp.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part right exp.png`,
-    category: "expanded",
-    snappingSides: "left",
-  },
-  {
-    id: "sofa part right corner",
-    name: "Sofa Part Right Corner",
-    displayName: "Sofa Part Right Corner",
-    modelPath: `${BASE}models/sofa part right corner.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part right corner.png`,
-    category: "corner",
-    snappingSides: "left",
-  },
-  {
-    id: "poduszka",
-    name: "Poduszka",
-    displayName: "Poduszka",
-    modelPath: `${BASE}models/gala_collezione_KARATO [PODUSZKA].glb`,
-    thumbnail: `${BASE}models/thumbnails/gala_collezione_KARATO [PODUSZKA].png`,
-    category: "accessory",
-    snappingSides: "none",
-    uvScale: 0.5,
-  },
-
-
+  { id: "1(70)TVBB aku",  name: "1(70)TVBB aku",  displayName: "1(70)TVBB aku",  modelPath: `${BASE}models/moduls/1(70)TVBB aku.glb`,  thumbnail: `${BASE}models/thumbnails/1(70)TVBB aku.jpg`,  category: "standard", snappingSides: "both" },
+  { id: "1D70(1)SBB",     name: "1D70(1)SBB",     displayName: "1D70(1)SBB",     modelPath: `${BASE}models/moduls/1D70(1)SBB.glb`,     thumbnail: `${BASE}models/thumbnails/1D70(1)SBB.jpg`,     category: "standard", snappingSides: "both" },
+  { id: "2(160)FBBW PRO", name: "2(160)FBBW PRO", displayName: "2(160)FBBW PRO", modelPath: `${BASE}models/moduls/2(160)FBBW PRO.glb`, thumbnail: `${BASE}models/thumbnails/2(160)FBBW PRO.jpg`, category: "wide",     snappingSides: "both" },
+  { id: "BAR(2z)L",       name: "BAR(2z)L",       displayName: "BAR(2z)L",       modelPath: `${BASE}models/moduls/BAR(2z)L.glb`,       thumbnail: `${BASE}models/thumbnails/BAR(2z)L.jpg`,       category: "standard", snappingSides: "right" },
+  { id: "BAR(2z)S",       name: "BAR(2z)S",       displayName: "BAR(2z)S",       modelPath: `${BASE}models/moduls/BAR(2z)S.glb`,       thumbnail: `${BASE}models/thumbnails/BAR(2z)S.jpg`,       category: "middle",   snappingSides: "both" },
+  { id: "BAR",            name: "BAR",            displayName: "BAR",            modelPath: `${BASE}models/moduls/BAR.glb`,            thumbnail: `${BASE}models/thumbnails/BAR.jpg`,            category: "standard", snappingSides: "both" },
+  { id: "BL (b)",         name: "BL (b)",         displayName: "BL (b)",         modelPath: `${BASE}models/moduls/BL (b).glb`,         thumbnail: `${BASE}models/thumbnails/BL (b).jpg`,         category: "standard", snappingSides: "right" },
+  { id: "BL",             name: "BL",             displayName: "BL",             modelPath: `${BASE}models/moduls/BL.glb`,             thumbnail: `${BASE}models/thumbnails/BL.jpg`,             category: "standard", snappingSides: "right" },
+  { id: "BP (b)",         name: "BP (b)",         displayName: "BP (b)",         modelPath: `${BASE}models/moduls/BP (b).glb`,         thumbnail: `${BASE}models/thumbnails/BP (b).jpg`,         category: "standard", snappingSides: "left" },
+  { id: "BP",             name: "BP",             displayName: "BP",             modelPath: `${BASE}models/moduls/BP.glb`,             thumbnail: `${BASE}models/thumbnails/BP.jpg`,             category: "standard", snappingSides: "left" },
+  { id: "EN(2)L",         name: "EN(2)L",         displayName: "EN(2)L",         modelPath: `${BASE}models/moduls/EN(2)L.glb`,         thumbnail: `${BASE}models/thumbnails/EN(2)L.jpg`,         category: "standard", snappingSides: "right" },
+  { id: "EN(2)R",         name: "EN(2)R",         displayName: "EN(2)R",         modelPath: `${BASE}models/moduls/EN(2)R.glb`,         thumbnail: `${BASE}models/thumbnails/EN(2)R.jpg`,         category: "standard", snappingSides: "left" },
+  { id: "KE(70)SL",       name: "KE(70)SL",       displayName: "KE(70)SL",       modelPath: `${BASE}models/moduls/KE(70)SL.glb`,       thumbnail: `${BASE}models/thumbnails/KE(70)SL.jpg`,       category: "standard", snappingSides: "right" },
+  { id: "KE(70)SP",       name: "KE(70)SP",       displayName: "KE(70)SP",       modelPath: `${BASE}models/moduls/KE(70)SP.glb`,       thumbnail: `${BASE}models/thumbnails/KE(70)SP.jpg`,       category: "standard", snappingSides: "left" },
 ];
 
 export const availableCompleteSets: CompleteSetDefinition[] = [
-  {
-    id: "sofa-1",
-    name: "Sofa 1",
-    displayName: " Sofa 1",
-    translationKey: "Sofa 1",
-    modelPath: `${BASE}models/sofa 1.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa 1.png`,
-  },
-  {
-    id: "sofa-2",
-    name: "Sofa 2",
-    displayName: "Sofa 2",
-    translationKey: "Sofa 2",
-    modelPath: `${BASE}models/sofa 2.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa 2.png`,
-  },
-    {
-    id: "sofa-3",
-    name: "Sofa 3",
-    displayName: "Sofa 3",
-    translationKey: "Sofa 3",
-    modelPath: `${BASE}models/sofa 3.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa 3.png`,
-  },
-  {
-    id: "sofa-4",
-    name: "Sofa 4",
-    displayName: "Sofa 4",
-    translationKey: "Sofa 4",
-    modelPath: `${BASE}models/sofa3.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa3.png`,
-    uvScale: 10.5,
-  }
+  { id: "set-bl-bp",          name: "BL - BP",        displayName: "BL – BP",                                  translationKey: "BL – BP",                    modelPath: `${BASE}models/BL - 2(160) FFBBW - BP.glb`,                                                             thumbnail: `${BASE}models/thumbnails/set-bl-bp.jpg` },
+  { id: "set-bl-bp-open",     name: "BL - BP open",   displayName: "BL – BP (open)",                           translationKey: "BL – BP (open)",             modelPath: `${BASE}models/BL - 2(160) FFBBW - BP open.glb`,                                                        thumbnail: `${BASE}models/thumbnails/set-bl-bp-open.jpg` },
+  { id: "set-bl-sbb-bp",      name: "BL SBB BP",      displayName: "BL PRO – SBB – BP",                        translationKey: "BL PRO – SBB – BP",          modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP.glb`,                                            thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp.jpg` },
+  { id: "set-bl-sbb-bp-open", name: "BL SBB BP open", displayName: "BL PRO – SBB – BP (open)",                 translationKey: "BL PRO – SBB – BP (open)",   modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP open.glb`,                                       thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp-open.jpg` },
+  { id: "set-bl-full",        name: "BL full",        displayName: "BL PRO – EN – TVBB – BAR – BP(b)",          translationKey: "BL PRO full",                modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - EN(2) - 1(70)TVBB (aku) - BAR(2)S - 1(70) BB - BP(b).glb`,      thumbnail: `${BASE}models/thumbnails/set-bl-full.jpg` },
+  { id: "set-bl-full-open",   name: "BL full open",   displayName: "BL PRO – EN – TVBB – BAR – BP(b) (open)",   translationKey: "BL PRO full (open)",         modelPath: `${BASE}models/BL - 2(160)FFBBW PRO - EN(2) - 1(70)TVBB(aku) - BAR(2)S- 1(70)BB - BP(b) open.glb`,     thumbnail: `${BASE}models/thumbnails/set-bl-full-open.jpg` },
+  { id: "set-blb-ke",         name: "BL(b) KE",       displayName: "BL(b) PRO – EN – KE SP",                   translationKey: "BL(b) PRO – EN – KE SP",     modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP.glb`,                                       thumbnail: `${BASE}models/thumbnails/set-blb-ke.jpg` },
+  { id: "set-blb-ke-open",    name: "BL(b) KE open",  displayName: "BL(b) PRO – EN – KE SP (open)",            translationKey: "BL(b) PRO – EN – KE SP (open)", modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP open.glb`,                              thumbnail: `${BASE}models/thumbnails/set-blb-ke-open.jpg` },
+  { id: "set-bar-bp",         name: "BAR BP",         displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b)",        translationKey: "BAR(2z)L full",              modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b).glb`,               thumbnail: `${BASE}models/thumbnails/set-bar-bp.jpg` },
+  { id: "set-bar-bp-open",    name: "BAR BP open",    displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b) (open)", translationKey: "BAR(2z)L full (open)",       modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b) open.glb`,          thumbnail: `${BASE}models/thumbnails/set-bar-bp-open.jpg` },
 ];
 
 export const getModuleSnappingConfig = (objectId: string): SnappingSide => {
@@ -310,13 +200,13 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     const moduleId = extractBaseModuleId(objectId);
     const instance: SceneInstance = { instanceId, moduleId };
 
-    const isCompleteSet = objectId.startsWith("sofa-");
+    const isCompleteSet = objectId.startsWith("set-");
 
     if (isCompleteSet && sceneObjects.length > 0) {
       const gap = 3;
       let latestSetInstance: SceneInstance | undefined;
       for (let i = sceneObjects.length - 1; i >= 0; i--) {
-        if (sceneObjects[i].instanceId.startsWith("sofa-")) {
+        if (sceneObjects[i].instanceId.startsWith("set-")) {
           latestSetInstance = sceneObjects[i];
           break;
         }

@@ -125,8 +125,8 @@ export function useDragAndSnap({
 
     const draggedSnapping = getModuleSnappingConfig(draggedId);
     const targetSnapping = getModuleSnappingConfig(targetId);
-    const draggedIsSet = draggedId.startsWith("sofa-");
-    const targetIsSet = targetId.startsWith("sofa-");
+    const draggedIsSet = draggedId.startsWith("set-");
+    const targetIsSet = targetId.startsWith("set-");
 
     if (
       (draggedIsSet && targetIsSet) ||

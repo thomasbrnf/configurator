@@ -1,317 +1,370 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model Thumbnail Generator</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        h1 {
-            color: #06402b;
-        }
-        .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        button {
-            background: #06402b;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-right: 10px;
-        }
-        button:hover {
-            background: #084d35;
-        }
-        #canvas {
-            background: #f0f0f0;
-            border-radius: 8px;
-            display: block;
-            margin: 20px auto;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .thumbnail-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .thumbnail-item {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .thumbnail-item img {
-            width: 100%;
-            height: auto;
-            border-radius: 4px;
-            background: #f0f0f0;
-        }
-        .thumbnail-item h3 {
-            margin: 10px 0 5px;
-            font-size: 14px;
-            color: #06402b;
-        }
-        .status {
-            padding: 10px;
-            background: #e3f2fd;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .progress {
-            margin-top: 10px;
-            font-weight: bold;
-            color: #06402b;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Thumbnail Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; padding: 20px; }
+    h1 { color: #06402b; margin-bottom: 16px; }
+    .controls {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: #06402b; color: #fff;
+      border: none; padding: 9px 18px;
+      border-radius: 6px; cursor: pointer; font-size: 14px;
+    }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    #status { font-size: 14px; color: #333; }
+    #progress { font-size: 13px; font-weight: 600; color: #06402b; min-width: 80px; }
+    canvas { display: block; margin: 0 auto 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,.12); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      background: #fff; border-radius: 8px;
+      padding: 8px; box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    }
+    .card img { width: 100%; border-radius: 4px; display: block; }
+    .card p  { font-size: 11px; color: #06402b; margin-top: 6px; word-break: break-all; }
+    .card small { font-size: 10px; color: #888; }
+    .section { font-size: 13px; font-weight: 700; color: #06402b;
+               margin: 16px 0 6px; border-bottom: 1px solid #06402b33; padding-bottom: 4px; }
+  </style>
 </head>
 <body>
-    <h1>🖼️ Model Thumbnail Generator</h1>
-    
-    <div class="controls">
-        <button onclick="generateAllThumbnails()">Generate All Thumbnails</button>
-        <button onclick="downloadAll()">Download All</button>
-        <div class="status" id="status">Ready to generate thumbnails...</div>
-        <div class="progress" id="progress"></div>
-    </div>
+  <h1>Thumbnail Generator</h1>
 
-    <canvas id="canvas" width="400" height="400"></canvas>
-    
-    <div class="thumbnail-grid" id="thumbnails"></div>
+  <div class="controls">
+    <button id="btnGenerate">Generate All Thumbnails</button>
+    <button id="btnDownload" disabled>Download All</button>
+    <span id="status">Ready.</span>
+    <span id="progress"></span>
+  </div>
 
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-        }
+  <canvas id="canvas" width="480" height="320"></canvas>
+  <div id="output"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
     }
-    </script>
+  }
+  </script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-        const models = [
-         
-            { id: "sofa-1", path: "/models/sofa 1.glb", name: "Sofa 1" },
-            { id: "sofa-2", path: "/models/sofa 2.glb", name: "Sofa 2" },
-            { id: "sofa-3", path: "/models/sofa 3.glb", name: "Sofa 3" },
-             { id: "sofa-4", path: "/models/sofa3.glb", name: "Sofa 4" },
-            { id: "sofa part middle", path: "/models/sofa part middle.glb", name: "Sofa Part Middle" },
-            { id: "sofa long part left", path: "/models/sofa long part left.glb", name: "Sofa Long Part Left" },
-            { id: "sofa long part right", path: "/models/sofa long part right.glb", name: "Sofa Long Part Right" },
-            { id: "sofa part left", path: "/models/sofa part left.glb", name: "Sofa Part Left" },
-            { id: "sofa part right", path: "/models/sofa part right.glb", name: "Sofa Part Right" },
-            { id: "sofa part right exp", path: "/models/sofa part right exp.glb", name: "Sofa Part Right Expanded" },
-            { id: "sofa part left exp", path: "/models/sofa part left exp.glb", name: "Sofa Part Left Expanded" },
-            { id: "sofa middle part wide", path: "/models/sofa middle part wide.glb", name: "Sofa Part Middle Wide" },
-            { id: "sofa part right corner", path: "/models/sofa part right corner.glb", name: "Sofa Part Right Corner" },
-            { id: "gala_collezione_KARATO [PODUSZKA]", path: "/models/gala_collezione_KARATO [PODUSZKA].glb", name: "Gala Collezione KARATO [PODUSZKA]" },
+    // ── Model lists (must mirror ConfiguratorContext.tsx) ─────────────────────
 
-        ];
+    const MODULES = [
+      { id: '1(70)TVBB aku',  path: '/models/moduls/1(70)TVBB aku.glb',  name: '1(70)TVBB aku',  isSet: false },
+      { id: '1D70(1)SBB',     path: '/models/moduls/1D70(1)SBB.glb',     name: '1D70(1)SBB',     isSet: false },
+      { id: '2(160)FBBW PRO', path: '/models/moduls/2(160)FBBW PRO.glb', name: '2(160)FBBW PRO', isSet: false },
+      { id: 'BAR(2z)L',       path: '/models/moduls/BAR(2z)L.glb',       name: 'BAR(2z)L',       isSet: false },
+      { id: 'BAR(2z)S',       path: '/models/moduls/BAR(2z)S.glb',       name: 'BAR(2z)S',       isSet: false },
+      { id: 'BAR',            path: '/models/moduls/BAR.glb',             name: 'BAR',            isSet: false },
+      { id: 'BL (b)',         path: '/models/moduls/BL (b).glb',         name: 'BL (b)',         isSet: false },
+      { id: 'BL',             path: '/models/moduls/BL.glb',             name: 'BL',             isSet: false },
+      { id: 'BP (b)',         path: '/models/moduls/BP (b).glb',         name: 'BP (b)',         isSet: false },
+      { id: 'BP',             path: '/models/moduls/BP.glb',             name: 'BP',             isSet: false },
+      { id: 'EN(2)L',         path: '/models/moduls/EN(2)L.glb',         name: 'EN(2)L',         isSet: false },
+      { id: 'EN(2)R',         path: '/models/moduls/EN(2)R.glb',         name: 'EN(2)R',         isSet: false },
+      { id: 'KE(70)SL',       path: '/models/moduls/KE(70)SL.glb',       name: 'KE(70)SL',       isSet: false },
+      { id: 'KE(70)SP',       path: '/models/moduls/KE(70)SP.glb',       name: 'KE(70)SP',       isSet: false },
+    ];
 
-        const canvas = document.getElementById('canvas');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf0f0f0);
-        
-        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-        camera.position.set(0, 2, 3);
-        
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-        renderer.setSize(400, 400);
-        renderer.shadowMap.enabled = true;
-        
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-        scene.add(ambientLight);
-        
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(-0.5, 1, 2);
-        scene.add(directionalLight);
-        
-        const loader = new GLTFLoader();
-        const textureLoader = new THREE.TextureLoader();
-        const thumbnails = {};
-        let granitTexture = null; // Declare texture variable
-        
-        // Load Granit texture once at startup
-        // URL encode spaces in path (files in public/ are served from root)
-        const texturePath = '/materials/the%20smallest%20granit/Granit_07_new_3.jpg';
-        console.log('Attempting to load texture from:', texturePath);
-        
-        // Wrap texture loading in a Promise
-        const texturePromise = new Promise((resolve, reject) => {
-            textureLoader.load(
-                texturePath,
-                (texture) => {
-                    granitTexture = texture;
-                    granitTexture.wrapS = THREE.RepeatWrapping;
-                    granitTexture.wrapT = THREE.RepeatWrapping;
-                    granitTexture.repeat.set(20, 20);
-                    console.log('✅ Granit texture loaded successfully');
-                    resolve(texture);
-                },
-                undefined,
-                (error) => {
-                    console.error('❌ Failed to load Granit texture:', error);
-                    console.log('Tried path:', texturePath);
-                    console.log('Make sure the file exists at: public/materials/the smallest granit/Granit_07_new_3.jpg');
-                    // Set granitTexture to null so we know it failed
-                    granitTexture = null;
-                    reject(error);
-                }
-            );
-        });
+    const SETS = [
+      { id: 'set-bl-bp',          path: '/models/BL - 2(160) FFBBW - BP.glb',                                                             name: 'BL – BP',                                isSet: true },
+      { id: 'set-bl-bp-open',     path: '/models/BL - 2(160) FFBBW - BP open.glb',                                                        name: 'BL – BP (open)',                         isSet: true },
+      { id: 'set-bl-sbb-bp',      path: '/models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP.glb',                                           name: 'BL PRO – SBB – BP',                      isSet: true },
+      { id: 'set-bl-sbb-bp-open', path: '/models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP open.glb',                                      name: 'BL PRO – SBB – BP (open)',               isSet: true },
+      { id: 'set-bl-full',        path: '/models/BL - 2(160) FFBBW PRO - EN(2) - 1(70)TVBB (aku) - BAR(2)S - 1(70) BB - BP(b).glb',      name: 'BL PRO – EN – TVBB – BAR – BP(b)',       isSet: true },
+      { id: 'set-bl-full-open',   path: '/models/BL - 2(160)FFBBW PRO - EN(2) - 1(70)TVBB(aku) - BAR(2)S- 1(70)BB - BP(b) open.glb',     name: 'BL PRO – EN – TVBB – BAR – BP(b) (open)',isSet: true },
+      { id: 'set-blb-ke',         path: '/models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP.glb',                                      name: 'BL(b) PRO – EN – KE SP',                isSet: true },
+      { id: 'set-blb-ke-open',    path: '/models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP open.glb',                                 name: 'BL(b) PRO – EN – KE SP (open)',          isSet: true },
+      { id: 'set-bar-bp',         path: '/models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b).glb',              name: 'BAR(2z)L – TVBB – EN – PRO – BP(b)',     isSet: true },
+      { id: 'set-bar-bp-open',    path: '/models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b) open.glb',         name: 'BAR(2z)L – TVBB – EN – PRO – BP(b) (open)',isSet: true },
+    ];
 
-        async function loadAndCapture(modelInfo) {
-            return new Promise((resolve, reject) => {
-                // Clear scene
-                scene.children.forEach(child => {
-                    if (child.type === 'Group') {
-                        scene.remove(child);
-                    }
-                });
+    const ALL = [...MODULES, ...SETS];
 
-                loader.load(
-                    modelInfo.path,
-                    (gltf) => {
-                        const model = gltf.scene;
-                        
-                        // Apply Granit material to all meshes if texture is loaded (except sofa_legs)
-                        model.traverse((child) => {
-                            if (child.isMesh) {
-                                // Skip meshes with geometry name "sofa_legs"
-                                const geometryName = child.geometry?.name?.toLowerCase() || '';
-                                if (geometryName.includes('sofa_legs')) {
-                                    console.log('Skipping texture for sofa_legs geometry');
-                                    return;
-                                }
-                                
-                                if (granitTexture) {
-                                    child.material = new THREE.MeshStandardMaterial({
-                                        map: granitTexture,
-                                        roughness: 0.85,
-                                        metalness: 0.15,
-                                    });
-                                } else {
-                                    // Fallback to a simple gray material if texture isn't loaded
-                                    child.material = new THREE.MeshStandardMaterial({
-                                        color: 0xcccccc,
-                                        roughness: 0.85,
-                                        metalness: 0.15,
-                                    });
-                                }
-                            }
-                        });
-                        
-                        scene.add(model);
-                        
-                        // Center and frame the model
-                        const box = new THREE.Box3().setFromObject(model);
-                        const center = box.getCenter(new THREE.Vector3());
-                        const size = box.getSize(new THREE.Vector3());
-                        
-                        model.position.sub(center);
-                        
-                        const maxDim = Math.max(size.x, size.y, size.z);
-                        const distance = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
-                        
-                        // Move camera further back (increased from 1.2 to 1.8)
-                        camera.position.set(0, size.y * 0.3, distance * 1.8);
-                        camera.lookAt(0, 0, 0);
-                        
-                        // Render
-                        renderer.render(scene, camera);
-                        
-                        // Capture at lower resolution for fast loading
-                        const dataURL = canvas.toDataURL('image/jpeg', 0.7);
-                        
-                        resolve({
-                            id: modelInfo.id,
-                            name: modelInfo.name,
-                            dataURL: dataURL
-                        });
-                    },
-                    undefined,
-                    (error) => {
-                        console.error('Error loading', modelInfo.path, error);
-                        reject(error);
-                    }
-                );
+    // ── Renderer ──────────────────────────────────────────────────────────────
+
+    const canvas   = document.getElementById('canvas');
+    const scene    = new THREE.Scene();
+    scene.background = new THREE.Color(0xf2f0ed);
+
+    const camera   = new THREE.PerspectiveCamera(38, 480 / 320, 0.01, 500);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(480, 320);
+    renderer.setPixelRatio(1);
+    renderer.shadowMap.enabled  = true;
+    renderer.shadowMap.type     = THREE.PCFSoftShadowMap;
+    renderer.toneMapping        = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
+    // Lighting — matches the app scene
+    const ambient = new THREE.AmbientLight(0xffffff, 1.8);
+    scene.add(ambient);
+
+    const key = new THREE.DirectionalLight(0xfff5e8, 2.8);
+    key.position.set(-3, 6, 5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(512, 512);
+    scene.add(key);
+
+    const fill = new THREE.DirectionalLight(0xe8f0ff, 1.2);
+    fill.position.set(5, 4, -3);
+    scene.add(fill);
+
+    // Floor for shadow receiving
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(50, 50),
+      new THREE.ShadowMaterial({ opacity: 0.12 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // ── Fabric texture (AMARAL 790) ───────────────────────────────────────────
+
+    const texLoader = new THREE.TextureLoader();
+
+    function loadTex(path) {
+      return new Promise(res =>
+        texLoader.load(
+          encodeURI(path),
+          t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; res(t); },
+          undefined,
+          () => { console.warn('Texture failed:', path); res(null); }
+        )
+      );
+    }
+
+    let baseMap   = null;
+    let normalMap = null;
+
+    async function loadTextures() {
+      const base   = '/materials/AMARAL 90  790  10  32/AMARAL 790_BaseColor.jpg';
+      const normal = '/materials/AMARAL 90  790  10  32/790_Normal.jpg';
+      [baseMap, normalMap] = await Promise.all([loadTex(base), loadTex(normal)]);
+      if (baseMap)   { baseMap.repeat.set(5, 5);   baseMap.colorSpace = THREE.SRGBColorSpace; }
+      if (normalMap)   normalMap.repeat.set(5, 5);
+    }
+
+    // ── Material application — mirrors DynamicModel exactly ───────────────────
+    // Only meshes whose GLTF material name === 'Sofa_Fabric' get the
+    // user-selectable PBR material.  All other meshes keep their original
+    // GLTF materials (Sofa_Bed_Metal, Sofa_Legs, Sofa_Wood_top, Sofa_Lamp,
+    // Sofa_Technical_Fabric, Sofa_Mattress, …).
+
+    function buildFabricMaterial(gltfMaterials) {
+      const src = gltfMaterials['Sofa_Fabric'];
+      return new THREE.MeshStandardMaterial({
+        map:             baseMap   || null,
+        normalMap:       normalMap || null,
+        normalScale:     new THREE.Vector2(1, 1),
+        aoMap:           src?.aoMap     ?? null,
+        aoMapIntensity:  src?.aoMap     ? 1 : 0,
+        roughness:       0.82,
+        metalness:       0.04,
+        envMapIntensity: 0.5,
+        color:           baseMap ? 0xffffff : 0xc8b8a0,
+      });
+    }
+
+    function applyMaterials(root, fabricMat) {
+      root.traverse(child => {
+        if (!child.isMesh) return;
+        child.castShadow    = true;
+        child.receiveShadow = true;
+        const matName = (child.material?.name ?? '').toLowerCase();
+        if (matName === 'sofa_fabric') {
+          child.material = fabricMat;
+        }
+        // Everything else keeps its original GLTF material
+      });
+    }
+
+    // ── Camera framing ────────────────────────────────────────────────────────
+
+    function frameCamera(model, isSet) {
+      const box    = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size   = box.getSize(new THREE.Vector3());
+
+      // Ground the model: centre X/Z, pin bottom to y = 0 (no levitation)
+      model.position.set(-center.x, -box.min.y, -center.z);
+      floor.position.y = 0;
+
+      const fovRad = camera.fov * Math.PI / 180;
+
+      // For sets (wide sofas) fit on height+depth, not width — keeps camera close
+      const frameDim = isSet
+        ? Math.max(size.y, size.z) * 1.1
+        : Math.max(size.x, size.y, size.z);
+
+      const dist = (frameDim / 2) / Math.tan(fovRad / 2);
+
+      // Straight front-facing: X = 0, camera looks directly at the front face
+      camera.position.set(
+        0,
+        size.y * 2.2,
+        dist * 1.5
+      );
+      camera.lookAt(0, size.y * 0.5, 0);
+    }
+
+    // ── Per-model render ──────────────────────────────────────────────────────
+
+    const gltfLoader = new GLTFLoader();
+
+    function renderModel(info) {
+      return new Promise((resolve, reject) => {
+        // Remove previously loaded mesh groups
+        scene.children
+          .filter(c => c.isGroup || (c.isObject3D && !c.isLight && c !== floor))
+          .forEach(c => scene.remove(c));
+
+        gltfLoader.load(
+          encodeURI(info.path),
+          gltf => {
+            const fabricMat = buildFabricMaterial(gltf.parser.associations
+              ? Object.fromEntries(
+                  Object.entries(gltf.scene.__gltfMaterials || {})
+                ) : (gltf.materials || {}));
+
+            // Build a proper material map from the loaded GLTF
+            const gltfMats = {};
+            gltf.scene.traverse(c => {
+              if (c.isMesh && c.material) {
+                const mats = Array.isArray(c.material) ? c.material : [c.material];
+                mats.forEach(m => { if (m.name) gltfMats[m.name] = m; });
+              }
             });
+
+            const fabric = buildFabricMaterial(gltfMats);
+            applyMaterials(gltf.scene, fabric);
+            scene.add(gltf.scene);
+            frameCamera(gltf.scene, info.isSet);
+
+            // Three render passes to let shadows settle
+            renderer.render(scene, camera);
+            renderer.render(scene, camera);
+            renderer.render(scene, camera);
+
+            resolve(canvas.toDataURL('image/jpeg', 0.88));
+          },
+          undefined,
+          err => reject(err)
+        );
+      });
+    }
+
+    // ── Generate loop ─────────────────────────────────────────────────────────
+
+    const statusEl   = document.getElementById('status');
+    const progressEl = document.getElementById('progress');
+    const outputEl   = document.getElementById('output');
+    const btnGen     = document.getElementById('btnGenerate');
+    const btnDl      = document.getElementById('btnDownload');
+
+    // Exposed globally for the puppeteer Node.js script to read
+    window.__capturedThumbnails = {};
+    window.__thumbnailsComplete = false;
+
+    async function generate() {
+      btnGen.disabled = true;
+      btnDl.disabled  = true;
+      outputEl.innerHTML = '';
+      window.__capturedThumbnails = {};
+      window.__thumbnailsComplete = false;
+
+      statusEl.textContent = 'Loading CREMONA 02 texture…';
+      await loadTextures();
+
+      // Build section containers
+      const modSection = document.createElement('div');
+      modSection.innerHTML = `<div class="section">Modules (${MODULES.length})</div>`;
+      const modGrid = document.createElement('div');
+      modGrid.className = 'grid';
+      modSection.appendChild(modGrid);
+      outputEl.appendChild(modSection);
+
+      const setSection = document.createElement('div');
+      setSection.innerHTML = `<div class="section">Complete Sets (${SETS.length})</div>`;
+      const setGrid = document.createElement('div');
+      setGrid.className = 'grid';
+      setSection.appendChild(setGrid);
+      outputEl.appendChild(setSection);
+
+      let done = 0;
+      for (const info of ALL) {
+        statusEl.textContent  = `Rendering: ${info.name}`;
+        progressEl.textContent = `${++done} / ${ALL.length}`;
+
+        try {
+          const dataURL = await renderModel(info);
+          window.__capturedThumbnails[info.id] = dataURL;
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <img src="${dataURL}" alt="${info.name}">
+            <p>${info.name}</p>
+            <small>${info.id}.jpg</small>
+          `;
+          (info.isSet ? setGrid : modGrid).appendChild(card);
+
+          console.log(`rendered: ${info.id}`);
+        } catch (err) {
+          console.error(`failed: ${info.id}`, err.message);
         }
 
-        window.generateAllThumbnails = async function() {
-            const statusEl = document.getElementById('status');
-            const progressEl = document.getElementById('progress');
-            const thumbnailsEl = document.getElementById('thumbnails');
-            
-            thumbnailsEl.innerHTML = '';
-            
-            // Wait for texture to load before starting
-            statusEl.textContent = 'Loading Granit texture...';
-            try {
-                await texturePromise;
-                console.log('Texture ready, starting thumbnail generation');
-            } catch (error) {
-                statusEl.textContent = '❌ Failed to load texture. Using fallback material.';
-                console.error('Texture loading failed, will use fallback material');
-            }
-            
-            for (let i = 0; i < models.length; i++) {
-                const model = models[i];
-                statusEl.textContent = `Generating thumbnail for ${model.name}...`;
-                progressEl.textContent = `Progress: ${i + 1}/${models.length}`;
-                
-                try {
-                    const result = await loadAndCapture(model);
-                    thumbnails[result.id] = result.dataURL;
-                    
-                    // Display thumbnail
-                    const div = document.createElement('div');
-                    div.className = 'thumbnail-item';
-                    div.innerHTML = `
-                        <img src="${result.dataURL}" alt="${result.name}">
-                        <h3>${result.name}</h3>
-                        <small>${result.id}</small>
-                    `;
-                    thumbnailsEl.appendChild(div);
-                    
-                } catch (error) {
-                    console.error('Failed to generate thumbnail for', model.name, error);
-                }
-                
-                // Small delay to let the browser breathe
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-            
-            statusEl.textContent = `✅ Generated ${Object.keys(thumbnails).length} thumbnails!`;
-            progressEl.textContent = '';
-        };
+        await new Promise(r => setTimeout(r, 60));
+      }
 
-        window.downloadAll = function() {
-            Object.entries(thumbnails).forEach(([id, dataURL]) => {
-                const link = document.createElement('a');
-                link.download = `${id}-thumbnail.jpg`;
-                link.href = dataURL;
-                link.click();
-            });
-        };
-    </script>
+      const count = Object.keys(window.__capturedThumbnails).length;
+      statusEl.textContent  = `✅ ${count} thumbnails ready.`;
+      progressEl.textContent = '';
+      btnDl.disabled  = false;
+      btnGen.disabled = false;
+
+      // Signal the Node.js puppeteer script that we're done
+      window.__thumbnailsComplete = true;
+    }
+
+    function downloadAll() {
+      for (const [id, dataURL] of Object.entries(window.__capturedThumbnails)) {
+        const a   = document.createElement('a');
+        a.href     = dataURL;
+        a.download = `${id}.jpg`;
+        a.click();
+      }
+    }
+
+    btnGen.addEventListener('click', generate);
+    btnDl.addEventListener('click', downloadAll);
+
+    // Auto-start when launched by the Node.js script (?auto=true)
+    if (new URLSearchParams(location.search).get('auto') === 'true') {
+      generate();
+    }
+  </script>
 </body>
 </html>

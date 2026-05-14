@@ -11,16 +11,16 @@ interface MaterialGroup {
 }
 
 const materialGroups: MaterialGroup[] = [
-  {
-    key: "club",
-    displayName: "CREVIN Club",
-    materials: availableMaterials.club,
-  },
-  {
-    key: "granit",
-    displayName: "CREVIN Granit",
-    materials: availableMaterials.granit,
-  },
+  { key: "amaral",  displayName: "AMARAL",  materials: availableMaterials.amaral },
+  { key: "cremona", displayName: "CREMONA", materials: availableMaterials.cremona },
+  { key: "glow",    displayName: "GLOW",    materials: availableMaterials.glow },
+  { key: "ilias",   displayName: "ILIAS",   materials: availableMaterials.ilias },
+  { key: "indiana", displayName: "INDIANA", materials: availableMaterials.indiana },
+  { key: "madras",  displayName: "MADRAS",  materials: availableMaterials.madras },
+  { key: "ness",    displayName: "NESS",    materials: availableMaterials.ness },
+  { key: "noma",    displayName: "NOMA",    materials: availableMaterials.noma },
+  { key: "pegaso",  displayName: "PEGASO",  materials: availableMaterials.pegaso },
+  { key: "puente",  displayName: "PUENTE",  materials: availableMaterials.puente },
 ];
 
 export const TopLeftButtons: React.FC = () => {
@@ -122,7 +122,7 @@ export const MaterialsModal: React.FC = () => {
   const { setCurrentMaterial, currentMaterial, selectedObjectId } =
     useMaterial();
   const [isModalOpen, setIsModalOpen] = useState(true);
-  const [expandedSection, setExpandedSection] = useState<string>("granit");
+  const [expandedSection, setExpandedSection] = useState<string>("amaral");
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);

@@ -1,12 +1,12 @@
 import { ContactShadows, Environment, OrbitControls, Line } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useControls, Leva } from "leva";
+import { useControls, folder, Leva } from "leva";
 import { DynamicModel } from "../DynamicModel";
 import { ContextMenu } from "../ContextMenu";
 import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
 import { useEffect, useRef, useState, createContext, useContext, useMemo } from "react";
-import { useMaterial } from "../../context/MaterialContext";
+import { useMaterial, MATERIAL_PBR_DEFAULTS, getMaterialFamily } from "../../context/MaterialContext";
 import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useObjectSelection } from "../../hooks/useObjectSelection";
@@ -590,7 +590,7 @@ function SceneObjects({ snapPreview }: { snapPreview: {
 }
 
 const Scene = () => {
-  const { setUvScale, setNormalScale, setMetalness, setRoughness, selectedObjectId } =
+  const { setUvScale, setNormalScale, setMetalness, setRoughness, selectedObjectId, currentMaterial } =
     useMaterial();
   const {
     sceneObjects,
@@ -669,40 +669,36 @@ const Scene = () => {
     setIsDraggingObject(isDragging);
   };
 
-  useControls(
-    "Material",
-    {
-      uvScale: {
-        value: 2.4,
-        min: 0.1,
-        max: 20,
-        step: 0.1,
-        onChange: (value) => setUvScale(value),
+  const currentFamily = getMaterialFamily(currentMaterial.name) ?? "amaral";
+
+  const [matControls, setMatControls] = useControls(() => ({
+    Material: folder(
+      {
+        uvScale:        { value: 15.4, min: 0.1, max: 25,  step: 0.1  },
+        normalStrength: { value: 1.15, min: 0,   max: 2,   step: 0.05, label: "Normal Strength" },
+        metalness:      { value: 0.45, min: 0,   max: 1,   step: 0.01 },
+        roughness:      { value: 0.87, min: 0,   max: 1,   step: 0.01 },
       },
-      normalScale: {
-        value: 1.60,
-        min: 0,
-        max: 2,
-        step: 0.05,
-        onChange: (value) => setNormalScale(value),
-      },
-      metalness: {
-        value: 0.45,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        onChange: (value) => setMetalness(value),
-      },
-      roughness: {
-        value: 0.87,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        onChange: (value) => setRoughness(value),
-      },
-    },
-    { collapsed: false },
-  );
+      { collapsed: false },
+    ),
+  }));
+
+  // Push slider values into MaterialContext whenever the user moves a slider
+  useEffect(() => {
+    setUvScale(matControls.uvScale);
+    setNormalScale(matControls.normalStrength);
+    setMetalness(matControls.metalness);
+    setRoughness(matControls.roughness);
+  }, [matControls.uvScale, matControls.normalStrength, matControls.metalness, matControls.roughness]);
+
+  // Reset sliders to per-family defaults when the material family changes,
+  // but not on deselect (selectedObjectId null causes currentMaterial to fall
+  // back to the amaral default, which would incorrectly clobber the sliders).
+  useEffect(() => {
+    if (!selectedObjectId) return;
+    const d = MATERIAL_PBR_DEFAULTS[currentFamily];
+    setMatControls({ uvScale: d.uvScale, normalStrength: d.normalScale, roughness: d.roughness });
+  }, [currentFamily, selectedObjectId]);
 
   const lightControls = useControls(
     "Lighting",

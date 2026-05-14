@@ -232,7 +232,7 @@ const ModuleSelectionStep: React.FC = () => {
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-gray-900 mb-2">
-                      {t[set.translationKey as keyof typeof t]}
+                      {set.displayName}
                     </h3>
                     <p className="text-sm text-gray-600">
                       {isAlreadyInScene ? t.alreadyInScene : t.clickToSelect2}

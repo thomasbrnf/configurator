@@ -1,7 +1,7 @@
 import { useGLTF, useTexture } from "@react-three/drei";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { useMaterial } from "../../context/MaterialContext";
+import { useMaterial, availableMaterials } from "../../context/MaterialContext";
 import {
   availableModules,
   availableCompleteSets,
@@ -63,9 +63,9 @@ export function DynamicModel({
         id: objectId,
         name: modelDefinition?.displayName || objectId,
         material: objectMaterial || {
-          name: "Granit 07",
-          diffuse: `${BASE}materials/the smallest granit/Granit_07_new_3.jpg`,
-          normal: `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
+          name: "AMARAL 90",
+          diffuse: `${BASE}materials/AMARAL 90  790  10  32/AMARAL 90_BaseColor.jpg`,
+          normal: `${BASE}materials/AMARAL 90  790  10  32/90_Normal.jpg`,
         },
       });
     }
@@ -79,9 +79,9 @@ export function DynamicModel({
 
   const [diffuseMap, normalMap] = useTexture([
     objectMaterial?.diffuse ||
-      `${BASE}materials/the smallest granit/Granit_01_new_3.jpg`,
+      `${BASE}materials/AMARAL 90  790  10  32/AMARAL 90_BaseColor.jpg`,
     objectMaterial?.normal ||
-      `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
+      `${BASE}materials/AMARAL 90  790  10  32/90_Normal.jpg`,
   ]);
 
   // Hide loader when textures are loaded
@@ -97,16 +97,15 @@ export function DynamicModel({
 
   const effectiveUvScale = modelDefinition?.uvScale ?? uvScale;
 
-  const customMaterials = useMemo(() => {
+  // Single PBR material applied only to the Sofa_Fabric mesh
+  const fabricMaterial = useMemo(() => {
     const diffuse = diffuseMap.clone();
     const normal = normalMap.clone();
 
     diffuse.wrapS = diffuse.wrapT = THREE.RepeatWrapping;
     normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
-
     diffuse.repeat.set(effectiveUvScale, effectiveUvScale);
     normal.repeat.set(effectiveUvScale, effectiveUvScale);
-
     diffuse.anisotropy = 16;
     normal.anisotropy = 16;
     diffuse.colorSpace = THREE.SRGBColorSpace;
@@ -115,96 +114,60 @@ export function DynamicModel({
     diffuse.needsUpdate = true;
     normal.needsUpdate = true;
 
-    const fabricMaterial = materials["Sofa_fabric"] as THREE.MeshStandardMaterial;
-    const aoMap = fabricMaterial?.aoMap || null;
-
-    const woodTopMaterial = materials["Sofa_Wood_top"] as THREE.MeshStandardMaterial;
-    const woodAoMap = woodTopMaterial?.aoMap || null;
-
-    const diffuseWood = diffuse.clone();
-    const normalWood = normal.clone();
-
-    const base = new THREE.MeshStandardMaterial({
+   const srcFabric = (
+  materials['Sofa_Fabric'] ?? // Quick check for the exact match first
+  Object.entries(materials).find(
+    ([name]) => name.toLowerCase() === 'sofa_fabric'
+  )?.[1]
+) as THREE.MeshStandardMaterial | undefined;
+    console.warn('Using source fabric material:', srcFabric);
+    return new THREE.MeshStandardMaterial({
       map: diffuse,
       normalMap: normal,
       normalScale: new THREE.Vector2(normalScale, normalScale),
-      aoMap: aoMap,
-      aoMapIntensity: aoMap ? 1 : 0,
-      roughness: roughness,
-      metalness: metalness,
+      aoMap: srcFabric?.aoMap ?? null,
+      aoMapIntensity: srcFabric?.aoMap ? 1 : 0,
+      roughness,
+      metalness,
       envMapIntensity: 0.5,
     });
-
-    const woodTop = new THREE.MeshStandardMaterial({
-      map: diffuseWood,
-      normalMap: normalWood,
-      normalScale: new THREE.Vector2(normalScale, normalScale),
-      aoMap: woodAoMap,
-      aoMapIntensity: woodAoMap ? 1 : 0,
-      roughness: roughness,
-      metalness: metalness,
-      envMapIntensity: 0.5,
-    });
-
-    return { base, woodTop };
-  }, [
-    diffuseMap,
-    normalMap,
-    effectiveUvScale,
-    normalScale,
-    metalness,
-    roughness,
-    materials,
-  ]);
+  }, [diffuseMap, normalMap, effectiveUvScale, normalScale, metalness, roughness, materials]);
 
   useEffect(() => {
-    for (const mat of [customMaterials.base, customMaterials.woodTop]) {
-      if (mat.map) {
-        mat.map.repeat.set(effectiveUvScale, effectiveUvScale);
-        mat.map.needsUpdate = true;
-      }
-      if (mat.normalMap) {
-        mat.normalMap.repeat.set(effectiveUvScale, effectiveUvScale);
-        mat.normalMap.needsUpdate = true;
-      }
-    }
-  }, [effectiveUvScale, customMaterials]);
+    if (fabricMaterial.map) { fabricMaterial.map.repeat.set(effectiveUvScale, effectiveUvScale); fabricMaterial.map.needsUpdate = true; }
+    if (fabricMaterial.normalMap) { fabricMaterial.normalMap.repeat.set(effectiveUvScale, effectiveUvScale); fabricMaterial.normalMap.needsUpdate = true; }
+  }, [effectiveUvScale, fabricMaterial]);
 
   useEffect(() => {
-    for (const mat of [customMaterials.base, customMaterials.woodTop]) {
-      if (mat.normalScale) {
-        mat.normalScale.set(normalScale, normalScale);
-        mat.needsUpdate = true;
-      }
-    }
-  }, [normalScale, customMaterials]);
+    fabricMaterial.normalScale?.set(normalScale, normalScale);
+    fabricMaterial.needsUpdate = true;
+  }, [normalScale, fabricMaterial]);
 
   useEffect(() => {
-    for (const mat of [customMaterials.base, customMaterials.woodTop]) {
-      mat.metalness = metalness;
-      mat.roughness = roughness;
-      mat.needsUpdate = true;
-    }
-  }, [metalness, roughness, customMaterials]);
+    fabricMaterial.metalness = metalness;
+    fabricMaterial.roughness = roughness;
+    fabricMaterial.needsUpdate = true;
+  }, [metalness, roughness, fabricMaterial]);
 
-  const defaultPreserveMeshNames = ['table_top', 'lamp_and_usb', 'legs', 'Sofa_top', 'Sofa_lamp', 'Sofa_mattress', 'Sofa_Bed_Metal', 'Sofa_technical_fabric'];
-  const preserveMeshNames = modelDefinition?.preserveMeshNames ?? defaultPreserveMeshNames;
-
+  // Only Sofa_Fabric receives the user-selected PBR material.
+  // Every other mesh keeps its original GLTF material.
+  // We cache the original GLTF material name in userData on first traversal —
+  // after the first apply, child.material.name becomes "" (our custom material
+  // has no name), so reading it live would silently skip all subsequent updates.
   const applyMaterials = (object: THREE.Object3D) => {
     object.traverse((child) => {
       if (child instanceof THREE.Mesh && !child.userData.isSelectionOutline) {
-        const shouldPreserve = preserveMeshNames.some((name: string) => child.name.includes(name));
-        if (shouldPreserve) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          return;
-        }
-
-        const originalMat = child.material as THREE.MeshStandardMaterial;
-        const isWoodTop = originalMat?.name === "Sofa_Wood_top";
-        child.material = isWoodTop ? customMaterials.woodTop : customMaterials.base;
         child.castShadow = true;
         child.receiveShadow = true;
+
+        if (child.userData.originalMatName === undefined) {
+          child.userData.originalMatName =
+            (child.material as THREE.MeshStandardMaterial)?.name ?? '';
+        }
+
+        if (child.userData.originalMatName.toLowerCase() === 'sofa_fabric') {
+          child.material = fabricMaterial;
+        }
       }
     });
   };
@@ -220,17 +183,20 @@ export function DynamicModel({
   // Clone the object for each instance to avoid sharing the same scene object
   const clonedObject = useMemo(() => mainObject.clone(), [mainObject]);
 
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Re-apply whenever fabricMaterial is recreated (new texture or PBR change)
+  useEffect(() => {
+    if (groupRef.current) applyMaterials(groupRef.current);
+  }, [fabricMaterial]);
+
   return (
     <group
+      ref={groupRef}
       position={position}
       rotation={rotation}
       scale={scale}
       userData={{ objectId }}
-      ref={(ref) => {
-        if (ref) {
-          applyMaterials(ref);
-        }
-      }}
     >
       <primitive object={clonedObject} dispose={null} />
       {isSelected && (
@@ -269,5 +235,16 @@ availableCompleteSets.forEach((set) => {
   useGLTF.preload(set.modelPath);
 });
 
-// Keep the original sofa preload for backwards compatibility
-useGLTF.preload(`${BASE}models/sofa3.glb`);
+// Pre-fetch every material texture into the browser's HTTP cache AND
+// drei's Suspense cache so fabric switches are instant with no flicker.
+// Native Image elements force the browser to fully download + decode each
+// file now; when THREE.js requests the same URL later it is served from
+// memory without any network round-trip.
+Object.values(availableMaterials).flat().forEach(({ diffuse, normal }) => {
+  useTexture.preload([diffuse, normal]);
+  [diffuse, normal].forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+});
+
