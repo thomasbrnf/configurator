@@ -1,7 +1,5 @@
 import React from "react";
 
-const BREADCRUMB_ARROW_SRC =
-  "https://www.figma.com/api/mcp/asset/3db141a4-fd77-41a1-952d-41454389a1c6";
 
 interface BreadcrumbProps {
   items: string[];

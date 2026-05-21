@@ -3,10 +3,6 @@ import { useMaterial, availableMaterials } from "../../context/MaterialContext";
 import { useLanguage } from "../../context/LanguageContext";
 import type { MaterialDefinition } from "../../context/MaterialContext";
 
-const ARROW_DOWN_SRC =
-  "https://www.figma.com/api/mcp/asset/a6ca5bbc-6c0e-45d1-8d69-fe02dbbc5c68";
-const ARROW_UP_SRC =
-  "https://www.figma.com/api/mcp/asset/539c4f8c-6b7c-4e5b-adfd-74ce2b155739";
 
 interface MaterialGroup {
   key: string;
