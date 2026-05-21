@@ -18,7 +18,7 @@ export const sceneDefaults = {
   },
   material: {
     uvScale: 2.4,
-    normalScale: 1.60,
+    normalScale: 1.6,
     metalness: 0.45,
     roughness: 0.87,
   },

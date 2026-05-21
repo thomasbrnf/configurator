@@ -11,11 +11,19 @@ export type ConfigurationStep =
 export type ConfigurationType = "complete" | "modules" | null;
 
 export type SnappingSide = "left" | "right" | "both" | "none";
-export type ModuleCategory = "standard" | "middle" | "long" | "expanded" | "wide" | "corner" | "accessory";
+export type ModuleCategory =
+  | "standard"
+  | "standardLong"
+  | "wide"
+  | "light"
+  | "extralight"
+  | "thin"
+  | "corner"
+  | "cornerWider";
 
 export interface SceneInstance {
   instanceId: string; // full encoded ID (or bare set ID for complete sets)
-  moduleId: string;   // base module ID (same as instanceId for complete sets)
+  moduleId: string; // base module ID (same as instanceId for complete sets)
 }
 
 export interface ModuleDefinition {
@@ -48,33 +56,215 @@ export interface CompleteSetDefinition {
 const BASE = import.meta.env.BASE_URL;
 
 export const availableModules: ModuleDefinition[] = [
-  { id: "1(70)TVBB aku",  name: "1(70)TVBB aku",  displayName: "1(70)TVBB aku",  modelPath: `${BASE}models/moduls/1(70)TVBB aku.glb`,  thumbnail: `${BASE}models/thumbnails/1(70)TVBB aku.jpg`,  category: "standard", snappingSides: "both" },
-  { id: "1D70(1)SBB",     name: "1D70(1)SBB",     displayName: "1D70(1)SBB",     modelPath: `${BASE}models/moduls/1D70(1)SBB.glb`,     thumbnail: `${BASE}models/thumbnails/1D70(1)SBB.jpg`,     category: "standard", snappingSides: "both" },
-  { id: "2(160)FBBW PRO", name: "2(160)FBBW PRO", displayName: "2(160)FBBW PRO", modelPath: `${BASE}models/moduls/2(160)FBBW PRO.glb`, thumbnail: `${BASE}models/thumbnails/2(160)FBBW PRO.jpg`, category: "wide",     snappingSides: "both" },
-  { id: "BAR(2z)L",       name: "BAR(2z)L",       displayName: "BAR(2z)L",       modelPath: `${BASE}models/moduls/BAR(2z)L.glb`,       thumbnail: `${BASE}models/thumbnails/BAR(2z)L.jpg`,       category: "standard", snappingSides: "right" },
-  { id: "BAR(2z)S",       name: "BAR(2z)S",       displayName: "BAR(2z)S",       modelPath: `${BASE}models/moduls/BAR(2z)S.glb`,       thumbnail: `${BASE}models/thumbnails/BAR(2z)S.jpg`,       category: "middle",   snappingSides: "both" },
-  { id: "BAR",            name: "BAR",            displayName: "BAR",            modelPath: `${BASE}models/moduls/BAR.glb`,            thumbnail: `${BASE}models/thumbnails/BAR.jpg`,            category: "standard", snappingSides: "both" },
-  { id: "BL (b)",         name: "BL (b)",         displayName: "BL (b)",         modelPath: `${BASE}models/moduls/BL (b).glb`,         thumbnail: `${BASE}models/thumbnails/BL (b).jpg`,         category: "standard", snappingSides: "right" },
-  { id: "BL",             name: "BL",             displayName: "BL",             modelPath: `${BASE}models/moduls/BL.glb`,             thumbnail: `${BASE}models/thumbnails/BL.jpg`,             category: "standard", snappingSides: "right" },
-  { id: "BP (b)",         name: "BP (b)",         displayName: "BP (b)",         modelPath: `${BASE}models/moduls/BP (b).glb`,         thumbnail: `${BASE}models/thumbnails/BP (b).jpg`,         category: "standard", snappingSides: "left" },
-  { id: "BP",             name: "BP",             displayName: "BP",             modelPath: `${BASE}models/moduls/BP.glb`,             thumbnail: `${BASE}models/thumbnails/BP.jpg`,             category: "standard", snappingSides: "left" },
-  { id: "EN(2)L",         name: "EN(2)L",         displayName: "EN(2)L",         modelPath: `${BASE}models/moduls/EN(2)L.glb`,         thumbnail: `${BASE}models/thumbnails/EN(2)L.jpg`,         category: "standard", snappingSides: "right" },
-  { id: "EN(2)R",         name: "EN(2)R",         displayName: "EN(2)R",         modelPath: `${BASE}models/moduls/EN(2)R.glb`,         thumbnail: `${BASE}models/thumbnails/EN(2)R.jpg`,         category: "standard", snappingSides: "left" },
-  { id: "KE(70)SL",       name: "KE(70)SL",       displayName: "KE(70)SL",       modelPath: `${BASE}models/moduls/KE(70)SL.glb`,       thumbnail: `${BASE}models/thumbnails/KE(70)SL.jpg`,       category: "standard", snappingSides: "right" },
-  { id: "KE(70)SP",       name: "KE(70)SP",       displayName: "KE(70)SP",       modelPath: `${BASE}models/moduls/KE(70)SP.glb`,       thumbnail: `${BASE}models/thumbnails/KE(70)SP.jpg`,       category: "standard", snappingSides: "left" },
+  {
+    id: "1(70)TVBB aku",
+    name: "1(70)TVBB aku",
+    displayName: "1(70)TVBB aku",
+    modelPath: `${BASE}models/moduls/1(70)TVBB aku.glb`,
+    thumbnail: `${BASE}models/thumbnails/1(70)TVBB aku.jpg`,
+    category: "standard",
+    snappingSides: "both",
+  },
+  {
+    id: "1D70(1)SBB",
+    name: "1D70(1)SBB",
+    displayName: "1D70(1)SBB",
+    modelPath: `${BASE}models/moduls/1D70(1)SBB.glb`,
+    thumbnail: `${BASE}models/thumbnails/1D70(1)SBB.jpg`,
+    category: 'standardLong',
+    snappingSides: "both",
+  },
+  {
+    id: "2(160)FBBW PRO",
+    name: "2(160)FBBW PRO",
+    displayName: "2(160)FBBW PRO",
+    modelPath: `${BASE}models/moduls/2(160)FBBW PRO.glb`,
+    thumbnail: `${BASE}models/thumbnails/2(160)FBBW PRO.jpg`,
+    category: "wide",
+    snappingSides: "both",
+  },
+  {
+    id: "BAR(2z)L",
+    name: "BAR(2z)L",
+    displayName: "BAR(2z)L",
+    modelPath: `${BASE}models/moduls/BAR(2z)L.glb`,
+    thumbnail: `${BASE}models/thumbnails/BAR(2z)L.jpg`,
+    category: "light",
+    snappingSides: "both",
+  },
+  {
+    id: "BAR(2z)S",
+    name: "BAR(2z)S",
+    displayName: "BAR(2z)S",
+    modelPath: `${BASE}models/moduls/BAR(2z)S.glb`,
+    thumbnail: `${BASE}models/thumbnails/BAR(2z)S.jpg`,
+    category: "light",
+    snappingSides: "both",
+  },
+  {
+    id: "BAR",
+    name: "BAR",
+    displayName: "BAR",
+    modelPath: `${BASE}models/moduls/BAR.glb`,
+    thumbnail: `${BASE}models/thumbnails/BAR.jpg`,
+    category: "light",
+    snappingSides: "both",
+  },
+  {
+    id: "BL (b)",
+    name: "BL (b)",
+    displayName: "BL (b)",
+    modelPath: `${BASE}models/moduls/BL (b).glb`,
+    thumbnail: `${BASE}models/thumbnails/BL (b).jpg`,
+    category: "thin",
+    snappingSides: "right",
+  },
+  {
+    id: "BL",
+    name: "BL",
+    displayName: "BL",
+    modelPath: `${BASE}models/moduls/BL.glb`,
+    thumbnail: `${BASE}models/thumbnails/BL.jpg`,
+    category: "extralight",
+    snappingSides: "right",
+  },
+  {
+    id: "BP (b)",
+    name: "BP (b)",
+    displayName: "BP (b)",
+    modelPath: `${BASE}models/moduls/BP (b).glb`,
+    thumbnail: `${BASE}models/thumbnails/BP (b).jpg`,
+    category: "thin",
+    snappingSides: "left",
+  },
+  {
+    id: "BP",
+    name: "BP",
+    displayName: "BP",
+    modelPath: `${BASE}models/moduls/BP.glb`,
+    thumbnail: `${BASE}models/thumbnails/BP.jpg`,
+    category: "extralight",
+    snappingSides: "left",
+  },
+  {
+    id: "EN(2)L",
+    name: "EN(2)L",
+    displayName: "EN(2)L",
+    modelPath: `${BASE}models/moduls/EN(2)L.glb`,
+    thumbnail: `${BASE}models/thumbnails/EN(2)L.jpg`,
+    category: "corner",
+    snappingSides: "right",
+  },
+  {
+    id: "EN(2)R",
+    name: "EN(2)R",
+    displayName: "EN(2)R",
+    modelPath: `${BASE}models/moduls/EN(2)R.glb`,
+    thumbnail: `${BASE}models/thumbnails/EN(2)R.jpg`,
+    category: "corner",
+    snappingSides: "left",
+  },
+  {
+    id: "KE(70)SL",
+    name: "KE(70)SL",
+    displayName: "KE(70)SL",
+    modelPath: `${BASE}models/moduls/KE(70)SL.glb`,
+    thumbnail: `${BASE}models/thumbnails/KE(70)SL.jpg`,
+    category: "cornerWider",
+    snappingSides: "right",
+  },
+  {
+    id: "KE(70)SP",
+    name: "KE(70)SP",
+    displayName: "KE(70)SP",
+    modelPath: `${BASE}models/moduls/KE(70)SP.glb`,
+    thumbnail: `${BASE}models/thumbnails/KE(70)SP.jpg`,
+    category: "cornerWider",
+    snappingSides: "left",
+  },
 ];
 
 export const availableCompleteSets: CompleteSetDefinition[] = [
-  { id: "set-bl-bp",          name: "BL - BP",        displayName: "BL – BP",                                  translationKey: "BL – BP",                    modelPath: `${BASE}models/BL - 2(160) FFBBW - BP.glb`,                                                             thumbnail: `${BASE}models/thumbnails/set-bl-bp.jpg` },
-  { id: "set-bl-bp-open",     name: "BL - BP open",   displayName: "BL – BP (open)",                           translationKey: "BL – BP (open)",             modelPath: `${BASE}models/BL - 2(160) FFBBW - BP open.glb`,                                                        thumbnail: `${BASE}models/thumbnails/set-bl-bp-open.jpg` },
-  { id: "set-bl-sbb-bp",      name: "BL SBB BP",      displayName: "BL PRO – SBB – BP",                        translationKey: "BL PRO – SBB – BP",          modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP.glb`,                                            thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp.jpg` },
-  { id: "set-bl-sbb-bp-open", name: "BL SBB BP open", displayName: "BL PRO – SBB – BP (open)",                 translationKey: "BL PRO – SBB – BP (open)",   modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP open.glb`,                                       thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp-open.jpg` },
-  { id: "set-bl-full",        name: "BL full",        displayName: "BL PRO – EN – TVBB – BAR – BP(b)",          translationKey: "BL PRO full",                modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - EN(2) - 1(70)TVBB (aku) - BAR(2)S - 1(70) BB - BP(b).glb`,      thumbnail: `${BASE}models/thumbnails/set-bl-full.jpg` },
-  { id: "set-bl-full-open",   name: "BL full open",   displayName: "BL PRO – EN – TVBB – BAR – BP(b) (open)",   translationKey: "BL PRO full (open)",         modelPath: `${BASE}models/BL - 2(160)FFBBW PRO - EN(2) - 1(70)TVBB(aku) - BAR(2)S- 1(70)BB - BP(b) open.glb`,     thumbnail: `${BASE}models/thumbnails/set-bl-full-open.jpg` },
-  { id: "set-blb-ke",         name: "BL(b) KE",       displayName: "BL(b) PRO – EN – KE SP",                   translationKey: "BL(b) PRO – EN – KE SP",     modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP.glb`,                                       thumbnail: `${BASE}models/thumbnails/set-blb-ke.jpg` },
-  { id: "set-blb-ke-open",    name: "BL(b) KE open",  displayName: "BL(b) PRO – EN – KE SP (open)",            translationKey: "BL(b) PRO – EN – KE SP (open)", modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP open.glb`,                              thumbnail: `${BASE}models/thumbnails/set-blb-ke-open.jpg` },
-  { id: "set-bar-bp",         name: "BAR BP",         displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b)",        translationKey: "BAR(2z)L full",              modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b).glb`,               thumbnail: `${BASE}models/thumbnails/set-bar-bp.jpg` },
-  { id: "set-bar-bp-open",    name: "BAR BP open",    displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b) (open)", translationKey: "BAR(2z)L full (open)",       modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b) open.glb`,          thumbnail: `${BASE}models/thumbnails/set-bar-bp-open.jpg` },
+  {
+    id: "set-bl-bp",
+    name: "BL - BP",
+    displayName: "BL – BP",
+    translationKey: "BL – BP",
+    modelPath: `${BASE}models/BL - 2(160) FFBBW - BP.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-bp.jpg`,
+  },
+  {
+    id: "set-bl-bp-open",
+    name: "BL - BP open",
+    displayName: "BL – BP (open)",
+    translationKey: "BL – BP (open)",
+    modelPath: `${BASE}models/BL - 2(160) FFBBW - BP open.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-bp-open.jpg`,
+  },
+  {
+    id: "set-bl-sbb-bp",
+    name: "BL SBB BP",
+    displayName: "BL PRO – SBB – BP",
+    translationKey: "BL PRO – SBB – BP",
+    modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp.jpg`,
+  },
+  {
+    id: "set-bl-sbb-bp-open",
+    name: "BL SBB BP open",
+    displayName: "BL PRO – SBB – BP (open)",
+    translationKey: "BL PRO – SBB – BP (open)",
+    modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP open.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp-open.jpg`,
+  },
+  {
+    id: "set-bl-full",
+    name: "BL full",
+    displayName: "BL PRO – EN – TVBB – BAR – BP(b)",
+    translationKey: "BL PRO full",
+    modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - EN(2) - 1(70)TVBB (aku) - BAR(2)S - 1(70) BB - BP(b).glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-full.jpg`,
+  },
+  {
+    id: "set-bl-full-open",
+    name: "BL full open",
+    displayName: "BL PRO – EN – TVBB – BAR – BP(b) (open)",
+    translationKey: "BL PRO full (open)",
+    modelPath: `${BASE}models/BL - 2(160)FFBBW PRO - EN(2) - 1(70)TVBB(aku) - BAR(2)S- 1(70)BB - BP(b) open.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-full-open.jpg`,
+  },
+  {
+    id: "set-blb-ke",
+    name: "BL(b) KE",
+    displayName: "BL(b) PRO – EN – KE SP",
+    translationKey: "BL(b) PRO – EN – KE SP",
+    modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-blb-ke.jpg`,
+  },
+  {
+    id: "set-blb-ke-open",
+    name: "BL(b) KE open",
+    displayName: "BL(b) PRO – EN – KE SP (open)",
+    translationKey: "BL(b) PRO – EN – KE SP (open)",
+    modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP open.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-blb-ke-open.jpg`,
+  },
+  {
+    id: "set-bar-bp",
+    name: "BAR BP",
+    displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b)",
+    translationKey: "BAR(2z)L full",
+    modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b).glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bar-bp.jpg`,
+  },
+  {
+    id: "set-bar-bp-open",
+    name: "BAR BP open",
+    displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b) (open)",
+    translationKey: "BAR(2z)L full (open)",
+    modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b) open.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-bar-bp-open.jpg`,
+  },
 ];
 
 export const getModuleSnappingConfig = (objectId: string): SnappingSide => {
@@ -130,7 +320,10 @@ interface ConfiguratorContextType {
 
   // Object positions (keyed by instanceId) - [x, y, z]
   objectPositions: Map<string, [number, number, number]>;
-  setObjectPosition: (instanceId: string, position: [number, number, number]) => void;
+  setObjectPosition: (
+    instanceId: string,
+    position: [number, number, number],
+  ) => void;
 
   // Rotation control UI state
   rotationControlId: string | null;
@@ -164,7 +357,9 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   const [objectPositions, setObjectPositions] = useState<
     Map<string, [number, number, number]>
   >(new Map());
-  const [rotationControlId, setRotationControlId] = useState<string | null>(null);
+  const [rotationControlId, setRotationControlId] = useState<string | null>(
+    null,
+  );
 
   const toggleModule = (moduleId: string) => {
     setSelectedModules((prev) => {
@@ -184,11 +379,21 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
 
   const addModulesToScene = () => {
     let counter = 0;
-    const instances: SceneInstance[] = Array.from(selectedModules).map((moduleId) => {
-      const instanceId = generateInstanceId(moduleId, counter++);
-      return { instanceId, moduleId };
-    });
+    const startIndex = sceneObjects.length;
+    const instances: SceneInstance[] = Array.from(selectedModules).map(
+      (moduleId) => {
+        const instanceId = generateInstanceId(moduleId, counter++);
+        return { instanceId, moduleId };
+      },
+    );
     setSceneObjects((prev) => [...prev, ...instances]);
+    setObjectPositions((prev) => {
+      const next = new Map(prev);
+      instances.forEach((inst, i) => {
+        next.set(inst.instanceId, [(startIndex + i) * 1.9, 0, 0]);
+      });
+      return next;
+    });
     if (instances.length > 0) {
       setSelectedObjectId(instances[0].instanceId);
     }
@@ -213,7 +418,9 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       if (latestSetInstance) {
-        const latestPos = objectPositions.get(latestSetInstance.instanceId) || [0, 0, 0];
+        const latestPos = objectPositions.get(latestSetInstance.instanceId) || [
+          0, 0, 0,
+        ];
         setObjectPositions((prev) => {
           const next = new Map(prev);
           next.set(instanceId, [latestPos[0] + gap, 0, 0]);
@@ -226,6 +433,12 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
           return next;
         });
       }
+    } else if (!isCompleteSet) {
+      setObjectPositions((prev) => {
+        const next = new Map(prev);
+        next.set(instanceId, [prev.size * 1.9, 0, 0]);
+        return next;
+      });
     }
 
     setSceneObjects((prev) => [...prev, instance]);
@@ -237,7 +450,9 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const removeObjectById = (instanceId: string) => {
-    setSceneObjects((prev) => prev.filter((inst) => inst.instanceId !== instanceId));
+    setSceneObjects((prev) =>
+      prev.filter((inst) => inst.instanceId !== instanceId),
+    );
     setObjectRotations((prev) => {
       const next = new Map(prev);
       next.delete(instanceId);
@@ -280,7 +495,11 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
       const next = new Map(prev);
       const current = next.get(instanceId) || [0, 0, 0];
       const axisIndex = axis === "x" ? 0 : axis === "y" ? 1 : 2;
-      const updated: [number, number, number] = [...current] as [number, number, number];
+      const updated: [number, number, number] = [...current] as [
+        number,
+        number,
+        number,
+      ];
       updated[axisIndex] += delta;
       next.set(instanceId, updated);
       return next;

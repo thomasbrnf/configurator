@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface LoaderStore {
   isLoading: boolean;
@@ -9,7 +9,8 @@ interface LoaderStore {
 
 export const useLoaderStore = create<LoaderStore>((set) => ({
   isLoading: false,
-  loadingMessage: 'Loading...',
-  showLoader: (message = 'Loading...') => set({ isLoading: true, loadingMessage: message }),
+  loadingMessage: "Loading...",
+  showLoader: (message = "Loading...") =>
+    set({ isLoading: true, loadingMessage: message }),
   hideLoader: () => set({ isLoading: false }),
 }));

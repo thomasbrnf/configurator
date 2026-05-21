@@ -7,11 +7,13 @@ This tool automatically generates low-resolution thumbnail previews of your 3D m
 ### Step 1: Run the Thumbnail Generator
 
 1. Make sure your development server is running:
+
    ```bash
    npm run dev
    ```
 
 2. Open the thumbnail generator in your browser:
+
    ```
    http://localhost:5173/scripts/generate-thumbnails.html
    ```
@@ -25,6 +27,7 @@ This tool automatically generates low-resolution thumbnail previews of your 3D m
 ### Step 2: Organize Thumbnails
 
 1. Create a `thumbnails` directory in your `public` folder:
+
    ```bash
    mkdir public/thumbnails
    ```
@@ -86,15 +89,18 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
 ## Troubleshooting
 
 **Problem**: Thumbnails not showing
+
 - Check that files are in `public/thumbnails/`
 - Verify file names match the module IDs exactly
 - Check browser console for 404 errors
 
 **Problem**: Models look cut off
+
 - Adjust camera distance in `generate-thumbnails.html` (line 124)
 - Change `distance * 1.2` to a higher number like `distance * 1.5`
 
 **Problem**: Lighting looks bad
+
 - Adjust `ambientLight` intensity (line 80)
 - Adjust `directionalLight` intensity and position (lines 83-84)
 

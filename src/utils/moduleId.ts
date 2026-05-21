@@ -4,7 +4,7 @@ const TIMESTAMP_RE = /^\d{13}$/;
 const COUNTER_RE = /^\d+$/;
 
 export function extractBaseModuleId(id: string): string {
-  const parts = id.split('-');
+  const parts = id.split("-");
 
   if (parts.length >= 4) {
     const last = parts[parts.length - 1];
@@ -16,7 +16,7 @@ export function extractBaseModuleId(id: string): string {
       TIMESTAMP_RE.test(secondLast) &&
       COUNTER_RE.test(thirdLast)
     ) {
-      return parts.slice(0, -3).join('-');
+      return parts.slice(0, -3).join("-");
     }
   }
 
@@ -25,7 +25,7 @@ export function extractBaseModuleId(id: string): string {
     const last = parts[parts.length - 1];
     const secondLast = parts[parts.length - 2];
     if (INSTANCE_SUFFIX_RE.test(last) && TIMESTAMP_RE.test(secondLast)) {
-      return parts.slice(0, -2).join('-');
+      return parts.slice(0, -2).join("-");
     }
   }
 

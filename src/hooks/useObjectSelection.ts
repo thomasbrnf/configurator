@@ -3,11 +3,14 @@ import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 
 interface UseObjectSelectionOptions {
-  onSelect: (objectId: string, x: number, y: number) => void;
+  onSelect: (objectId: string) => void;
   onDeselect: () => void;
 }
 
-export function useObjectSelection({ onSelect, onDeselect }: UseObjectSelectionOptions) {
+export function useObjectSelection({
+  onSelect,
+  onDeselect,
+}: UseObjectSelectionOptions) {
   const { camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
@@ -28,8 +31,10 @@ export function useObjectSelection({ onSelect, onDeselect }: UseObjectSelectionO
     canvasRect: DOMRect,
     selectedObjectId: string | null,
   ) {
-    mouse.current.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    mouse.current.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+    mouse.current.x =
+      ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+    mouse.current.y =
+      -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
 
     raycaster.current.setFromCamera(mouse.current, camera);
     const intersects = raycaster.current.intersectObjects(scene.children, true);
@@ -48,13 +53,18 @@ export function useObjectSelection({ onSelect, onDeselect }: UseObjectSelectionO
     if (objectId === selectedObjectId) {
       onDeselect();
     } else {
-      onSelect(objectId, 220, event.clientY); // 220px from left edge (below controls)
+      onSelect(objectId);
     }
   }
 
-  function getRaycasterIntersects(event: MouseEvent, canvasRect: DOMRect): THREE.Intersection[] {
-    mouse.current.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    mouse.current.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+  function getRaycasterIntersects(
+    event: MouseEvent,
+    canvasRect: DOMRect,
+  ): THREE.Intersection[] {
+    mouse.current.x =
+      ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+    mouse.current.y =
+      -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
     raycaster.current.setFromCamera(mouse.current, camera);
     return raycaster.current.intersectObjects(scene.children, true);
   }

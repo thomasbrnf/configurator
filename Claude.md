@@ -10,15 +10,15 @@ The app is a single-page experience with no routing. A step machine gates the 3D
 
 ## Tech Stack
 
-| Layer | Library | Version |
-|---|---|---|
-| UI | React, TypeScript | 19.1.1, 5.9.3 |
-| 3D Rendering | Three.js, React Three Fiber, @react-three/drei | 0.180, 9.3.0, 10.7.6 |
-| Post-processing | @react-three/postprocessing | 3.0.4 |
-| State | React Context API (3 contexts) + Zustand (loader only) | 5.0.8 |
-| Styling | Tailwind CSS | 4.1.14 |
-| Build | Vite (rolldown-vite fork), SWC | 7.1.14 |
-| Debug UI | Leva | 0.10.0 |
+| Layer           | Library                                                | Version              |
+| --------------- | ------------------------------------------------------ | -------------------- |
+| UI              | React, TypeScript                                      | 19.1.1, 5.9.3        |
+| 3D Rendering    | Three.js, React Three Fiber, @react-three/drei         | 0.180, 9.3.0, 10.7.6 |
+| Post-processing | @react-three/postprocessing                            | 3.0.4                |
+| State           | React Context API (3 contexts) + Zustand (loader only) | 5.0.8                |
+| Styling         | Tailwind CSS                                           | 4.1.14               |
+| Build           | Vite (rolldown-vite fork), SWC                         | 7.1.14               |
+| Debug UI        | Leva                                                   | 0.10.0               |
 
 No routing library. No test suite. No state persistence.
 
@@ -39,17 +39,25 @@ src/
                                      Leva debug panels
     DynamicModel/index.tsx         — Per-object GLTF loader + material applicator
                                      + selection outline rendering
-    ControlPanel/index.tsx         — Materials modal, top-left nav buttons, selected
-                                     object info card
+    ControlPanel/
+      index.tsx                    — Composes ConfiguratorHeader (scene variant),
+                                     SceneActionButtons, MaterialsModal
+      SceneActionButtons.tsx       — Floating delete/copy action buttons
+      MaterialsModal.tsx           — Right-side material picker panel
     Configurator/
       index.tsx                    — Step router (switch on currentStep)
+      ConfiguratorHeader.tsx       — Unified header used by ALL steps + scene
       WelcomeStep.tsx              — Initial welcome overlay
       ConfigTypeStep.tsx           — Complete sets vs. modules choice
       ModuleSelectionStep.tsx      — Module picker with quantity counter
     ContextMenu/index.tsx          — Draggable floating menu (delete action)
-    ControlsInfo/index.tsx         — Camera controls help tooltip + language switcher
+    ControlsInfo/index.tsx         — Camera controls help tooltip
     Spinner/index.tsx              — Loading overlay
     model/index.tsx                — Legacy component, verify before touching
+    ui/
+      Breadcrumb.tsx               — Reusable breadcrumb trail (arrow-separated items)
+      LanguageSwitcher.tsx         — PL/EN toggle button (reads useLanguage internally)
+      ItemCard.tsx                 — Module/complete-set card (thumbnail + name + overlay slot)
 
   context/
     ConfiguratorContext.tsx        — Step state, scene object list (string[]),
@@ -72,6 +80,23 @@ public/
 
 ---
 
+## Design Tokens
+
+All UI colors and the Lato font are defined as Tailwind tokens in `tailwind.config.js`. **Never hardcode these hex values directly** — always use the token class.
+
+| Token            | Class                                            | Hex       | Usage                                                           |
+| ---------------- | ------------------------------------------------ | --------- | --------------------------------------------------------------- |
+| Brand green      | `text-brand` / `bg-brand`                        | `#06402b` | Primary brand color                                             |
+| Dark text/border | `text-ui-dark` / `border-ui-dark` / `bg-ui-dark` | `#454343` | Primary text, active borders, buttons                           |
+| Header accent    | `text-ui-mid` / `border-ui-mid` / `bg-ui-mid`    | `#7e7870` | Header lines, accent bars, secondary borders                    |
+| Muted text       | `text-ui-muted` / `bg-ui-muted`                  | `#757575` | Breadcrumb text, disabled labels, add-module bar                |
+| Inactive border  | `border-ui-border`                               | `#acacac` | Inactive card borders, disabled buttons                         |
+| Card surface     | `from-ui-surface`                                | `#f3f3f3` | Card gradient start (used with `bg-gradient-to-b ... to-white`) |
+
+The Lato typeface is available as `font-lato`. Use `font-lato` instead of `font-['Lato',sans-serif]` everywhere.
+
+---
+
 ## Architecture Decisions
 
 ### Provider Order in App.tsx (Load-Bearing)
@@ -84,6 +109,34 @@ LanguageProvider
 ```
 
 `ConfiguratorProvider` depends on `MaterialProvider` — it calls `setSelectedObjectId` from `useMaterial` inside its own logic. **Never hoist `ConfiguratorProvider` above `MaterialProvider`.**
+
+### Unified Header: ConfiguratorHeader
+
+A single `ConfiguratorHeader` component is used across all four steps and the scene view. Its props:
+
+```ts
+interface ConfiguratorHeaderProps {
+  showLabel?: boolean; // "Sofa configurator" label (WelcomeStep)
+  onBack?: () => void; // renders standard BACK button
+  leftContent?: React.ReactNode; // fully custom left slot (overrides showLabel/onBack)
+  breadcrumb?: string[];
+  onClose?: () => void;
+  subBar?: React.ReactNode; // second row below header bar (scene ADD MODULE button)
+  fixed?: boolean; // position:fixed vs absolute (true for scene header)
+}
+```
+
+- Wizard steps (`WelcomeStep`, `ConfigTypeStep`, `ModuleSelectionStep`) live inside `fixed inset-0` containers so they use `fixed={false}` (default).
+- `ControlPanel` passes `fixed={true}` because it renders directly in the document, outside any overlay container.
+- `Breadcrumb` and `LanguageSwitcher` are consumed internally by `ConfiguratorHeader` — do not render them separately alongside it.
+
+### Shared UI Primitives (`src/components/ui/`)
+
+| Component          | Props                                                                              | Notes                                             |
+| ------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `Breadcrumb`       | `items: string[]`                                                                  | Arrow-separated uppercase items                   |
+| `LanguageSwitcher` | none                                                                               | Reads `useLanguage` internally                    |
+| `ItemCard`         | `name`, `subtitle`, `thumbnail?`, `selected?`, `disabled?`, `onClick?`, `overlay?` | Used for both module cards and complete-set cards |
 
 ### Object Identity System
 
@@ -113,7 +166,7 @@ All UI overlays (`ContextMenu`, `ControlPanel`, `Configurator`, `Spinner`) are o
 When adding a module instance, always generate IDs in this exact format:
 
 ```ts
-`${moduleId}-${counter}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+`${moduleId}-${counter}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 ```
 
 The 3-segment suffix (counter: digits, timestamp: 13 digits, random: 9 alphanumeric) is what `extractBaseModuleId` uses to recover the base module ID. Changing this format breaks material lookup, model resolution, and snapping.
@@ -150,10 +203,6 @@ Two models have hardcoded UV scale overrides in `DynamicModel`:
 
 If you add a model that needs a non-default UV scale, add another condition to the `effectiveUvScale` assignment in `DynamicModel/index.tsx`.
 
-### Brand Color
-
-The brand green is `#06402b`. It appears in 51+ places. There is currently no Tailwind token for it. Continue using the literal hex until design tokens are established (Phase 1 of the refactoring plan). **Do not introduce a second shade value.**
-
 ### Translation Keys
 
 Always add new keys to **both** `pl` and `en` objects in `LanguageContext.tsx`. TypeScript will catch missing keys only if the `Translations` interface is kept in sync — update the interface when adding new keys.
@@ -177,6 +226,7 @@ Positions and rotations are re-indexed synchronously in `removeObjectByIndex`. I
 ### `extractBaseModuleId` is Duplicated
 
 The function that strips the unique suffix from a module instance ID exists in:
+
 1. `ConfiguratorContext.tsx` — as an inline closure inside `getModuleSnappingConfig`
 2. `DynamicModel/index.tsx` — as a local function inside the component
 
@@ -220,7 +270,7 @@ There are no React error boundaries. If a GLTF fails to load, `useGLTF` throws a
 In `ModuleSelectionStep`, the "already in scene" check for complete sets is an exact match on the bare ID:
 
 ```ts
-sceneObjects.some(obj => obj === set.id)
+sceneObjects.some((obj) => obj === set.id);
 ```
 
 Module instances always generate a unique suffix, so they are never blocked from being re-added. This asymmetry is intentional — complete sets are singletons, modules are not.
@@ -263,6 +313,9 @@ Never hardcode an absolute asset path.
 
 ## Things NOT To Do
 
+- **Do not hardcode UI colors** — use the `ui.*` Tailwind tokens (`text-ui-dark`, `bg-ui-mid`, etc.) defined in `tailwind.config.js`.
+- **Do not write `font-['Lato',sans-serif]`** — use `font-lato` (the Tailwind token).
+- **Do not render `<Breadcrumb>` or `<LanguageSwitcher>` manually in header areas** — they are already included inside `ConfiguratorHeader`. Duplicating them creates desynced state.
 - **Do not rename module IDs** without auditing the snap logic — string-match type detection (`includes('long')`, `includes('middle')`) is coupled to ID naming and breaks silently.
 - **Do not move `ConfiguratorProvider` above `MaterialProvider`** — `ConfiguratorProvider` calls `useMaterial()` internally and will throw.
 - **Do not remove Leva before extracting production defaults** — the Leva `value:` defaults for lighting, tone mapping, shadows, and environment are the production-tuned values.
@@ -272,5 +325,4 @@ Never hardcode an absolute asset path.
 - **Do not render DOM elements inside the R3F `<Canvas>`** — only Three.js/R3F scene objects are valid there.
 - **Do not call hooks inside `useEffect` callbacks** — use the `useLoaderStore.getState()` Zustand escape hatch pattern for store access in callbacks, not `useContext`.
 - **Do not import a context hook in a non-React file** — use `useLoaderStore.getState()` for Zustand or restructure to pass values as arguments.
-- **Do not add `#06402b` to Tailwind theme or CSS variables** until the design token phase is completed — introducing it in two systems simultaneously causes drift.
 - **Do not add IDs for new complete sets that don't start with `"sofa-"`** — the `isAlreadyInScene` check and other detection logic rely on this prefix convention.

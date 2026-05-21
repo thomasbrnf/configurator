@@ -1,7 +1,10 @@
 import { useRef } from "react";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
-import { getModuleSnappingConfig, getModuleCategory } from "../context/ConfiguratorContext";
+import {
+  getModuleSnappingConfig,
+  getModuleCategory,
+} from "../context/ConfiguratorContext";
 import { getSnapConfig } from "../data/snapDistances";
 
 export interface SnapPreview {
@@ -18,7 +21,10 @@ interface SceneInstanceRef {
 interface UseDragAndSnapOptions {
   sceneObjects: SceneInstanceRef[];
   objectPositions: Map<string, [number, number, number]>;
-  onDragUpdate: (instanceId: string, position: [number, number, number]) => void;
+  onDragUpdate: (
+    instanceId: string,
+    position: [number, number, number],
+  ) => void;
   onSnapPreview: (preview: SnapPreview | null) => void;
   onDragStateChange: (isDragging: boolean) => void;
   SNAP_DISTANCE?: number;
@@ -42,11 +48,18 @@ export function useDragAndSnap({
   const draggedInstanceIdRef = useRef<string | null>(null);
   const snapTargetIdRef = useRef<string | null>(null);
 
-  function startDrag(instanceId: string, intersects: THREE.Intersection[], canvasRect: DOMRect, event: MouseEvent) {
+  function startDrag(
+    instanceId: string,
+    intersects: THREE.Intersection[],
+    canvasRect: DOMRect,
+    event: MouseEvent,
+  ) {
     draggedInstanceIdRef.current = instanceId;
 
-    mouse.current.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    mouse.current.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+    mouse.current.x =
+      ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+    mouse.current.y =
+      -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
     raycaster.current.setFromCamera(mouse.current, camera);
 
     const intersectionPoint = new THREE.Vector3();
@@ -71,12 +84,20 @@ export function useDragAndSnap({
       onDragStateChange(true);
     }
 
-    mouse.current.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    mouse.current.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+    mouse.current.x =
+      ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+    mouse.current.y =
+      -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
     raycaster.current.setFromCamera(mouse.current, camera);
 
     const intersectionPoint = new THREE.Vector3();
-    if (!raycaster.current.ray.intersectPlane(dragPlane.current, intersectionPoint)) return;
+    if (
+      !raycaster.current.ray.intersectPlane(
+        dragPlane.current,
+        intersectionPoint,
+      )
+    )
+      return;
     intersectionPoint.add(dragOffset.current);
 
     const draggedId = draggedInstanceIdRef.current;
@@ -90,7 +111,11 @@ export function useDragAndSnap({
         if (inst.instanceId === draggedId) return;
         if (getModuleSnappingConfig(inst.instanceId) === "none") return;
 
-        const targetPos = objectPositions.get(inst.instanceId) || [index * 1.4, 0, 0];
+        const targetPos = objectPositions.get(inst.instanceId) || [
+          index * 1.9,
+          0,
+          0,
+        ];
         const dist = Math.hypot(
           intersectionPoint.x - targetPos[0],
           intersectionPoint.z - targetPos[2],
@@ -108,14 +133,22 @@ export function useDragAndSnap({
       onSnapPreview({
         fromId: draggedId,
         toId: closestId,
-        fromPos: [intersectionPoint.x, intersectionPoint.y, intersectionPoint.z],
+        fromPos: [
+          intersectionPoint.x,
+          intersectionPoint.y,
+          intersectionPoint.z,
+        ],
         toPos: targetPos as [number, number, number],
       });
     } else {
       onSnapPreview(null);
     }
 
-    onDragUpdate(draggedId, [intersectionPoint.x, intersectionPoint.y, intersectionPoint.z]);
+    onDragUpdate(draggedId, [
+      intersectionPoint.x,
+      intersectionPoint.y,
+      intersectionPoint.z,
+    ]);
   }
 
   function commitSnap(): boolean {
@@ -147,35 +180,24 @@ export function useDragAndSnap({
     const draggedCat = getModuleCategory(draggedId);
     const targetCat = getModuleCategory(targetId);
     const config = getSnapConfig(draggedCat, targetCat);
+    if (!config) return false;
 
     let snapPos: [number, number, number] | null = null;
 
     if (absX > absZ) {
-      // Left-right snapping
+      // Left-right snapping only
       const isRight = dx > 0;
       const draggedSide = isRight ? "left" : "right";
       const targetSide = isRight ? "right" : "left";
-      const canDragged = draggedSnapping === "both" || draggedSnapping === draggedSide;
-      const canTarget = targetSnapping === "both" || targetSnapping === targetSide;
+      const canDragged =
+        draggedSnapping === "both" || draggedSnapping === draggedSide;
+      const canTarget =
+        targetSnapping === "both" || targetSnapping === targetSide;
       if (canDragged && canTarget) {
         snapPos = [
           targetPos[0] + (dx > 0 ? config.xDist : -config.xDist),
           targetPos[1],
           targetPos[2] + config.zShift,
-        ];
-      }
-    } else {
-      // Front-back snapping
-      const isBack = dz > 0;
-      const draggedSide = isBack ? "left" : "right";
-      const targetSide = isBack ? "right" : "left";
-      const canDragged = draggedSnapping === "both" || draggedSnapping === draggedSide;
-      const canTarget = targetSnapping === "both" || targetSnapping === targetSide;
-      if (canDragged && canTarget) {
-        snapPos = [
-          targetPos[0] + config.zShift,
-          targetPos[1],
-          targetPos[2] + (dz > 0 ? config.zDist : -config.zDist),
         ];
       }
     }
@@ -202,7 +224,11 @@ export function useDragAndSnap({
     startDrag,
     updateDrag,
     endDrag,
-    get isDragging() { return isDraggingRef.current; },
-    get draggedInstanceId() { return draggedInstanceIdRef.current; },
+    get isDragging() {
+      return isDraggingRef.current;
+    },
+    get draggedInstanceId() {
+      return draggedInstanceIdRef.current;
+    },
   };
 }

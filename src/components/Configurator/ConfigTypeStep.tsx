@@ -1,10 +1,16 @@
 import React from "react";
 import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
+import ConfiguratorHeader from "./ConfiguratorHeader";
+
+const BASE = import.meta.env.BASE_URL;
+const COMPLETE_SETS_ICON_SRC = `${BASE}assets/images/couch.png`;
+const MODULES_ICON_SRC = `${BASE}assets/images/module.png`;
 
 const ConfigTypeStep: React.FC = () => {
-  const { setCurrentStep, setConfigurationType, clearScene } = useConfigurator();
-  const { t, language, setLanguage } = useLanguage();
+  const { setCurrentStep, setConfigurationType, clearScene, sceneObjects } =
+    useConfigurator();
+  const { t } = useLanguage();
 
   const handleCompleteSetSelection = () => {
     clearScene();
@@ -18,148 +24,95 @@ const ConfigTypeStep: React.FC = () => {
     setCurrentStep("module-selection");
   };
 
-  const handleBack = () => {
-    setCurrentStep("welcome");
-  };
-
-  const handleClose = () => {
-    setCurrentStep("scene");
-  };
-
-  const toggleLanguage = () => {
-    setLanguage(language === "pl" ? "en" : "pl");
-  };
-
   return (
-    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex items-center justify-center">
-      <div className="max-w-4xl mx-auto text-center px-8">
-        <button
-          onClick={handleBack}
-          className="cursor-pointer absolute top-8 left-8 flex items-center px-4 py-2 text-black hover:bg-[#06402b]/10 rounded-lg transition-colors duration-200"
-        >
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          {t.back}
-        </button>
+    <div className="fixed inset-0 bg-white z-[1000] overflow-hidden">
+      <ConfiguratorHeader
+        onBack={() => setCurrentStep("welcome")}
+        onClose={
+          sceneObjects.length > 0 ? () => setCurrentStep("scene") : undefined
+        }
+        breadcrumb={["HOME", "CONFIGURATION TYPE"]}
+      />
 
-        {/* Language Switcher and Close Button */}
-        <div className="absolute top-8 right-8 flex items-center gap-2">
-          <button
-            onClick={toggleLanguage}
-            className="cursor-pointer px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
-          >
-            {language === "pl" ? "EN" : "PL"}
-          </button>
-          <button
-            onClick={handleClose}
-            className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+      {/* Page title */}
+      <div className="absolute top-[175px] left-1/2 -translate-x-1/2 w-[1160px] flex flex-col gap-[5px]">
+        <h1 className="font-lato font-medium text-[45px] text-black leading-none">
+          {t.chooseConfigType}
+        </h1>
+        <p className="font-lato font-light text-[25px] text-black leading-normal">
+          {t.configTypeSubtitle}
+        </p>
+      </div>
 
-        <div className="mb-12">
-          <h1 className="text-3xl font-bold text-black mb-4">
-            {t.chooseConfigType}
-          </h1>
-          <p className="text-lg text-gray-600">
-            {t.configTypeSubtitle}
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Complete Set Option */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 hover:border-[#06402b]/40 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden group">
-            <div className="p-8 h-full flex flex-col justify-between items-stretch">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-[#06402b] to-[#0a5a38] rounded-xl flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                {t.completeSets}
-              </h3>
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                {t.completeSetsDesc}
-              </p>
-              <button
-                onClick={handleCompleteSetSelection}
-                className="mt-auto cursor-pointer w-full px-6 py-3 bg-[#06402b] text-white font-semibold rounded-lg hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200"
-              >
-                {t.completeSets}
-              </button>
-            </div>
-          </div>
-
-          {/* Module Selection Option */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 hover:border-[#06402b]/40 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden group">
-            <div className="p-8">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-[#06402b] to-[#0a5a38] rounded-xl flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                {t.modules}
-              </h3>
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                {t.modulesDesc}
-              </p>
-              <button
-                onClick={handleModuleSelection}
-                className="cursor-pointer w-full px-6 py-3 bg-[#06402b] text-white font-semibold rounded-lg hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200"
-              >
-                {t.modules}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Two option cards */}
+      <div className="absolute top-[340px] left-1/2 -translate-x-1/2 flex gap-5">
+        <OptionCard
+          icon={COMPLETE_SETS_ICON_SRC}
+          iconOffset={{ left: 29, top: 32 }}
+          title={t.completeSets}
+          description={t.completeSetsDesc}
+          buttonLabel={t.completeSets}
+          onSelect={handleCompleteSetSelection}
+        />
+        <OptionCard
+          icon={MODULES_ICON_SRC}
+          iconOffset={{ left: 29, top: 27 }}
+          title={t.modules}
+          description={t.modulesDesc}
+          buttonLabel={t.modules}
+          onSelect={handleModuleSelection}
+        />
       </div>
     </div>
   );
 };
+
+interface OptionCardProps {
+  icon: string;
+  iconOffset: { left: number; top: number };
+  title: string;
+  description: string;
+  buttonLabel: string;
+  onSelect: () => void;
+}
+
+const OptionCard: React.FC<OptionCardProps> = ({
+  icon,
+  iconOffset,
+  title,
+  description,
+  buttonLabel,
+  onSelect,
+}) => (
+  <div className="flex flex-col items-center justify-center gap-[30px] w-[580px] h-[500px] p-[60px] bg-gradient-to-b from-ui-surface to-white border-t-[3px] border-ui-dark">
+    <div className="relative size-[160px] shrink-0">
+      <div className="absolute inset-0 bg-white border-t-[3px] border-b-[3px] border-ui-dark" />
+      <img
+        src={icon}
+        alt=""
+        className="absolute size-[102px] object-cover"
+        style={{ left: iconOffset.left, top: iconOffset.top }}
+      />
+    </div>
+
+    <div className="flex flex-col items-center gap-[10px] w-full text-center">
+      <span className="font-lato font-light text-[35px] text-black uppercase leading-none h-[50px] flex items-center">
+        {title}
+      </span>
+      <span className="font-lato font-[300] text-[25px] text-ui-dark leading-normal">
+        {description}
+      </span>
+    </div>
+
+    <button
+      onClick={onSelect}
+      className="flex items-center justify-center bg-white border-[3px] border-ui-muted  hover:border-ui-dark h-[70px] w-[340px] cursor-pointer  transition-colors shrink-0"
+    >
+      <span className="font-lato font-light text-[25px] text-ui-dark uppercase">
+        {buttonLabel}
+      </span>
+    </button>
+  </div>
+);
 
 export default ConfigTypeStep;

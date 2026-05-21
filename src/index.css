@@ -1,10 +1,22 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700&display=swap");
+
+@theme {
+  --font-sans: "Lato", sans-serif;
+  --font-lato: "Lato", sans-serif;
+
+  --font-weight-275: 275;
+
+  --color-brand: #06402b;
+  --color-ui-dark: #454343;
+  --color-ui-mid: #7e7870;
+  --color-ui-muted: #757575;
+  --color-ui-border: #acacac;
+  --color-ui-surface: #f3f3f3;
+}
 
 :root {
-  --color-brand: #06402b;
-
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Lato", sans-serif;
   line-height: 1.5;
   font-weight: 400;
 

@@ -1,0 +1,197 @@
+<div id="ar-view-btn-139"></div>
+
+<style>
+  .ar-launch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 40px;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1;
+    font-family: inherit;
+    transition:
+      background 0.15s,
+      box-shadow 0.15s;
+  }
+  .ar-launch-btn:hover {
+    background: #f5f5f3;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  .ar-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .ar-modal-box {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 320px;
+    overflow: hidden;
+  }
+  .ar-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .ar-modal-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin: 0;
+  }
+  .ar-modal-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.07);
+    border: none;
+    cursor: pointer;
+    color: #1a1a1a;
+    transition: background 0.15s;
+  }
+  .ar-modal-close-btn:hover {
+    background: rgba(0, 0, 0, 0.14);
+  }
+  .ar-modal-body {
+    padding: 20px;
+    text-align: center;
+  }
+  .ar-modal-hint {
+    font-size: 13px;
+    color: #666;
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+  .ar-qr-frame {
+    display: inline-block;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .ar-qr-frame img {
+    display: block;
+  }
+</style>
+
+<script>
+  (function () {
+    var USDZ_URL = "https://onvirtue.io/ar/smoked.usdz";
+    var GLB_URL = "https://onvirtue.io/ar/smoked.glb";
+    var QR_URL = "https://onvirtue.io/ar/smoked.glb"; // ideally a page that detects iOS vs Android
+
+    var ua = navigator.userAgent;
+    var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    var isAndroid = /Android|Miui/i.test(ua);
+
+    var arIcon =
+      '<svg viewBox="0 0 512 512" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polyline points="201.14 64 256 32 310.86 64" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><line stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" x1="256" x2="256" y1="32" y2="112"/><polyline points="310.86 448 256 480 201.14 448" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><line stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" x1="256" x2="256" y1="480" y2="400"/><polyline points="64 207.51 64 144 117.15 112.49" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><line stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" x1="64" x2="131.29" y1="144" y2="184"/><polyline points="448 304.49 448 368 394.85 399.51" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><line stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" x1="448" x2="380.71" y1="368" y2="328"/><polyline points="117.15 400 64 368 64 304.49" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><line stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" x1="64" x2="130.64" y1="368" y2="328"/><polyline points="394.85 112.49 448 144 448 207.51" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><line stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" x1="448" x2="380.71" y1="144" y2="184"/><polyline points="256 320 256 256 310.86 224" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32"/><line stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" x1="256" x2="201.14" y1="256" y2="224"/></svg>';
+
+    var closeIcon =
+      '<svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+    var container = document.getElementById("ar-view-btn-139");
+
+    if (isIOS) {
+      // Native QuickLook AR on iPhone / iPad
+      container.innerHTML =
+        '<a href="' +
+        USDZ_URL +
+        '" rel="ar" class="ar-launch-btn">' +
+        arIcon +
+        "<span>View in AR</span>" +
+        "</a>";
+    } else if (isAndroid) {
+      // Native Scene Viewer AR on Android
+      var intentURL =
+        "intent://arvr.google.com/scene-viewer/1.0?file=" +
+        GLB_URL +
+        "#Intent;scheme=https;package=com.google.android.googlequicksearchbox;" +
+        "action=android.intent.action.VIEW;" +
+        "S.browser_fallback_url=https://developers.google.com/ar;end;";
+
+      container.innerHTML =
+        '<button class="ar-launch-btn" id="ar-android-btn-139">' +
+        arIcon +
+        "<span>View in AR</span>" +
+        "</button>";
+
+      document
+        .getElementById("ar-android-btn-139")
+        .addEventListener("click", function () {
+          window.location.href = intentURL;
+        });
+    } else {
+      // Desktop — show QR code modal
+      var qrSrc =
+        "https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=0&data=" +
+        encodeURIComponent(QR_URL);
+
+      var modalHTML =
+        '<div id="ar-modal-139" class="ar-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-label="View in AR">' +
+        '<div class="ar-modal-box">' +
+        '<div class="ar-modal-head">' +
+        '<h2 class="ar-modal-title">View in your space</h2>' +
+        '<button class="ar-modal-close-btn" id="ar-close-139" aria-label="Close">' +
+        closeIcon +
+        "</button>" +
+        "</div>" +
+        '<div class="ar-modal-body">' +
+        '<p class="ar-modal-hint">Point your phone\'s camera at the QR code to view this product in AR.</p>' +
+        '<div class="ar-qr-frame">' +
+        '<img src="' +
+        qrSrc +
+        '" alt="QR code to view in AR" width="180" height="180" />' +
+        "</div>" +
+        "</div>" +
+        "</div>" +
+        "</div>";
+
+      container.innerHTML =
+        '<button class="ar-launch-btn" id="ar-open-139">' +
+        arIcon +
+        "<span>View in AR</span>" +
+        "</button>" +
+        modalHTML;
+
+      var modal = document.getElementById("ar-modal-139");
+
+      document
+        .getElementById("ar-open-139")
+        .addEventListener("click", function () {
+          modal.style.display = "flex";
+        });
+
+      document
+        .getElementById("ar-close-139")
+        .addEventListener("click", function () {
+          modal.style.display = "none";
+        });
+
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal) modal.style.display = "none";
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") modal.style.display = "none";
+      });
+    }
+  })();
+</script>

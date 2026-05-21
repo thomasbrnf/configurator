@@ -26,7 +26,8 @@ interface Translations {
   addToScene: string;
   backToMenu: string;
   back: string;
-  
+  close: string;
+
   // Module Selection
   selectCompleteSet: string;
   selectCompleteSetSubtitle: string;
@@ -37,7 +38,7 @@ interface Translations {
   clearSelection: string;
   selected: string;
   modulesCount: string;
-  
+
   // Control Panel
   controlPanel: string;
   materials: string;
@@ -48,14 +49,14 @@ interface Translations {
   addModule: string;
   addCompleteSet: string;
   material: string;
-  
+
   // Context Menu
   delete: string;
   rotate: string;
-  
+
   // Rotation Control
   finishRotation: string;
-  
+
   // Loader
   loadingObject: string;
   loadingMaterial: string;
@@ -93,36 +94,38 @@ const translations: Record<Language, Translations> = {
     addToScene: "Dodaj do Sceny",
     backToMenu: "Wróć do Menu",
     back: "Wstecz",
-    
+    close: "Zamknij",
+
     // Module Selection
     selectCompleteSet: "Wybierz Kompletny Zestaw",
     selectCompleteSetSubtitle: "Wybierz jeden z gotowych zestawów mebli",
     clickToSelect2: "Kliknij, aby wybrać",
     alreadyInScene: "Już dodany do sceny",
     selectModulesMultiple: "Wybierz moduły (możesz wybrać wiele)",
-    buildOwnConfiguration: "Zbuduj własną konfigurację wybierając poszczególne moduły",
+    buildOwnConfiguration:
+      "Zbuduj własną konfigurację wybierając poszczególne moduły",
     clearSelection: "Wyczyść wybór",
     selected: "Wybrano",
     modulesCount: "modułów",
-    
+
     // Control Panel
     controlPanel: "Panel Sterowania",
     materials: "Materiały",
     club: "Club",
     granit: "Granit",
     addObject: "Dodaj Obiekt",
-    changeConfigType: "Zmień Typ Konfiguracji",
+    changeConfigType: "Typ Konfiguracji",
     addModule: "Dodaj Moduł",
     addCompleteSet: "Dodaj Zestaw",
     material: "Materiał",
-    
+
     // Context Menu
     delete: "Usuń",
     rotate: "Obróć",
-    
+
     // Rotation Control
     finishRotation: "Zakończ Obracanie",
-    
+
     // Loader
     loadingObject: "Ładowanie obiektu...",
     loadingMaterial: "Ładowanie materiału...",
@@ -158,36 +161,38 @@ const translations: Record<Language, Translations> = {
     addToScene: "Add to Scene",
     backToMenu: "Back to Menu",
     back: "Back",
-    
+    close: "Close",
+
     // Module Selection
     selectCompleteSet: "Select Complete Set",
     selectCompleteSetSubtitle: "Choose one of the ready-made furniture sets",
     clickToSelect2: "Click to select",
     alreadyInScene: "Already in scene",
     selectModulesMultiple: "Select modules (you can select multiple)",
-    buildOwnConfiguration: "Build your own configuration by selecting individual modules",
+    buildOwnConfiguration:
+      "Build your own configuration by selecting individual modules",
     clearSelection: "Clear selection",
     selected: "Selected",
     modulesCount: "modules",
-    
+
     // Control Panel
     controlPanel: "Control Panel",
     materials: "Materials",
     club: "Club",
     granit: "Granit",
     addObject: "Add Object",
-    changeConfigType: "Change Configuration Type",
+    changeConfigType: "Configuration Type",
     addModule: "Add Module",
     addCompleteSet: "Add Set",
     material: "Material",
-    
+
     // Context Menu
     delete: "Delete",
     rotate: "Rotate",
-    
+
     // Rotation Control
     finishRotation: "Finish Rotation",
-    
+
     // Loader
     loadingObject: "Loading object...",
     loadingMaterial: "Loading material...",
@@ -209,7 +214,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({
@@ -218,7 +223,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({
   // Initialize language from localStorage, fallback to "pl"
   const [language, setLanguage] = useState<Language>(() => {
     const savedLanguage = localStorage.getItem("configurator-language");
-    return (savedLanguage === "pl" || savedLanguage === "en") ? savedLanguage : "pl";
+    return savedLanguage === "pl" || savedLanguage === "en"
+      ? savedLanguage
+      : "pl";
   });
 
   // Update localStorage whenever language changes

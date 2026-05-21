@@ -1,6 +1,6 @@
-import { useLoaderStore } from '../../store/loaderStore';
-import { useLanguage } from '../../context/LanguageContext';
-import './spinner.css';
+import { useLoaderStore } from "../../store/loaderStore";
+import { useLanguage } from "../../context/LanguageContext";
+import "./spinner.css";
 
 const Spinner = () => {
   const { isLoading, loadingMessage } = useLoaderStore();
@@ -10,12 +10,12 @@ const Spinner = () => {
 
   // Map Polish messages to English
   const translateMessage = (message: string) => {
-    if (language === 'en') {
+    if (language === "en") {
       const translations: Record<string, string> = {
-        'Ładowanie obiektu...': 'Loading object...',
-        'Ładowanie materiału...': 'Loading material...',
-        'Zmienianie materiału...': 'Changing material...',
-        'Ładowanie...': 'Loading...',
+        "Ładowanie obiektu...": "Loading object...",
+        "Ładowanie materiału...": "Loading material...",
+        "Zmienianie materiału...": "Changing material...",
+        "Ładowanie...": "Loading...",
       };
       return translations[message] || message;
     }

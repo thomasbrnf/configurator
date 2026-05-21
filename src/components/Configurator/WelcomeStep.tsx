@@ -1,58 +1,66 @@
 import React from "react";
 import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
+import ConfiguratorHeader from "./ConfiguratorHeader";
+
+const SOFA_IMAGE_SRC = `${import.meta.env.BASE_URL}poster.png`;
 
 const WelcomeStep: React.FC = () => {
   const { setCurrentStep } = useConfigurator();
-  const { t, language, setLanguage } = useLanguage();
-
-  const handleStartConfiguration = () => {
-    setCurrentStep("config-type");
-  };
-
-  const toggleLanguage = () => {
-    setLanguage(language === "pl" ? "en" : "pl");
-  };
+  const { t } = useLanguage();
 
   return (
-    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex items-center justify-center">
-      {/* Language Switcher */}
-      <button
-        onClick={toggleLanguage}
-        className="cursor-pointer absolute top-8  px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
-      >
-        {language === "pl" ? "EN" : " PL"}
-      </button>
+    <div className="fixed inset-0 bg-white z-[1000] overflow-hidden">
+      <ConfiguratorHeader showLabel />
 
-      <div className="max-w-2xl mx-auto text-center px-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black mb-4">
+      <div className="absolute top-[95px] left-0 right-0 bottom-0 flex">
+        {/* Left column: title, subtitle, CTA */}
+        <div className="w-1/2 flex flex-col text-start justify-center pl-[130px] pr-8">
+          <h1 className="font-lato font-light text-ui-dark text-[72px] leading-[87%] mb-6 w-[580px]">
             {t.welcome}
           </h1>
-          <p className="text-lg text-gray-600 leading-relaxed">
+          <p className="font-lato font-thin text-ui-dark text-[39px] leading-none mb-10 w-[580px]">
             {t.welcomeSubtitle}
           </p>
+          <button
+            onClick={() => setCurrentStep("config-type")}
+            className="flex items-center bg-white border-[3px] border-ui-dark hover:border-[#D4CCBC] h-[70px] w-[460px] cursor-pointer hover:bg-[#D4CCBC] "
+          >
+            <span className="flex-1 font-lato font-light text-[25px] text-black uppercase text-center">
+              {t.startConfiguration}
+            </span>
+            <div className="size-[70px] shrink-0 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="29"
+                height="34"
+                viewBox="0 0 29 34"
+                fill="none"
+              >
+                <path
+                  d="M28.9775 16.7305L2.92525e-06 33.4609L0 0L28.9775 16.7305Z"
+                  fill="black"
+                />
+              </svg>{" "}
+            </div>
+          </button>
         </div>
 
-        <button
-          onClick={handleStartConfiguration}
-          className="cursor-pointer inline-flex items-center px-8 py-4 bg-[#06402b] text-white text-lg font-semibold rounded-xl hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200 shadow-lg hover:shadow-xl"
-        >
-          <span>{t.startConfiguration}</span>
-          <svg
-            className="ml-3 w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+        {/* Right column: sofa illustration */}
+        <div className="w-1/2 relative -ml-20 overflow-hidden">
+          <img
+            src={SOFA_IMAGE_SRC}
+            alt="Sofa preview"
+            className="absolute object-contain"
+            style={{
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </div>
       </div>
     </div>
   );

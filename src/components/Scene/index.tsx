@@ -1,17 +1,31 @@
-import { ContactShadows, Environment, OrbitControls, Line } from "@react-three/drei";
+import {
+  ContactShadows,
+  Environment,
+  OrbitControls,
+  Line,
+} from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useControls, folder, Leva } from "leva";
 import { DynamicModel } from "../DynamicModel";
-import { ContextMenu } from "../ContextMenu";
 import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
-import { useEffect, useRef, useState, createContext, useContext, useMemo } from "react";
-import { useMaterial, MATERIAL_PBR_DEFAULTS, getMaterialFamily } from "../../context/MaterialContext";
+import {
+  useEffect,
+  useRef,
+  useState,
+  createContext,
+  useContext,
+  useMemo,
+} from "react";
+import {
+  useMaterial,
+  MATERIAL_PBR_DEFAULTS,
+  getMaterialFamily,
+} from "../../context/MaterialContext";
 import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useObjectSelection } from "../../hooks/useObjectSelection";
 import { useDragAndSnap } from "../../hooks/useDragAndSnap";
-
 
 interface SceneContextType {
   handleRecenter: () => void;
@@ -24,18 +38,19 @@ const SceneContext = createContext<SceneContextType | null>(null);
 export const useScene = () => {
   const context = useContext(SceneContext);
   if (!context) {
-    throw new Error('useScene must be used within SceneProvider');
+    throw new Error("useScene must be used within SceneProvider");
   }
   return context;
 };
 
 // Internal component that uses the scene context
 function SceneControls() {
-  const { handleRecenter, isAutoCenterEnabled, setIsAutoCenterEnabled } = useScene();
-  
+  const { handleRecenter, isAutoCenterEnabled, setIsAutoCenterEnabled } =
+    useScene();
+
   return (
-    <ControlsInfo 
-      onRecenter={handleRecenter} 
+    <ControlsInfo
+      onRecenter={handleRecenter}
       isAutoCenterEnabled={isAutoCenterEnabled}
       onToggleAutoCenter={setIsAutoCenterEnabled}
     />
@@ -162,64 +177,70 @@ function AutoCenterCamera({
       userHasInteractedRef.current = false;
       currentTargetRef.current.copy(desiredTargetRef.current);
       isRecentering.current = true;
-      
+
       // Calculate bounds of all objects
-      let minX = Infinity, maxX = -Infinity;
-      let minZ = Infinity, maxZ = -Infinity;
-      
+      let minX = Infinity,
+        maxX = -Infinity;
+      let minZ = Infinity,
+        maxZ = -Infinity;
+
       sceneObjects.forEach((inst, index) => {
-        const position = objectPositions.get(inst.instanceId) || [index * 1.4, 0, 0];
+        const position = objectPositions.get(inst.instanceId) || [
+          index * 1.4,
+          0,
+          0,
+        ];
         minX = Math.min(minX, position[0]);
         maxX = Math.max(maxX, position[0]);
         minZ = Math.min(minZ, position[2]);
         maxZ = Math.max(maxZ, position[2]);
       });
-      
+
       const centerX = (minX + maxX) / 2;
       const centerZ = (minZ + maxZ) / 2;
       const sceneWidth = maxX - minX;
       const sceneDepth = maxZ - minZ;
       const sceneSize = Math.max(sceneWidth, sceneDepth);
-      
+
       // Calculate optimal camera distance to see all objects
       // Add padding factor to ensure all objects are visible
       const paddingFactor = 1.5;
       const distance = Math.max(sceneSize * paddingFactor, 3);
-      
+
       // Position camera at an angle from above and behind
       const cameraHeight = distance * 0.6; // Height from ground
       const cameraBack = distance * 0.8; // Distance back from center
-      
+
       // Set the center point where camera should look at
       const centerPoint = new THREE.Vector3(centerX, 0.2, centerZ);
-      
+
       // Update desired target to the center of objects
       desiredTargetRef.current.copy(centerPoint);
       currentTargetRef.current.copy(centerPoint);
-      
+
       // Smooth transition to new camera position
       const targetCameraPos = new THREE.Vector3(
         centerX,
         cameraHeight,
-        centerZ + cameraBack
+        centerZ + cameraBack,
       );
-      
+
       // Animate camera to new position and update orbit controls target
       const animateCamera = () => {
         if (camera && orbitControlsRef.current && isRecentering.current) {
           camera.position.lerp(targetCameraPos, 0.1);
-          
+
           // Also update the orbit controls target to look at the center
           orbitControlsRef.current.target.lerp(centerPoint, 0.1);
           orbitControlsRef.current.update();
-          
+
           // Check if camera is close enough to target position
           if (camera.position.distanceTo(targetCameraPos) < 0.1) {
             isRecentering.current = false;
           }
         }
       };
-      
+
       // Start animation
       const interval = setInterval(() => {
         animateCamera();
@@ -227,7 +248,7 @@ function AutoCenterCamera({
           clearInterval(interval);
         }
       }, 16); // ~60fps
-      
+
       return () => clearInterval(interval);
     }
   }, [recenterTrigger, sceneObjects, objectPositions, camera]);
@@ -241,19 +262,19 @@ function AutoCenterCamera({
       userHasInteractedRef.current = true;
     };
 
-    controls.addEventListener('start', handleStart);
+    controls.addEventListener("start", handleStart);
 
     return () => {
-      controls.removeEventListener('start', handleStart);
+      controls.removeEventListener("start", handleStart);
     };
   }, [orbitControlsRef]);
 
   useEffect(() => {
     if (!enabled || isDragging) return;
-    
+
     // Check if the scene has changed (objects added/removed)
     const sceneChanged = previousSceneCountRef.current !== sceneObjects.length;
-    
+
     if (sceneObjects.length === 0) {
       desiredTargetRef.current.set(0, 0.2, 0);
       initializedRef.current = false;
@@ -276,7 +297,11 @@ function AutoCenterCamera({
     let count = 0;
 
     sceneObjects.forEach((inst, index) => {
-      const position = objectPositions.get(inst.instanceId) || [index * 3, 0, 0];
+      const position = objectPositions.get(inst.instanceId) || [
+        index * 3,
+        0,
+        0,
+      ];
       totalX += position[0];
       totalY += position[1];
       totalZ += position[2];
@@ -289,7 +314,7 @@ function AutoCenterCamera({
       const centerZ = totalZ / count;
 
       desiredTargetRef.current.set(centerX, centerY, centerZ);
-      
+
       // Initialize current target on first calculation or when scene changes
       if (!initializedRef.current || sceneChanged) {
         currentTargetRef.current.copy(desiredTargetRef.current);
@@ -297,7 +322,7 @@ function AutoCenterCamera({
         // Reset user interaction flag when scene changes
         userHasInteractedRef.current = false;
       }
-      
+
       previousSceneCountRef.current = sceneObjects.length;
     }
   }, [sceneObjects, objectPositions, enabled, isDragging]);
@@ -305,10 +330,10 @@ function AutoCenterCamera({
   // Smooth interpolation using useFrame
   useFrame(() => {
     if (!enabled || !orbitControlsRef.current || isDragging) return;
-    
+
     // Only animate if user hasn't manually interacted
     if (userHasInteractedRef.current) return;
-    
+
     // Smoothly lerp the current target towards the desired target
     currentTargetRef.current.lerp(desiredTargetRef.current, 0.1);
     orbitControlsRef.current.target.copy(currentTargetRef.current);
@@ -319,16 +344,16 @@ function AutoCenterCamera({
 }
 
 // Pan Constraint Component - prevents panning below ground
-function PanConstraint({ 
+function PanConstraint({
   orbitControlsRef,
-}: { 
+}: {
   orbitControlsRef: React.MutableRefObject<any>;
 }) {
   useFrame(() => {
     if (!orbitControlsRef.current) return;
-    
+
     const target = orbitControlsRef.current.target;
-    
+
     // Constrain target Y to not go below 0 (ground level)
     if (target.y < 0) {
       target.y = 0;
@@ -341,17 +366,25 @@ function PanConstraint({
 
 // Thin coordinator — delegates to useObjectSelection and useDragAndSnap hooks
 function ClickHandler({
-  onContextMenu,
   sceneObjects,
   onDragUpdate,
   onDragStateChange,
   onSnapPreview,
 }: {
-  onContextMenu: (x: number, y: number, objectId: string) => void;
   sceneObjects: { instanceId: string }[];
-  onDragUpdate: (instanceId: string, position: [number, number, number]) => void;
+  onDragUpdate: (
+    instanceId: string,
+    position: [number, number, number],
+  ) => void;
   onDragStateChange: (isDragging: boolean) => void;
-  onSnapPreview: (snapInfo: { fromId: string; toId: string; fromPos: [number, number, number]; toPos: [number, number, number] } | null) => void;
+  onSnapPreview: (
+    snapInfo: {
+      fromId: string;
+      toId: string;
+      fromPos: [number, number, number];
+      toPos: [number, number, number];
+    } | null,
+  ) => void;
 }) {
   const { gl, scene } = useThree();
   const { selectedObjectId, setSelectedObjectId } = useMaterial();
@@ -360,13 +393,13 @@ function ClickHandler({
   const isRotatingRef = useRef(false);
   const mouseDownRef = useRef<{ x: number; y: number } | null>(null);
 
-  const { handleClick, getRaycasterIntersects, resolveObjectId } = useObjectSelection({
-    onSelect: (objectId, x, y) => {
-      setSelectedObjectId(objectId);
-      onContextMenu(x, y, objectId);
-    },
-    onDeselect: () => setSelectedObjectId(null),
-  });
+  const { handleClick, getRaycasterIntersects, resolveObjectId } =
+    useObjectSelection({
+      onSelect: (objectId) => {
+        setSelectedObjectId(objectId);
+      },
+      onDeselect: () => setSelectedObjectId(null),
+    });
 
   const drag = useDragAndSnap({
     sceneObjects,
@@ -430,7 +463,16 @@ function ClickHandler({
       canvas.removeEventListener("mouseup", onMouseUp);
       canvas.removeEventListener("contextmenu", onContextMenuNative);
     };
-  }, [gl, scene, selectedObjectId, setSelectedObjectId, drag, handleClick, getRaycasterIntersects, resolveObjectId, onContextMenu]);
+  }, [
+    gl,
+    scene,
+    selectedObjectId,
+    setSelectedObjectId,
+    drag,
+    handleClick,
+    getRaycasterIntersects,
+    resolveObjectId,
+  ]);
 
   return null;
 }
@@ -468,11 +510,11 @@ function RotationModeCamera() {
 }
 
 // Snap Indicator Component - shows visual feedback when objects can snap
-function SnapIndicator({ 
-  fromPos, 
-  toPos 
-}: { 
-  fromPos: [number, number, number]; 
+function SnapIndicator({
+  fromPos,
+  toPos,
+}: {
+  fromPos: [number, number, number];
   toPos: [number, number, number];
 }) {
   const { fromEdge, toEdge } = useMemo(() => {
@@ -480,36 +522,36 @@ function SnapIndicator({
     const dx = toPos[0] - fromPos[0];
     const dz = toPos[2] - fromPos[2];
     const distance = Math.sqrt(dx * dx + dz * dz);
-    
+
     // Normalize direction
     const dirX = dx / distance;
     const dirZ = dz / distance;
-    
+
     // Approximate object width (adjust based on your models)
     const objectWidth = 0.4;
-    
+
     // Calculate edge positions - where objects will connect
     // For dragged object: edge closest to target
     const fromEdgePos: [number, number, number] = [
       fromPos[0] + dirX * objectWidth,
       fromPos[1] + 0.3,
-      fromPos[2] + dirZ * objectWidth
+      fromPos[2] + dirZ * objectWidth,
     ];
-    
+
     // For target object: edge closest to dragged object
     const toEdgePos: [number, number, number] = [
       toPos[0] - dirX * objectWidth,
       toPos[1] + 0.3,
-      toPos[2] - dirZ * objectWidth
+      toPos[2] - dirZ * objectWidth,
     ];
-    
+
     return { fromEdge: fromEdgePos, toEdge: toEdgePos };
   }, [fromPos, toPos]);
-  
+
   const linePoints = useMemo(() => {
     return [fromEdge, toEdge] as [number, number, number][];
   }, [fromEdge, toEdge]);
-  
+
   return (
     <group>
       {/* Line connecting the two snap points on edges */}
@@ -521,28 +563,28 @@ function SnapIndicator({
         dashSize={0.1}
         gapSize={0.05}
       />
-      
+
       {/* Green circle with magnet icon at dragged object edge */}
       <group position={fromEdge}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.02, 0.03, 32]} />
-          <meshBasicMaterial color="#06402b"  />
+          <meshBasicMaterial color="#757575" />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.02, 32]} />
-          <meshBasicMaterial color="#06402b"   />
+          <meshBasicMaterial color="#757575" />
         </mesh>
       </group>
-      
+
       {/* Green circle with magnet icon at target object edge */}
       <group position={toEdge}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.02, 0.03, 32]} />
-          <meshBasicMaterial color="#06402b"  />
+          <meshBasicMaterial color="#757575" />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.02, 32]} />
-          <meshBasicMaterial color="#06402b" />
+          <meshBasicMaterial color="#757575" />
         </mesh>
       </group>
     </group>
@@ -550,23 +592,26 @@ function SnapIndicator({
 }
 
 // Component to render all objects in the scene
-function SceneObjects({ snapPreview }: { snapPreview: {
-  fromId: string;
-  toId: string;
-  fromPos: [number, number, number];
-  toPos: [number, number, number];
-} | null }) {
-  const {
-    sceneObjects,
-    objectRotations,
-    objectPositions,
-
-  } = useConfigurator();
+function SceneObjects({
+  snapPreview,
+}: {
+  snapPreview: {
+    fromId: string;
+    toId: string;
+    fromPos: [number, number, number];
+    toPos: [number, number, number];
+  } | null;
+}) {
+  const { sceneObjects, objectRotations, objectPositions } = useConfigurator();
 
   return (
     <>
       {sceneObjects.map((inst, index) => {
-        const position = objectPositions.get(inst.instanceId) || [index * 1.9, 0, 0];
+        const position = objectPositions.get(inst.instanceId) || [
+          index * 1.9,
+          0,
+          0,
+        ];
         return (
           <group key={inst.instanceId}>
             <DynamicModel
@@ -577,11 +622,11 @@ function SceneObjects({ snapPreview }: { snapPreview: {
           </group>
         );
       })}
-      
+
       {/* Show snap indicator when dragging near another object */}
       {snapPreview && (
-        <SnapIndicator 
-          fromPos={snapPreview.fromPos} 
+        <SnapIndicator
+          fromPos={snapPreview.fromPos}
           toPos={snapPreview.toPos}
         />
       )}
@@ -590,23 +635,26 @@ function SceneObjects({ snapPreview }: { snapPreview: {
 }
 
 const Scene = () => {
-  const { setUvScale, setNormalScale, setMetalness, setRoughness, selectedObjectId, currentMaterial } =
-    useMaterial();
+  const {
+    setUvScale,
+    setNormalScale,
+    setMetalness,
+    setRoughness,
+    setSheen,
+    setSheenRoughness,
+    setEnvMapIntensity,
+    setAoMapIntensity,
+    selectedObjectId,
+    currentMaterial,
+  } = useMaterial();
   const {
     sceneObjects,
-    removeObjectById,
     rotationControlId,
     setRotationControlId,
     setObjectPosition,
     objectPositions,
   } = useConfigurator();
   const { t } = useLanguage();
-
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    objectId: string;
-  } | null>(null);
 
   const [isDraggingObject, setIsDraggingObject] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
@@ -620,48 +668,19 @@ const Scene = () => {
   const orbitControlsRef = useRef<any>(null);
   const previousSceneObjectsLength = useRef(sceneObjects.length);
 
-  // Close context menu when object is deselected
+  // Track scene object count changes
   useEffect(() => {
-    if (selectedObjectId === null && contextMenu !== null) {
-      setContextMenu(null);
-    }
-  }, [selectedObjectId, contextMenu]);
-
-  // Open context menu when a new object is spawned (scene length increases and object is selected)
-  useEffect(() => {
-    const sceneIncreased = sceneObjects.length > previousSceneObjectsLength.current;
     previousSceneObjectsLength.current = sceneObjects.length;
-
-    if (sceneIncreased && selectedObjectId) {
-      const leftX = 220;
-      const centerY = window.innerHeight / 2;
-      handleContextMenu(leftX, centerY, selectedObjectId);
-    }
-  }, [sceneObjects, selectedObjectId]);
+  }, [sceneObjects]);
 
   const handleRecenter = () => {
-    setRecenterTrigger(prev => prev + 1);
+    setRecenterTrigger((prev) => prev + 1);
   };
 
-  const handleContextMenu = (x: number, y: number, objectId: string) => {
-    setContextMenu({ x, y, objectId });
-  };
-
-  const handleDelete = () => {
-    if (contextMenu) {
-      removeObjectById(contextMenu.objectId);
-      setContextMenu(null);
-    }
-  };
-
-  const handleRotate = () => {
-    if (contextMenu) {
-      setRotationControlId(contextMenu.objectId);
-      setContextMenu(null);
-    }
-  };
-
-  const handleDragUpdate = (instanceId: string, position: [number, number, number]) => {
+  const handleDragUpdate = (
+    instanceId: string,
+    position: [number, number, number],
+  ) => {
     setObjectPosition(instanceId, position);
   };
 
@@ -674,10 +693,38 @@ const Scene = () => {
   const [matControls, setMatControls] = useControls(() => ({
     Material: folder(
       {
-        uvScale:        { value: 15.4, min: 0.1, max: 25,  step: 0.1  },
-        normalStrength: { value: 1.15, min: 0,   max: 2,   step: 0.05, label: "Normal Strength" },
-        metalness:      { value: 0.45, min: 0,   max: 1,   step: 0.01 },
-        roughness:      { value: 0.87, min: 0,   max: 1,   step: 0.01 },
+        uvScale: { value: 15.4, min: 0.1, max: 25, step: 0.1 },
+        normalStrength: {
+          value: 1.15,
+          min: 0,
+          max: 2,
+          step: 0.05,
+          label: "Normal Strength",
+        },
+        metalness: { value: 0.0, min: 0, max: 1, step: 0.01 },
+        roughness: { value: 0.87, min: 0, max: 1, step: 0.01 },
+        sheen: { value: 0.6, min: 0, max: 1, step: 0.01 },
+        sheenRoughness: {
+          value: 0.8,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          label: "Sheen Roughness",
+        },
+        envMapIntensity: {
+          value: 0.15,
+          min: 0,
+          max: 2,
+          step: 0.01,
+          label: "Env Map",
+        },
+        aoMapIntensity: {
+          value: 0.7,
+          min: 0,
+          max: 2,
+          step: 0.01,
+          label: "AO Intensity",
+        },
       },
       { collapsed: false },
     ),
@@ -689,7 +736,20 @@ const Scene = () => {
     setNormalScale(matControls.normalStrength);
     setMetalness(matControls.metalness);
     setRoughness(matControls.roughness);
-  }, [matControls.uvScale, matControls.normalStrength, matControls.metalness, matControls.roughness]);
+    setSheen(matControls.sheen);
+    setSheenRoughness(matControls.sheenRoughness);
+    setEnvMapIntensity(matControls.envMapIntensity);
+    setAoMapIntensity(matControls.aoMapIntensity);
+  }, [
+    matControls.uvScale,
+    matControls.normalStrength,
+    matControls.metalness,
+    matControls.roughness,
+    matControls.sheen,
+    matControls.sheenRoughness,
+    matControls.envMapIntensity,
+    matControls.aoMapIntensity,
+  ]);
 
   // Reset sliders to per-family defaults when the material family changes,
   // but not on deselect (selectedObjectId null causes currentMaterial to fall
@@ -697,7 +757,14 @@ const Scene = () => {
   useEffect(() => {
     if (!selectedObjectId) return;
     const d = MATERIAL_PBR_DEFAULTS[currentFamily];
-    setMatControls({ uvScale: d.uvScale, normalStrength: d.normalScale, roughness: d.roughness });
+    setMatControls({
+      uvScale: d.uvScale,
+      normalStrength: d.normalScale,
+      roughness: d.roughness,
+      sheen: d.sheen,
+      sheenRoughness: d.sheenRoughness,
+      envMapIntensity: d.envMapIntensity,
+    });
   }, [currentFamily, selectedObjectId]);
 
   const lightControls = useControls(
@@ -752,112 +819,105 @@ const Scene = () => {
   );
 
   return (
-    <SceneContext.Provider value={{ handleRecenter, isAutoCenterEnabled, setIsAutoCenterEnabled }}>
+    <SceneContext.Provider
+      value={{ handleRecenter, isAutoCenterEnabled, setIsAutoCenterEnabled }}
+    >
       <div style={{ width: "100vw", height: "100vh", cursor: "grab" }}>
-        {contextMenu && (
-          <ContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            onDelete={handleDelete}
-            onRotate={handleRotate}
-            onClose={() => setContextMenu(null)}
-          />
+        {rotationControlId !== null && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[200]">
+            <button
+              onClick={() => setRotationControlId(null)}
+              className="px-6 py-3 bg-[#454343] text-white font-['Lato',sans-serif] font-light text-[15px] uppercase hover:bg-[#333] active:scale-[0.98] transition-all duration-200 cursor-pointer drop-shadow-[0px_1px_2.5px_rgba(0,0,0,0.3)] flex items-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <span>{t.finishRotation}</span>
+            </button>
+          </div>
         )}
 
-        {rotationControlId !== null && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[200]">
-          <button
-            onClick={() => setRotationControlId(null)}
-            className="px-6 py-3 bg-[#06402b] text-white font-medium rounded-full hover:bg-[#06402b]/90 active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-sm flex items-center gap-2"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>{t.finishRotation}</span>
-          </button>
-        </div>
-      )}
+        {import.meta.env.DEV && (
+          <Leva
+            hidden
+            collapsed={true}
+            oneLineLabels={true}
+            titleBar={{ position: { x: -390, y: 16 } }}
+          />
+        )}
+        <Canvas
+          camera={{ position: [0, 2, 2], fov: 60 }}
+          shadows
+          style={{ width: "100%", height: "100%" }}
+          gl={{
+            antialias: true,
+            powerPreference: "high-performance",
+          }}
+          dpr={[1, 2]}
+        >
+          <CameraController />
+          <ToneMappingController />
+          <RotationModeCamera />
+          <PanConstraint orbitControlsRef={orbitControlsRef} />
+          <AutoCenterCamera
+            orbitControlsRef={orbitControlsRef}
+            objectPositions={objectPositions}
+            sceneObjects={sceneObjects}
+            enabled={rotationControlId === null && !isAutoCenterEnabled}
+            isDragging={isDraggingObject}
+            recenterTrigger={recenterTrigger}
+          />
+          <ClickHandler
+            sceneObjects={sceneObjects}
+            onDragUpdate={handleDragUpdate}
+            onDragStateChange={handleDragStateChange}
+            onSnapPreview={setSnapPreview}
+          />
 
-      {import.meta.env.DEV && (
-        <Leva
-          collapsed={true}
-          oneLineLabels={true}
-          titleBar={{ position: { x: -390, y: 16 } }}
-        />
-      )}
-      <Canvas
-        camera={{ position: [0, 2, 2], fov: 60 }}
-        shadows
-        style={{ width: "100%", height: "100%" }}
-        gl={{ 
-          antialias: true,
-          powerPreference: "high-performance",
-        }}
-        dpr={[1, 2]}
-      >
-        <CameraController />
-        <ToneMappingController />
-        <RotationModeCamera />
-        <PanConstraint orbitControlsRef={orbitControlsRef} />
-        <AutoCenterCamera
-          orbitControlsRef={orbitControlsRef}
-          objectPositions={objectPositions}
-          sceneObjects={sceneObjects}
-          enabled={rotationControlId === null && !isAutoCenterEnabled}
-          isDragging={isDraggingObject}
-          recenterTrigger={recenterTrigger}
-        />
-        <ClickHandler
-          onContextMenu={handleContextMenu}
-          sceneObjects={sceneObjects}
-          onDragUpdate={handleDragUpdate}
-          onDragStateChange={handleDragStateChange}
-          onSnapPreview={setSnapPreview}
-        />
+          <OrbitControls
+            ref={orbitControlsRef}
+            enableZoom={rotationControlId === null && !isDraggingObject}
+            enablePan={true}
+            enableRotate={rotationControlId === null && !isDraggingObject}
+            target={[0, 0.2, 0]}
+            minDistance={1}
+            maxDistance={50}
+            minPolarAngle={0.1}
+            maxPolarAngle={Math.PI / 2.1}
+            enableDamping={true}
+            dampingFactor={0.08}
+            rotateSpeed={0.3}
+            zoomSpeed={0.3}
+            zoomToCursor={false}
+            enabled={rotationControlId === null}
+            makeDefault
+          />
 
-        <OrbitControls
-          ref={orbitControlsRef}
-          enableZoom={rotationControlId === null && !isDraggingObject}
-          enablePan={true}
-          enableRotate={rotationControlId === null && !isDraggingObject}
-          target={[0, 0.2, 0]}
-          minDistance={1}
-          maxDistance={50}
-          minPolarAngle={0.1}
-          maxPolarAngle={Math.PI / 2.1}
-          enableDamping={true}
-          dampingFactor={0.08}
-          rotateSpeed={0.3}
-          zoomSpeed={0.3}
-          zoomToCursor={false}
-          enabled={rotationControlId === null}
-          makeDefault
-        />
+          <ambientLight
+            intensity={lightControls.ambientIntensity}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[
+              lightControls.directionalX,
+              lightControls.directionalY,
+              lightControls.directionalZ,
+            ]}
+            intensity={lightControls.directionalIntensity}
+            color="#ffffff"
+          />
 
-        <ambientLight intensity={lightControls.ambientIntensity} color="#ffffff" />
-        <directionalLight
-          position={[
-            lightControls.directionalX,
-            lightControls.directionalY,
-            lightControls.directionalZ,
-          ]}
-          intensity={lightControls.directionalIntensity}
-          color="#ffffff"
-      
-        />
-        
-
-        <SceneObjects snapPreview={snapPreview} />
+          <SceneObjects snapPreview={snapPreview} />
 
           <ContactShadows
             opacity={shadowControls.shadowOpacity}
@@ -870,20 +930,18 @@ const Scene = () => {
             color="#000000"
           />
 
-
-
-        <group>
-          <Environment
-            preset={environmentControls.preset as any}
-            background={environmentControls.background}
-            blur={environmentControls.blur}
-            environmentIntensity={environmentControls.environmentIntensity}
-            environmentRotation={[0, environmentControls.rotationY, 0]}
-          />
-        </group>
-      </Canvas>
-      <SceneControls />
-    </div>
+          <group>
+            <Environment
+              preset={environmentControls.preset as any}
+              background={environmentControls.background}
+              blur={environmentControls.blur}
+              environmentIntensity={environmentControls.environmentIntensity}
+              environmentRotation={[0, environmentControls.rotationY, 0]}
+            />
+          </group>
+        </Canvas>
+        <SceneControls />
+      </div>
     </SceneContext.Provider>
   );
 };

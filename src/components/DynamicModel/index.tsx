@@ -30,6 +30,10 @@ export function DynamicModel({
     normalScale,
     metalness,
     roughness,
+    sheen,
+    sheenRoughness,
+    envMapIntensity,
+    aoMapIntensity,
     getObjectMaterial,
     addObject,
     objects,
@@ -40,10 +44,12 @@ export function DynamicModel({
   const baseModuleId = extractBaseModuleId(objectId);
 
   // Try to find module definition using base ID first, then full ID
-  const moduleDefinition = availableModules.find((m) => m.id === baseModuleId) ||
-                           availableModules.find((m) => m.id === objectId);
-  const completeSetDefinition = availableCompleteSets.find((s) => s.id === baseModuleId) ||
-                                availableCompleteSets.find((s) => s.id === objectId);
+  const moduleDefinition =
+    availableModules.find((m) => m.id === baseModuleId) ||
+    availableModules.find((m) => m.id === objectId);
+  const completeSetDefinition =
+    availableCompleteSets.find((s) => s.id === baseModuleId) ||
+    availableCompleteSets.find((s) => s.id === objectId);
   const modelDefinition = moduleDefinition || completeSetDefinition;
 
   const modelPath = modelDefinition?.modelPath || `${BASE}models/sofa3.glb`;
@@ -57,7 +63,7 @@ export function DynamicModel({
     const objectExists = objects.some((obj) => obj.id === objectId);
     if (!objectExists) {
       const { showLoader } = useLoaderStore.getState();
-      showLoader('Ładowanie obiektu...');
+      showLoader("Ładowanie obiektu...");
 
       addObject({
         id: objectId,
@@ -111,31 +117,55 @@ export function DynamicModel({
     diffuse.colorSpace = THREE.SRGBColorSpace;
     diffuse.generateMipmaps = true;
     normal.generateMipmaps = true;
+    diffuse.minFilter = THREE.LinearMipmapLinearFilter; // trilinear
+    diffuse.magFilter = THREE.LinearFilter;
+    normal.minFilter = THREE.LinearMipmapLinearFilter;
+    normal.magFilter = THREE.LinearFilter;
     diffuse.needsUpdate = true;
     normal.needsUpdate = true;
 
-   const srcFabric = (
-  materials['Sofa_Fabric'] ?? // Quick check for the exact match first
-  Object.entries(materials).find(
-    ([name]) => name.toLowerCase() === 'sofa_fabric'
-  )?.[1]
-) as THREE.MeshStandardMaterial | undefined;
-    console.warn('Using source fabric material:', srcFabric);
-    return new THREE.MeshStandardMaterial({
+    const srcFabric = (materials["Sofa_Fabric"] ??
+      Object.entries(materials).find(
+        ([name]) => name.toLowerCase() === "sofa_fabric",
+      )?.[1]) as THREE.MeshStandardMaterial | undefined;
+    const mat = new THREE.MeshPhysicalMaterial({
       map: diffuse,
       normalMap: normal,
       normalScale: new THREE.Vector2(normalScale, normalScale),
       aoMap: srcFabric?.aoMap ?? null,
-      aoMapIntensity: srcFabric?.aoMap ? 1 : 0,
+      aoMapIntensity: srcFabric?.aoMap ? aoMapIntensity : 0,
       roughness,
       metalness,
-      envMapIntensity: 0.5,
+      sheen,
+      sheenRoughness,
+      sheenColor: new THREE.Color(1, 1, 1),
+      envMapIntensity,
     });
-  }, [diffuseMap, normalMap, effectiveUvScale, normalScale, metalness, roughness, materials]);
+
+    return mat;
+  }, [
+    diffuseMap,
+    normalMap,
+    effectiveUvScale,
+    normalScale,
+    metalness,
+    roughness,
+    sheen,
+    sheenRoughness,
+    envMapIntensity,
+    aoMapIntensity,
+    materials,
+  ]);
 
   useEffect(() => {
-    if (fabricMaterial.map) { fabricMaterial.map.repeat.set(effectiveUvScale, effectiveUvScale); fabricMaterial.map.needsUpdate = true; }
-    if (fabricMaterial.normalMap) { fabricMaterial.normalMap.repeat.set(effectiveUvScale, effectiveUvScale); fabricMaterial.normalMap.needsUpdate = true; }
+    if (fabricMaterial.map) {
+      fabricMaterial.map.repeat.set(effectiveUvScale, effectiveUvScale);
+      fabricMaterial.map.needsUpdate = true;
+    }
+    if (fabricMaterial.normalMap) {
+      fabricMaterial.normalMap.repeat.set(effectiveUvScale, effectiveUvScale);
+      fabricMaterial.normalMap.needsUpdate = true;
+    }
   }, [effectiveUvScale, fabricMaterial]);
 
   useEffect(() => {
@@ -144,10 +174,23 @@ export function DynamicModel({
   }, [normalScale, fabricMaterial]);
 
   useEffect(() => {
-    fabricMaterial.metalness = metalness;
-    fabricMaterial.roughness = roughness;
-    fabricMaterial.needsUpdate = true;
-  }, [metalness, roughness, fabricMaterial]);
+    const m = fabricMaterial as THREE.MeshPhysicalMaterial;
+    m.metalness = metalness;
+    m.roughness = roughness;
+    m.sheen = sheen;
+    m.sheenRoughness = sheenRoughness;
+    m.envMapIntensity = envMapIntensity;
+    if (m.aoMap) m.aoMapIntensity = aoMapIntensity;
+    m.needsUpdate = true;
+  }, [
+    metalness,
+    roughness,
+    sheen,
+    sheenRoughness,
+    envMapIntensity,
+    aoMapIntensity,
+    fabricMaterial,
+  ]);
 
   // Only Sofa_Fabric receives the user-selected PBR material.
   // Every other mesh keeps its original GLTF material.
@@ -162,10 +205,10 @@ export function DynamicModel({
 
         if (child.userData.originalMatName === undefined) {
           child.userData.originalMatName =
-            (child.material as THREE.MeshStandardMaterial)?.name ?? '';
+            (child.material as THREE.MeshStandardMaterial)?.name ?? "";
         }
 
-        if (child.userData.originalMatName.toLowerCase() === 'sofa_fabric') {
+        if (child.userData.originalMatName.toLowerCase() === "sofa_fabric") {
           child.material = fabricMaterial;
         }
       }
@@ -202,14 +245,14 @@ export function DynamicModel({
       {isSelected && (
         <primitive
           object={clonedObject.clone()}
-          scale={[1.02, 1.02, 1.02]}
+          scale={[1, 1.01, 1]}
           ref={(ref: THREE.Object3D) => {
             if (ref) {
               const selectionMaterial = new THREE.MeshBasicMaterial({
-                color: "#06402b",
+                color: "#757575",
                 side: THREE.BackSide,
                 transparent: true,
-                opacity: 0.8,
+                opacity: 1,
               });
 
               ref.traverse((child: THREE.Object3D) => {
@@ -240,11 +283,12 @@ availableCompleteSets.forEach((set) => {
 // Native Image elements force the browser to fully download + decode each
 // file now; when THREE.js requests the same URL later it is served from
 // memory without any network round-trip.
-Object.values(availableMaterials).flat().forEach(({ diffuse, normal }) => {
-  useTexture.preload([diffuse, normal]);
-  [diffuse, normal].forEach(src => {
-    const img = new Image();
-    img.src = src;
+Object.values(availableMaterials)
+  .flat()
+  .forEach(({ diffuse, normal }) => {
+    useTexture.preload([diffuse, normal]);
+    [diffuse, normal].forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
   });
-});
-

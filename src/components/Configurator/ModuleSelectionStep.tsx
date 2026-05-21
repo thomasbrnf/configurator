@@ -6,9 +6,11 @@ import {
 } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { generateInstanceId } from "../../utils/moduleId";
+import ConfiguratorHeader from "./ConfiguratorHeader";
+import ItemCard from "../ui/ItemCard";
 
 const ModuleSelectionStep: React.FC = () => {
-  const { t, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
   const {
     configurationType,
     selectedCompleteSet,
@@ -19,32 +21,34 @@ const ModuleSelectionStep: React.FC = () => {
     sceneObjects,
   } = useConfigurator();
 
-  // Local state for module counts (moduleId -> count)
   const [moduleCounts, setModuleCounts] = useState<Map<string, number>>(
     new Map(),
   );
 
-  // Clear selection when modal opens
   useEffect(() => {
     setModuleCounts(new Map());
   }, []);
 
-  // Clear scene when switching to module selection from complete set
   useEffect(() => {
     if (configurationType === "modules" && selectedCompleteSet) {
       clearScene();
       setSelectedCompleteSet(null);
     }
-  }, [configurationType, selectedCompleteSet, clearScene, setSelectedCompleteSet]);
+  }, [
+    configurationType,
+    selectedCompleteSet,
+    clearScene,
+    setSelectedCompleteSet,
+  ]);
 
   const handleBack = () => {
     setCurrentStep("config-type");
-    setModuleCounts(new Map()); // Clear on back
+    setModuleCounts(new Map());
   };
 
   const handleClose = () => {
     setCurrentStep("scene");
-    setModuleCounts(new Map()); // Clear on close
+    setModuleCounts(new Map());
   };
 
   const handleCompleteSetSelect = (setId: string) => {
@@ -53,56 +57,39 @@ const ModuleSelectionStep: React.FC = () => {
     setCurrentStep("scene");
   };
 
-  const getModuleCount = (moduleId: string): number => {
-    return moduleCounts.get(moduleId) || 0;
-  };
+  const getModuleCount = (moduleId: string) => moduleCounts.get(moduleId) || 0;
+  const isModuleSelected = (moduleId: string) => getModuleCount(moduleId) > 0;
 
   const incrementModule = (moduleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setModuleCounts((prev) => {
-      const newCounts = new Map(prev);
-      const currentCount = newCounts.get(moduleId) || 0;
-      newCounts.set(moduleId, currentCount + 1);
-      return newCounts;
+      const next = new Map(prev);
+      next.set(moduleId, (next.get(moduleId) || 0) + 1);
+      return next;
     });
   };
 
   const decrementModule = (moduleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setModuleCounts((prev) => {
-      const newCounts = new Map(prev);
-      const currentCount = newCounts.get(moduleId) || 0;
-      if (currentCount > 0) {
-        if (currentCount === 1) {
-          newCounts.delete(moduleId);
-        } else {
-          newCounts.set(moduleId, currentCount - 1);
-        }
-      }
-      return newCounts;
+      const next = new Map(prev);
+      const current = next.get(moduleId) || 0;
+      if (current <= 1) next.delete(moduleId);
+      else next.set(moduleId, current - 1);
+      return next;
     });
   };
 
   const toggleModule = (moduleId: string) => {
-    const currentCount = getModuleCount(moduleId);
-    if (currentCount === 0) {
-      setModuleCounts((prev) => {
-        const newCounts = new Map(prev);
-        newCounts.set(moduleId, 1);
-        return newCounts;
-      });
-    } else {
-      setModuleCounts((prev) => {
-        const newCounts = new Map(prev);
-        newCounts.delete(moduleId);
-        return newCounts;
-      });
-    }
+    setModuleCounts((prev) => {
+      const next = new Map(prev);
+      if (next.has(moduleId)) next.delete(moduleId);
+      else next.set(moduleId, 1);
+      return next;
+    });
   };
 
-  const clearModules = () => {
-    setModuleCounts(new Map());
-  };
+  const clearModules = () => setModuleCounts(new Map());
 
   const addModulesToScene = () => {
     let counter = 0;
@@ -112,172 +99,51 @@ const ModuleSelectionStep: React.FC = () => {
         counter++;
       }
     });
-    
     setCurrentStep("scene");
-    setModuleCounts(new Map()); // Clear after adding
+    setModuleCounts(new Map());
   };
 
-  const isModuleSelected = (moduleId: string) => {
-    return getModuleCount(moduleId) > 0;
-  };
-
-  const toggleLanguage = () => {
-    setLanguage(language === "pl" ? "en" : "pl");
-  };
-
+  /* ─── Complete Sets view ──────────────────────────────────────── */
   if (configurationType === "complete") {
     return (
-      <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex flex-col">
-        <div className="flex-1 overflow-y-auto pt-8">
-          <div className="max-w-6xl mx-auto px-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <button
-                  onClick={handleBack}
-                  className="cursor-pointer flex items-center px-4 py-2 text-black hover:bg-[#06402b]/10 rounded-lg transition-colors duration-200 mr-6"
-                >
-                  <svg
-                    className="w-5 h-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                  {t.back}
-                </button>
-                <div>
-                  <h1 className="text-lg font-bold text-black">
-                    {t.selectCompleteSet}
-                  </h1>
-                  <p className="text-sm text-gray-600">
-                    {t.selectCompleteSetSubtitle}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleLanguage}
-                  className="cursor-pointer px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
-                >
-                  {language === "pl" ? "EN" : "PL"}
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
+      <div className="fixed inset-0 bg-white z-[1000] flex flex-col overflow-hidden">
+        <ConfiguratorHeader
+          onBack={handleBack}
+          onClose={sceneObjects.length > 0 ? handleClose : undefined}
+          breadcrumb={["HOME", "CONFIGURATION TYPE", "COMPLETE SETS"]}
+        />
 
-            {/* Complete Sets Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="pt-[95px] flex flex-col px-[100px] flex-1 text-left overflow-hidden">
+          <div className=" pt-[25px] pb-[35px] shrink-0">
+            <h2 className="font-lato font-medium text-[25px] text-black leading-none">
+              {t.selectCompleteSet}
+            </h2>
+            <p className="font-lato font-light text-[20px] text-black leading-normal">
+              {t.selectCompleteSetSubtitle}
+            </p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto  pb-[44px]">
+            <div className="grid grid-cols-3 gap-5">
               {availableCompleteSets.map((set) => {
-                const isAlreadyInScene = sceneObjects.some(inst => inst.instanceId === set.id);
-                
+                const isAlreadyInScene = sceneObjects.some(
+                  (inst) =>
+                    (inst as unknown as { instanceId: string }).instanceId ===
+                    set.id,
+                );
                 return (
-                  <div
+                  <ItemCard
                     key={set.id}
-                    className={`bg-white rounded-xl border-2 transition-all duration-300 shadow-lg overflow-hidden relative ${
-                      isAlreadyInScene 
-                        ? "opacity-50 cursor-not-allowed border-gray-300" 
-                        : selectedCompleteSet === set.id
-                          ? "border-[#06402b] ring-2 ring-[#06402b]/20 cursor-pointer hover:shadow-xl"
-                          : "border-gray-200 hover:border-[#06402b]/40 cursor-pointer hover:shadow-xl"
-                    } group`}
-                    onClick={() => !isAlreadyInScene && handleCompleteSetSelect(set.id)}
-                  >
-                    <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
-                      {set.thumbnail ? (
-                        <img
-                          src={set.thumbnail}
-                          alt={set.displayName}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                      <svg
-                        className="w-16 h-16 text-gray-400 group-hover:text-black transition-colors duration-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1}
-                          d="M4 16v4h16v-4M4 16L2 8h20l-2 8M4 16h16M8 12V8m8 4V8"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-gray-900 mb-2">
-                      {set.displayName}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {isAlreadyInScene ? t.alreadyInScene : t.clickToSelect2}
-                    </p>
-                  </div>
-                  {isAlreadyInScene && (
-                    <div className="absolute top-3 right-3">
-                      <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
-                  {!isAlreadyInScene && selectedCompleteSet === set.id && (
-                    <div className="absolute top-3 right-3">
-                      <div className="w-6 h-6 bg-[#06402b] rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
+                    name={set.displayName}
+                    subtitle={
+                      isAlreadyInScene ? t.alreadyInScene : t.clickToSelect2
+                    }
+                    thumbnail={set.thumbnail}
+                    disabled={isAlreadyInScene}
+                    onClick={() => handleCompleteSetSelect(set.id)}
+                    imageAspect="video"
+                  />
+                );
               })}
             </div>
           </div>
@@ -286,269 +152,106 @@ const ModuleSelectionStep: React.FC = () => {
     );
   }
 
-  // Module selection interface
+  /* ─── Modules selection view ──────────────────────────────────── */
   return (
-    <div className="fixed inset-0 bg-white/95 backdrop-blur-lg z-[1000] flex flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-8 py-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center">
-              <button
-                onClick={handleBack}
-                className="cursor-pointer flex items-center px-4 py-2 text-black hover:bg-[#06402b]/10 rounded-lg transition-colors duration-200 mr-6"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                {t.back}
-              </button>
-              <div>
-                <h1 className="text-lg font-bold text-black">
-                  {t.selectModulesMultiple}
-                </h1>
-                <p className="text-sm text-gray-600">
-                  {t.buildOwnConfiguration}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleLanguage}
-                className="cursor-pointer px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
-              >
-                {language === "pl" ? "EN" : "PL"}
-              </button>
-              <button
-                onClick={handleClose}
-                className="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+    <div className="fixed inset-0 bg-white z-[1000] flex flex-col overflow-hidden">
+      <ConfiguratorHeader
+        onBack={handleBack}
+        onClose={sceneObjects.length > 0 ? handleClose : undefined}
+        breadcrumb={["HOME", "CONFIGURATION TYPE", "MODULE SELECT"]}
+      />
 
-          {/* Main Content Area with Filters */}
-          <div className="flex gap-8">
-            {/* Modules Grid */}
-            <div className="flex-1">
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-20">
-                {availableModules.map((module) => {
-                  const count = getModuleCount(module.id);
-                  const isSelected = isModuleSelected(module.id);
-                  
-                  return (
-                    <div
-                      key={module.id}
-                      className={`bg-white rounded-xl border-2 transition-all duration-300 shadow-md hover:shadow-lg overflow-hidden cursor-pointer group relative ${
-                        isSelected
-                          ? "border-[#06402b] ring-2 ring-[#06402b]/20 scale-105"
-                          : "border-gray-200 hover:border-[#06402b]/40 hover:scale-102"
-                      }`}
-                      onClick={() => toggleModule(module.id)}
-                    >
-                      <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
-                        {module.thumbnail ? (
-                          <img
-                            src={module.thumbnail}
-                            alt={module.displayName}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <svg
-                            className={`w-12 h-12 transition-colors duration-300 ${
-                              isSelected
-                                ? "text-black"
-                                : "text-gray-400 group-hover:text-black"
-                            }`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1}
-                              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <h3 className="font-bold text-gray-900 text-sm mb-1">
-                          {module.displayName}
-                        </h3>
-                        <p className="text-xs text-gray-600">
-                          {t.clickToSelect2}
-                        </p>
-                      </div>
-                      {isSelected && (
-                        <>
-                          <div className="absolute top-2 right-2">
-                            <div className="w-6 h-6 bg-[#06402b] rounded-full flex items-center justify-center">
-                              <svg
-                                className="w-4 h-4 text-white"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                          {/* Counter Controls */}
-                          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white rounded-lg shadow-lg border border-[#06402b]/20 p-1">
-                            <button
-                              onClick={(e) => decrementModule(module.id, e)}
-                              className="cursor-pointer w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-red-100 text-gray-700 hover:text-red-600 rounded transition-colors duration-200"
-                            >
-                              <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={3}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M20 12H4"
-                                />
-                              </svg>
-                            </button>
-                            <span className="text-xs font-bold text-[#06402b] min-w-[20px] text-center">
-                              {count}
-                            </span>
-                            <button
-                              onClick={(e) => incrementModule(module.id, e)}
-                              className="cursor-pointer w-6 h-6 flex items-center justify-center bg-[#06402b] hover:bg-[#06402b]/80 text-white rounded transition-colors duration-200"
-                            >
-                              <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={3}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M12 4v16m8-8H4"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+      <div className="pt-[95px] flex w-full flex-col   px-[100px] flex-1 text-left overflow-hidden">
+        <div className=" pt-[25px] pb-[35px] shrink-0">
+          <h2 className="font-lato font-medium text-[25px] text-black leading-none">
+            {t.selectModulesMultiple}
+          </h2>
+          <p className="font-lato font-light text-[20px] text-black leading-normal">
+            {t.buildOwnConfiguration}
+          </p>
+        </div>
 
-            {/* Filter Section - Placeholder */}
-            {/* <div className="w-80 flex-shrink-0">
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm sticky top-0">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtry</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Kategoria</label>
-                    <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-400 text-sm">
-                      Filtry będą dostępne wkrótce
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Rozmiar</label>
-                    <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-400 text-sm">
-                      Opcje rozmiaru
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Materiał</label>
-                    <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-400 text-sm">
-                      Wybór materiału
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div> */}
+        <div className="flex-1 overflow-y-auto ">
+          <div className="grid grid-cols-4 gap-5 pb-5">
+            {availableModules.map((module) => {
+              const count = getModuleCount(module.id);
+              const isSelected = isModuleSelected(module.id);
+
+              return (
+                <ItemCard
+                  key={module.id}
+                  name={module.displayName}
+                  subtitle={t.clickToSelect2}
+                  thumbnail={module.thumbnail}
+                  selected={isSelected}
+                  onClick={() => toggleModule(module.id)}
+                  imageAspect="square"
+                  overlay={
+                    isSelected ? (
+                      <div
+                        className="absolute bottom-2 right-2 flex items-center gap-1 bg-white border border-ui-dark px-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={(e) => decrementModule(module.id, e)}
+                          className="w-6 h-8 flex items-center justify-center font-lato text-[18px] text-ui-dark hover:bg-gray-100 cursor-pointer"
+                        >
+                          −
+                        </button>
+                        <span className="font-lato font-light text-[15px] text-ui-dark min-w-[20px] text-center">
+                          {count}
+                        </span>
+                        <button
+                          onClick={(e) => incrementModule(module.id, e)}
+                          className="w-6 h-6 flex items-center justify-center font-lato text-[18px] text-ui-dark hover:bg-gray-100 cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    ) : undefined
+                  }
+                />
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Footer Controls - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[1010]">
-        <div className="max-w-6xl mx-auto px-6 py-3">
-          <div className="flex flex-col items-center space-y-2">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={addModulesToScene}
-                disabled={moduleCounts.size === 0}
-                className={`cursor-pointer px-12 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 ${
-                  moduleCounts.size > 0
-                    ? "bg-[#06402b] text-white hover:bg-[#06402b]/90 active:scale-[0.98] shadow-lg hover:shadow-xl"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                }`}
-              >
-                {t.addToScene}
-              </button>
-              <button
-                onClick={clearModules}
-                disabled={moduleCounts.size === 0}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 ${
-                  moduleCounts.size === 0
-                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-600 cursor-pointer"
-                }`}
-                title={t.clearSelection}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="text-xs text-black/35">
-              {t.selected}: {Array.from(moduleCounts.values()).reduce((sum, count) => sum + count, 0)} {t.modulesCount}
-            </div>
-          </div>
+        <div className="h-[88px] bg-white shrink-0 flex items-center justify-center gap-3.75">
+          <button
+            onClick={addModulesToScene}
+            disabled={moduleCounts.size === 0}
+            className={`flex items-center justify-center bg-white border-[3px] h-[60px] w-[300px] transition-colors font-lato font-light text-[20px] uppercase ${
+              moduleCounts.size > 0
+                ? "border-[#757575] hover:border-ui-dark text-black  cursor-pointer"
+                : "border-ui-border text-ui-border cursor-not-allowed"
+            }`}
+          >
+            {t.addToScene}
+          </button>
+
+          <button
+            onClick={clearModules}
+            disabled={moduleCounts.size === 0}
+            title={t.clearSelection}
+            className={`flex items-center justify-center bg-white border-[3px] h-[60px] w-[60px] transition-colors ${
+              moduleCounts.size > 0
+                ? "border-[#757575] hover:border-ui-dark hover:bg-[#EE4848] hover:text-white cursor-pointer"
+                : "border-ui-border  cursor-not-allowed opacity-40"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="19"
+              height="20"
+              viewBox="0 0 19 20"
+              fill="none"
+            >
+              <path
+                d="M18.2494 19.7964H14.5804C14.3248 19.7964 14.1194 19.7325 13.9643 19.6048C13.8183 19.477 13.6996 19.331 13.6083 19.1667L9.02203 11.5685C8.94901 11.7966 8.8623 11.9929 8.7619 12.1571L4.36726 19.1667C4.25774 19.3218 4.12996 19.4679 3.98393 19.6048C3.84702 19.7325 3.66448 19.7964 3.43631 19.7964H0L6.57143 9.61072L0.260119 0H3.92917C4.18472 0 4.36726 0.036508 4.47679 0.109524C4.59544 0.173413 4.70496 0.282937 4.80536 0.438096L9.30952 7.69405C9.40079 7.46587 9.51032 7.2377 9.6381 7.00953L13.7726 0.506548C13.873 0.333135 13.9825 0.205357 14.1012 0.123215C14.2198 0.0410717 14.3704 0 14.553 0H18.0714L11.7054 9.46012L18.2494 19.7964Z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

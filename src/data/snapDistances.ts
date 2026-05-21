@@ -18,63 +18,135 @@ export interface SnapConfig {
 // Only (dragged, target) pairs are stored; the function handles (target, dragged) by negating zShift.
 const TABLE: Record<string, SnapConfig> = {
   // standard ↔ standard
-  "standard:standard": { xDist: 1.03, zDist: 1.03, zShift: 0 },
-  // middle ↔ middle
-  "middle:middle": { xDist: 0.79, zDist: 0.9, zShift: 0 },
-  // long ↔ long
-  "long:long": { xDist: 1.05, zDist: 1.18, zShift: 0 },
-  // expanded ↔ expanded
-  "expanded:expanded": { xDist: 1.825, zDist: 1.825, zShift: 0 },
+  "standard:standard": { xDist: 0.70, zDist: 1.03, zShift: 0 },
+  // standardLong ↔ standardLong
+  "standardLong:standardLong": { xDist: 0.70, zDist: 1.03, zShift: 0 },
   // wide ↔ wide
-  "wide:wide": { xDist: 1.57, zDist: 1.20, zShift: 0 },
+  "wide:wide": { xDist: 1.61, zDist: 1.2, zShift: 0 },
+  // corner ↔ corner
+  "corner:corner": { xDist: 1.03, zDist: 1.03, zShift: 0 },
+  // cornerWider ↔ cornerWider
+  "cornerWider:cornerWider": { xDist: 1.03, zDist: 1.03, zShift: 0 },
 
-  // standard ↔ middle
-  "standard:middle": { xDist: 0.92, zDist: 0.9, zShift: 0 },
-  "middle:standard": { xDist: 0.92, zDist: 0.92, zShift: 0 },
-
-  // standard ↔ long
-  "standard:long": { xDist: 1.05, zDist: 1.05, zShift: -0.415 },
-  "long:standard": { xDist: 1.05, zDist: 1.05, zShift: 0.415 },
-
-  // standard ↔ expanded
-  "standard:expanded": { xDist: 1.5, zDist: 1.43, zShift: -0.323 },
-  "expanded:standard": { xDist: 1.5, zDist: 1.43, zShift: 0.323 },
+  // standard ↔ standardLong
+  "standard:standardLong": { xDist: 0.71, zDist: 1.03, zShift: -0.31 },
+  "standardLong:standard": { xDist: 0.71, zDist: 1.03, zShift: 0.31 },
 
   // standard ↔ wide
-  "standard:wide": { xDist: 1.30, zDist: 1.30, zShift: -0.323 },
-  "wide:standard": { xDist: 1.30, zDist: 1.30, zShift: 0.323 },
+  "standard:wide": { xDist: 1.15, zDist: 1.3, zShift: 0 },
+  "wide:standard": { xDist: 1.15, zDist: 1.3, zShift: 0 },
 
-  // middle ↔ long
-  "middle:long": { xDist: 0.92, zDist: 1.05, zShift: -0.415 },
-  "long:middle": { xDist: 0.92, zDist: 1.05, zShift: 0.415 },
+  // standard ↔ light
+  "standard:light": { xDist: 0.56, zDist: 1.03, zShift: -0.042 },
+  "light:standard": { xDist: 0.56, zDist: 1.03, zShift: 0.042},
 
-  // middle ↔ expanded
-  "middle:expanded": { xDist: 1.305, zDist: 1.305, zShift: -0.323 },
-  "expanded:middle": { xDist: 1.305, zDist: 1.305, zShift: 0.323 },
+  // standard ↔ extralight
+  "standard:extralight":{ xDist: 0.46, zDist: 0.9, zShift: -0.054 },
+  "extralight:standard": { xDist: 0.46, zDist: 0.92, zShift: 0.054 },
 
-  // middle ↔ wide
-  "middle:wide": { xDist: 1.18, zDist: 1.18, zShift: -0.323 },
-  "wide:middle": { xDist: 1.18, zDist: 1.18, zShift: 0.323 },
+  // standard ↔ thin
+  "standard:thin": { xDist: 0.43, zDist: 0.9, zShift: -0.054 },
+  "thin:standard": { xDist: 0.43, zDist: 0.92, zShift: 0.054 },
 
-  // long ↔ expanded
-  "long:expanded": { xDist: 1.43, zDist: 1.43, zShift: 0.09 },
-  "expanded:long": { xDist: 1.43, zDist: 1.43, zShift: -0.09 },
+  // standard ↔ corner
+  "standard:corner": { xDist: 0.901, zDist: 1.03, zShift: 0 },
+  "corner:standard": { xDist: 0.901, zDist: 1.03, zShift: 0 },
 
-  // long ↔ wide
-  "long:wide": { xDist: 1.31, zDist: 1.31, zShift: 0.09 },
-  "wide:long": { xDist: 1.31, zDist: 1.31, zShift: -0.09 },
+  // standard ↔ cornerWider
+  "standard:cornerWider": { xDist: 0.91, zDist: 1.03, zShift: 0 },
+  "cornerWider:standard": { xDist: 0.91, zDist: 1.03, zShift: 0 },
 
-  // expanded ↔ wide
-  "expanded:wide": { xDist: 1.69, zDist: 1.69, zShift: 0 },
-  "wide:expanded": { xDist: 1.69, zDist: 1.69, zShift: 0 },
+  // standardLong ↔ wide
+  "standardLong:wide": { xDist: 1.15, zDist: 1.3, zShift: 0.31 },
+  "wide:standardLong": { xDist: 1.15, zDist: 1.3, zShift: -0.31 },
+
+  // standardLong ↔ light
+  "standardLong:light": { xDist: 0.56, zDist: 1.03, zShift: 0.265 },
+  "light:standardLong": { xDist: 0.56, zDist: 1.03, zShift: -0.265 },
+
+  // standardLong ↔ extralight
+  "standardLong:extralight": { xDist: 0.46, zDist: 1.03, zShift: 0.255  },
+  "extralight:standardLong": { xDist: 0.46, zDist: 1.03, zShift: -0.255 },
+
+  // standardLong ↔ thin
+  "standardLong:thin": { xDist: 0.43, zDist: 0.9, zShift: 0.255  },
+  "thin:standardLong": { xDist: 0.43, zDist: 0.92, zShift: -0.255 },
+
+  // standardLong ↔ corner
+  "standardLong:corner": { xDist: 0.901, zDist: 1.03, zShift: 0.31 },
+  "corner:standardLong": { xDist: 0.901, zDist: 1.03, zShift: -0.31 },
+
+  // standardLong ↔ cornerWider
+  "standardLong:cornerWider": { xDist: 0.91, zDist: 1.03, zShift: 0.31  },
+  "cornerWider:standardLong": { xDist: 0.91, zDist: 1.03, zShift: -0.31  },
+
+  // wide ↔ light
+  "wide:light": { xDist: 1.01, zDist: 1.3, zShift: -0.042 },
+  "light:wide": { xDist: 1.01, zDist: 1.3, zShift: 0.042 },
+
+  // wide ↔ extralight
+  "wide:extralight": { xDist: 0.91, zDist: 1.3, zShift: -0.054 },
+  "extralight:wide": { xDist: 0.91, zDist: 1.3, zShift: 0.054 },
+
+  // wide ↔ thin
+  "wide:thin": { xDist: 0.89, zDist: 1.18, zShift:  -0.054 },
+  "thin:wide": { xDist: 0.89, zDist: 1.18, zShift: 0.054 },
+
+  // wide ↔ corner
+  "wide:corner": { xDist: 1.35, zDist: 1.3, zShift: 0 },
+  "corner:wide": { xDist: 1.35, zDist: 1.3, zShift: 0 },
+
+  // wide ↔ cornerWider
+  "wide:cornerWider": { xDist: 1.36, zDist: 1.3, zShift: 0},
+  "cornerWider:wide": { xDist: 1.36, zDist: 1.3, zShift: 0 },
+
+  // light ↔ corner
+  "light:corner": { xDist: 0.76, zDist: 1.03, zShift: 0.038 },
+  "corner:light": { xDist: 0.76, zDist: 1.03, zShift: -0.038 },
+
+  // light ↔ cornerWider
+  "light:cornerWider": { xDist: 0.77, zDist: 1.03, zShift: 0.04 },
+  "cornerWider:light": { xDist: 0.77, zDist: 1.03, zShift: -0.04 },
+
+  // extralight ↔ corner
+  "extralight:corner": { xDist: 0.66, zDist: 1.03, zShift: 0.05 },
+  "corner:extralight": { xDist: 0.66, zDist: 1.03, zShift: -0.05 },
+
+  // extralight ↔ cornerWider
+  "extralight:cornerWider": { xDist: 0.67, zDist: 1.03, zShift: 0.05 },
+  "cornerWider:extralight": { xDist: 0.67, zDist: 1.03, zShift: -0.05 },
+
+  // thin ↔ corner
+  "thin:corner": { xDist: 0.63, zDist: 0.9, zShift: 0.05 },
+  "corner:thin": { xDist: 0.63, zDist: 0.92, zShift: -0.05 },
+
+  // thin ↔ cornerWider
+  "thin:cornerWider": { xDist: 0.64, zDist: 0.9, zShift: 0.05 },
+  "cornerWider:thin": { xDist: 0.64, zDist: 0.92, zShift: -0.05 },
+
+  // corner ↔ cornerWider
+  "corner:cornerWider": { xDist: 1.03, zDist: 1.03, zShift: 0 },
+  "cornerWider:corner": { xDist: 1.03, zDist: 1.03, zShift: 0 },
 };
 
-const FALLBACK: SnapConfig = { xDist: 1.03, zDist: 1.03, zShift: 0 };
+// Pairs that must never snap to each other.
+const BLOCKED = new Set([
+  "light:light",
+  "extralight:extralight",
+  "thin:thin",
+  "light:extralight",
+  "extralight:light",
+  "light:thin",
+  "thin:light",
+  "extralight:thin",
+  "thin:extralight",
+]);
 
 export function getSnapConfig(
   draggedCategory: ModuleCategory,
   targetCategory: ModuleCategory,
-): SnapConfig {
+): SnapConfig | null {
   const key = `${draggedCategory}:${targetCategory}`;
-  return TABLE[key] ?? FALLBACK;
+  if (BLOCKED.has(key)) return null;
+  return TABLE[key] ?? null;
 }
