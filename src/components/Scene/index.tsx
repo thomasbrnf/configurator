@@ -10,6 +10,7 @@ import { DynamicModel } from "../DynamicModel";
 import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -22,6 +23,35 @@ import {
   MATERIAL_PBR_DEFAULTS,
   getMaterialFamily,
 } from "../../context/MaterialContext";
+
+function saveSession(key: string, value: unknown) {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+function loadSession<T>(key: string, fallback: T): T {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw === null ? fallback : (JSON.parse(raw) as T);
+  } catch { return fallback; }
+}
+
+interface CameraState {
+  position: { x: number; y: number; z: number };
+  target: { x: number; y: number; z: number };
+}
+
+function CameraRestorer({ orbitControlsRef }: { orbitControlsRef: React.MutableRefObject<any> }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    const saved = loadSession<CameraState | null>("camera_state", null);
+    if (!saved || !orbitControlsRef.current) return;
+    camera.position.set(saved.position.x, saved.position.y, saved.position.z);
+    orbitControlsRef.current.target.set(saved.target.x, saved.target.y, saved.target.z);
+    orbitControlsRef.current.update();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
 import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useObjectSelection } from "../../hooks/useObjectSelection";
@@ -162,181 +192,126 @@ function AutoCenterCamera({
   isDragging?: boolean;
   recenterTrigger?: number;
 }) {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
   const desiredTargetRef = useRef(new THREE.Vector3(0, 0.2, 0));
   const currentTargetRef = useRef(new THREE.Vector3(0, 0.2, 0));
+  // Desired camera world position — null means "no animation in progress"
+  const desiredCameraRef = useRef<THREE.Vector3 | null>(null);
   const initializedRef = useRef(false);
   const userHasInteractedRef = useRef(false);
   const previousSceneCountRef = useRef(0);
-  const isRecentering = useRef(false);
+  // Used to skip camera move on session restore (camera already set by CameraRestorer)
+  const isFirstMountRef = useRef(true);
 
-  // Handle manual recenter trigger - with camera repositioning
-  useEffect(() => {
-    // Don't recenter if currently dragging an object
-    if (recenterTrigger > 0 && sceneObjects.length > 0 && !isDragging) {
-      userHasInteractedRef.current = false;
-      currentTargetRef.current.copy(desiredTargetRef.current);
-      isRecentering.current = true;
+  // Compute world-space bounding box of every DynamicModel group in the scene
+  const computeBounds = useCallback((): THREE.Box3 => {
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3();
+    scene.traverse((obj) => {
+      if (obj instanceof THREE.Group && obj.userData.objectId) {
+        const objBox = new THREE.Box3().setFromObject(obj);
+        if (!objBox.isEmpty()) box.union(objBox);
+      }
+    });
+    return box;
+  }, [scene]);
 
-      // Calculate bounds of all objects
-      let minX = Infinity,
-        maxX = -Infinity;
-      let minZ = Infinity,
-        maxZ = -Infinity;
+  // Derive ideal target and camera position from actual model bounds.
+  // footprint diagonal → back = diagonal × 1.3, height = diagonal × 0.6
+  // (elevation angle ≈ 25° regardless of model scale)
+  const cameraFromBounds = useCallback((bounds: THREE.Box3) => {
+    const center = new THREE.Vector3();
+    const size = new THREE.Vector3();
+    bounds.getCenter(center);
+    bounds.getSize(size);
+    const footprint = Math.sqrt(size.x * size.x + size.z * size.z);
+    const back = Math.max(footprint * 1.3, 2.0);
+    const height = Math.max(footprint * 0.6, 1.5);
+    return {
+      target: new THREE.Vector3(center.x, Math.max(center.y, 0.2), center.z),
+      cameraPos: new THREE.Vector3(center.x, center.y + height, center.z + back),
+    };
+  }, []);
 
-      sceneObjects.forEach((inst, index) => {
-        const position = objectPositions.get(inst.instanceId) || [
-          index * 1.4,
-          0,
-          0,
-        ];
-        minX = Math.min(minX, position[0]);
-        maxX = Math.max(maxX, position[0]);
-        minZ = Math.min(minZ, position[2]);
-        maxZ = Math.max(maxZ, position[2]);
-      });
-
-      const centerX = (minX + maxX) / 2;
-      const centerZ = (minZ + maxZ) / 2;
-      const sceneWidth = maxX - minX;
-      const sceneDepth = maxZ - minZ;
-      const sceneSize = Math.max(sceneWidth, sceneDepth);
-
-      // Calculate optimal camera distance to see all objects
-      // Add padding factor to ensure all objects are visible
-      const paddingFactor = 1.5;
-      const distance = Math.max(sceneSize * paddingFactor, 3);
-
-      // Position camera at an angle from above and behind
-      const cameraHeight = distance * 0.6; // Height from ground
-      const cameraBack = distance * 0.8; // Distance back from center
-
-      // Set the center point where camera should look at
-      const centerPoint = new THREE.Vector3(centerX, 0.2, centerZ);
-
-      // Update desired target to the center of objects
-      desiredTargetRef.current.copy(centerPoint);
-      currentTargetRef.current.copy(centerPoint);
-
-      // Smooth transition to new camera position
-      const targetCameraPos = new THREE.Vector3(
-        centerX,
-        cameraHeight,
-        centerZ + cameraBack,
-      );
-
-      // Animate camera to new position and update orbit controls target
-      const animateCamera = () => {
-        if (camera && orbitControlsRef.current && isRecentering.current) {
-          camera.position.lerp(targetCameraPos, 0.1);
-
-          // Also update the orbit controls target to look at the center
-          orbitControlsRef.current.target.lerp(centerPoint, 0.1);
-          orbitControlsRef.current.update();
-
-          // Check if camera is close enough to target position
-          if (camera.position.distanceTo(targetCameraPos) < 0.1) {
-            isRecentering.current = false;
-          }
-        }
-      };
-
-      // Start animation
-      const interval = setInterval(() => {
-        animateCamera();
-        if (!isRecentering.current) {
-          clearInterval(interval);
-        }
-      }, 16); // ~60fps
-
-      return () => clearInterval(interval);
-    }
-  }, [recenterTrigger, sceneObjects, objectPositions, camera]);
-
+  // Track manual camera interaction so auto-center stops after user touches orbit
   useEffect(() => {
     const controls = orbitControlsRef.current;
     if (!controls) return;
-
-    const handleStart = () => {
-      // Mark that user has manually controlled the camera
-      userHasInteractedRef.current = true;
-    };
-
+    const handleStart = () => { userHasInteractedRef.current = true; };
     controls.addEventListener("start", handleStart);
-
-    return () => {
-      controls.removeEventListener("start", handleStart);
-    };
+    return () => controls.removeEventListener("start", handleStart);
   }, [orbitControlsRef]);
 
+  // Manual recenter button — resets interaction flag and fully repositions
+  useEffect(() => {
+    if (recenterTrigger === 0 || sceneObjects.length === 0 || isDragging) return;
+    userHasInteractedRef.current = false;
+    const raf = requestAnimationFrame(() => {
+      const bounds = computeBounds();
+      if (bounds.isEmpty()) return;
+      const { target, cameraPos } = cameraFromBounds(bounds);
+      desiredTargetRef.current.copy(target);
+      currentTargetRef.current.copy(target);
+      desiredCameraRef.current = cameraPos.clone();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [recenterTrigger, sceneObjects, isDragging, computeBounds, cameraFromBounds]);
+
+  // Auto-center when scene changes (objects added / removed)
   useEffect(() => {
     if (!enabled || isDragging) return;
-
-    // Check if the scene has changed (objects added/removed)
     const sceneChanged = previousSceneCountRef.current !== sceneObjects.length;
 
     if (sceneObjects.length === 0) {
       desiredTargetRef.current.set(0, 0.2, 0);
       initializedRef.current = false;
       previousSceneCountRef.current = 0;
-      // Reset user interaction flag when scene is empty
       userHasInteractedRef.current = false;
+      isFirstMountRef.current = true;
       return;
     }
 
-    // Only recalculate if scene changed (objects added/removed)
-    // Don't recalculate if user has manually interacted and scene hasn't changed
-    if (!sceneChanged && userHasInteractedRef.current) {
-      return;
-    }
+    if (!sceneChanged && userHasInteractedRef.current) return;
 
-    // Calculate the center of all objects
-    let totalX = 0;
-    let totalY = 0;
-    let totalZ = 0;
-    let count = 0;
+    previousSceneCountRef.current = sceneObjects.length;
+    userHasInteractedRef.current = false;
 
-    sceneObjects.forEach((inst, index) => {
-      const position = objectPositions.get(inst.instanceId) || [
-        index * 3,
-        0,
-        0,
-      ];
-      totalX += position[0];
-      totalY += position[1];
-      totalZ += position[2];
-      count++;
-    });
+    // On the very first mount with a saved camera (session restore),
+    // skip repositioning so the user's last camera angle is preserved.
+    const skipCameraMove =
+      isFirstMountRef.current && !!sessionStorage.getItem("camera_state");
+    isFirstMountRef.current = false;
 
-    if (count > 0) {
-      const centerX = totalX / count;
-      const centerY = totalY / count + 0.2; // Add slight offset for better viewing
-      const centerZ = totalZ / count;
-
-      desiredTargetRef.current.set(centerX, centerY, centerZ);
-
-      // Initialize current target on first calculation or when scene changes
+    const raf = requestAnimationFrame(() => {
+      const bounds = computeBounds();
+      if (bounds.isEmpty()) return;
+      const { target, cameraPos } = cameraFromBounds(bounds);
+      desiredTargetRef.current.copy(target);
       if (!initializedRef.current || sceneChanged) {
-        currentTargetRef.current.copy(desiredTargetRef.current);
+        currentTargetRef.current.copy(target);
+        if (!skipCameraMove) desiredCameraRef.current = cameraPos.clone();
         initializedRef.current = true;
-        // Reset user interaction flag when scene changes
-        userHasInteractedRef.current = false;
       }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [sceneObjects, objectPositions, enabled, isDragging, computeBounds, cameraFromBounds]);
 
-      previousSceneCountRef.current = sceneObjects.length;
-    }
-  }, [sceneObjects, objectPositions, enabled, isDragging]);
-
-  // Smooth interpolation using useFrame
+  // Smooth lerp every frame — drives orbit target and camera position
   useFrame(() => {
     if (!enabled || !orbitControlsRef.current || isDragging) return;
-
-    // Only animate if user hasn't manually interacted
     if (userHasInteractedRef.current) return;
 
-    // Smoothly lerp the current target towards the desired target
     currentTargetRef.current.lerp(desiredTargetRef.current, 0.1);
     orbitControlsRef.current.target.copy(currentTargetRef.current);
+
+    if (desiredCameraRef.current) {
+      camera.position.lerp(desiredCameraRef.current, 0.08);
+      if (camera.position.distanceTo(desiredCameraRef.current) < 0.05) {
+        camera.position.copy(desiredCameraRef.current);
+        desiredCameraRef.current = null;
+      }
+    }
+
     orbitControlsRef.current.update();
   });
 
@@ -646,6 +621,7 @@ const Scene = () => {
     setAoMapIntensity,
     selectedObjectId,
     currentMaterial,
+    objects: materialObjects,
   } = useMaterial();
   const {
     sceneObjects,
@@ -703,7 +679,7 @@ const Scene = () => {
         },
         metalness: { value: 0.0, min: 0, max: 1, step: 0.01 },
         roughness: { value: 0.87, min: 0, max: 1, step: 0.01 },
-        sheen: { value: 0.6, min: 0, max: 1, step: 0.01 },
+        sheen: { value: 0.04, min: 0, max: 1, step: 0.01 },
         sheenRoughness: {
           value: 0.8,
           min: 0,
@@ -719,7 +695,7 @@ const Scene = () => {
           label: "Env Map",
         },
         aoMapIntensity: {
-          value: 0.7,
+          value: 0.53,
           min: 0,
           max: 2,
           step: 0.01,
@@ -761,11 +737,34 @@ const Scene = () => {
       uvScale: d.uvScale,
       normalStrength: d.normalScale,
       roughness: d.roughness,
+      metalness: d.metalness,
       sheen: d.sheen,
       sheenRoughness: d.sheenRoughness,
       envMapIntensity: d.envMapIntensity,
     });
   }, [currentFamily, selectedObjectId]);
+
+  // On session restore: apply per-family PBR defaults for the first scene
+  // object's material without requiring the user to click first.
+  useEffect(() => {
+    if (sceneObjects.length === 0) return;
+    const firstMat = materialObjects.find(
+      (o) => o.id === sceneObjects[0].instanceId,
+    );
+    if (!firstMat) return;
+    const family = getMaterialFamily(firstMat.material.name) ?? "amaral";
+    const d = MATERIAL_PBR_DEFAULTS[family];
+    setMatControls({
+      uvScale: d.uvScale,
+      normalStrength: d.normalScale,
+      roughness: d.roughness,
+      metalness: d.metalness,
+      sheen: d.sheen,
+      sheenRoughness: d.sheenRoughness,
+      envMapIntensity: d.envMapIntensity,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const lightControls = useControls(
     "Lighting",
@@ -849,10 +848,8 @@ const Scene = () => {
 
         {import.meta.env.DEV && (
           <Leva
-            hidden
             collapsed={true}
             oneLineLabels={true}
-            titleBar={{ position: { x: -390, y: 16 } }}
           />
         )}
         <Canvas
@@ -868,6 +865,7 @@ const Scene = () => {
           <CameraController />
           <ToneMappingController />
           <RotationModeCamera />
+          <CameraRestorer orbitControlsRef={orbitControlsRef} />
           <PanConstraint orbitControlsRef={orbitControlsRef} />
           <AutoCenterCamera
             orbitControlsRef={orbitControlsRef}
@@ -901,6 +899,22 @@ const Scene = () => {
             zoomToCursor={false}
             enabled={rotationControlId === null}
             makeDefault
+            onEnd={() => {
+              const controls = orbitControlsRef.current;
+              if (!controls) return;
+              saveSession("camera_state", {
+                position: {
+                  x: controls.object.position.x,
+                  y: controls.object.position.y,
+                  z: controls.object.position.z,
+                },
+                target: {
+                  x: controls.target.x,
+                  y: controls.target.y,
+                  z: controls.target.z,
+                },
+              });
+            }}
           />
 
           <ambientLight

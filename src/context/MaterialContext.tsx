@@ -1,5 +1,16 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+
+function saveSession(key: string, value: unknown) {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+function loadSession<T>(key: string, fallback: T): T {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw === null ? fallback : (JSON.parse(raw) as T);
+  } catch { return fallback; }
+}
 
 export interface MaterialDefinition {
   name: string;
@@ -37,6 +48,7 @@ interface MaterialContextType {
   setSelectedObjectId: (id: string | null) => void;
   addObject: (object: SceneObject) => void;
   removeObject: (id: string) => void;
+  clearObjects: () => void;
   getObjectMaterial: (id: string) => MaterialDefinition | undefined;
   setObjectMaterial: (id: string, material: MaterialDefinition) => void;
 
@@ -341,13 +353,17 @@ export const availableMaterials: MaterialLibrary = {
 export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [objects, setObjects] = useState<SceneObject[]>([]);
+  const [objects, setObjects] = useState<SceneObject[]>(
+    () => loadSession<SceneObject[]>("mat_objects", []),
+  );
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+
+  useEffect(() => saveSession("mat_objects", objects), [objects]);
   const [uvScale, setUvScale] = useState(15.4);
   const [normalScale, setNormalScale] = useState(1.15);
   const [metalness, setMetalness] = useState(0.0);
   const [roughness, setRoughness] = useState(0.87);
-  const [sheen, setSheen] = useState(0.6);
+  const [sheen, setSheen] = useState(0.04);
   const [sheenRoughness, setSheenRoughness] = useState(0.8);
   const [envMapIntensity, setEnvMapIntensity] = useState(0.15);
   const [aoMapIntensity, setAoMapIntensity] = useState(0.7);
@@ -365,7 +381,10 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addObject = (object: SceneObject) => {
-    setObjects((prev) => [...prev, object]);
+    setObjects((prev) => {
+      if (prev.some((o) => o.id === object.id)) return prev;
+      return [...prev, object];
+    });
   };
 
   const removeObject = (id: string) => {
@@ -373,6 +392,12 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
     if (selectedObjectId === id) {
       setSelectedObjectId(null);
     }
+  };
+
+  const clearObjects = () => {
+    sessionStorage.removeItem("mat_objects");
+    setObjects([]);
+    setSelectedObjectId(null);
   };
 
   const getObjectMaterial = (id: string): MaterialDefinition | undefined => {
@@ -395,6 +420,7 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
         setSelectedObjectId,
         addObject,
         removeObject,
+        clearObjects,
         getObjectMaterial,
         setObjectMaterial,
         uvScale,
@@ -426,48 +452,54 @@ export const MATERIAL_PBR_DEFAULTS: Record<
     uvScale: number;
     normalScale: number;
     roughness: number;
+    metalness?: number;
     sheen: number;
     sheenRoughness: number;
     envMapIntensity: number;
   }
 > = {
   amaral: {
-    uvScale: 15.4,
-    normalScale: 1.15,
-    roughness: 0.87,
-    sheen: 0.6,
-    sheenRoughness: 0.8,
+    uvScale: 18.0,
+    normalScale: 1.55,
+    roughness: 1,
+    metalness: 1,
+    sheen: 0.04,
+    sheenRoughness: 0.87,
     envMapIntensity: 0.15,
   },
   cremona: {
-    uvScale: 14.5,
-    normalScale: 1.15,
-    roughness: 0.87,
-    sheen: 0.6,
-    sheenRoughness: 0.8,
+    uvScale: 18.9,
+    normalScale: 1.35,
+    roughness: 0.93,
+    metalness: 1,
+    sheen: 0.05,
+    sheenRoughness: 0.93,
     envMapIntensity: 0.15,
   },
   glow: {
-    uvScale: 14.1,
-    normalScale: 0.45,
-    roughness: 0.91,
-    sheen: 0.5,
+    uvScale: 18.2,
+    normalScale: 1.55,
+    roughness: 0.98,
+    metalness: 0.98,
+    sheen: 0.04,
     sheenRoughness: 0.9,
     envMapIntensity: 0.1,
   },
   ilias: {
     uvScale: 20.0,
-    normalScale: 0.05,
+    normalScale: 1.35,
     roughness: 0.91,
-    sheen: 0.4,
+    metalness: 1,
+    sheen: 0.04,
     sheenRoughness: 0.9,
     envMapIntensity: 0.1,
   },
   indiana: {
-    uvScale: 18.8,
-    normalScale: 0.7,
-    roughness: 0.91,
-    sheen: 0.6,
+    uvScale: 16.0,
+    normalScale: 0.8,
+    roughness: 0.94,
+    metalness: 0.97,
+    sheen: 0.03,
     sheenRoughness: 0.8,
     envMapIntensity: 0.15,
   },
@@ -475,23 +507,24 @@ export const MATERIAL_PBR_DEFAULTS: Record<
     uvScale: 16.3,
     normalScale: 0.4,
     roughness: 0.91,
-    sheen: 0.5,
+    sheen: 0.05,
     sheenRoughness: 0.9,
     envMapIntensity: 0.1,
   },
   ness: {
     uvScale: 18.7,
-    normalScale: 0.95,
-    roughness: 0.91,
-    sheen: 0.7,
-    sheenRoughness: 0.7,
-    envMapIntensity: 0.15,
+    normalScale: 1.75,
+    roughness: 1,
+    metalness: 1,
+    sheen: 0,
+    sheenRoughness: 1,
+    envMapIntensity: 0.07,
   },
   noma: {
     uvScale: 18.4,
     normalScale: 0.55,
     roughness: 0.91,
-    sheen: 0.6,
+    sheen: 0.04,
     sheenRoughness: 0.8,
     envMapIntensity: 0.15,
   },
@@ -499,15 +532,15 @@ export const MATERIAL_PBR_DEFAULTS: Record<
     uvScale: 19.9,
     normalScale: 0.2,
     roughness: 0.91,
-    sheen: 0.5,
+    sheen: 0.05,
     sheenRoughness: 0.9,
     envMapIntensity: 0.1,
   },
   puente: {
     uvScale: 16.8,
-    normalScale: 0.65,
+    normalScale: 0.045,
     roughness: 0.87,
-    sheen: 0.6,
+    sheen: 0.04,
     sheenRoughness: 0.8,
     envMapIntensity: 0.15,
   },

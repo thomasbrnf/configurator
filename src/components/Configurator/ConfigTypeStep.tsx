@@ -25,7 +25,7 @@ const ConfigTypeStep: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-white z-[1000] overflow-hidden">
+    <div className="fixed inset-0 bg-white z-[1000] flex flex-col overflow-hidden">
       <ConfiguratorHeader
         onBack={() => setCurrentStep("welcome")}
         onClose={
@@ -34,34 +34,38 @@ const ConfigTypeStep: React.FC = () => {
         breadcrumb={["HOME", "CONFIGURATION TYPE"]}
       />
 
-      {/* Page title */}
-      <div className="absolute top-[175px] left-1/2 -translate-x-1/2 w-[1160px] flex flex-col gap-[5px]">
-        <h1 className="font-lato font-medium text-[45px] text-black leading-none">
-          {t.chooseConfigType}
-        </h1>
-        <p className="font-lato font-light text-[25px] text-black leading-normal">
-          {t.configTypeSubtitle}
-        </p>
-      </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col items-center px-5 pt-[140px] pb-10">
+          {/* Page title */}
+          <div className="w-full max-w-[1160px] flex flex-col gap-[5px] mb-[40px]">
+            <h1 className="font-lato font-medium text-[45px] text-black leading-none">
+              {t.chooseConfigType}
+            </h1>
+            <p className="font-lato font-light text-[25px] text-black leading-normal">
+              {t.configTypeSubtitle}
+            </p>
+          </div>
 
-      {/* Two option cards */}
-      <div className="absolute top-[340px] left-1/2 -translate-x-1/2 flex gap-5">
-        <OptionCard
-          icon={COMPLETE_SETS_ICON_SRC}
-          iconOffset={{ left: 29, top: 32 }}
-          title={t.completeSets}
-          description={t.completeSetsDesc}
-          buttonLabel={t.completeSets}
-          onSelect={handleCompleteSetSelection}
-        />
-        <OptionCard
-          icon={MODULES_ICON_SRC}
-          iconOffset={{ left: 29, top: 27 }}
-          title={t.modules}
-          description={t.modulesDesc}
-          buttonLabel={t.modules}
-          onSelect={handleModuleSelection}
-        />
+          {/* Two option cards */}
+          <div className="flex gap-5 flex-wrap justify-center">
+            <OptionCard
+              icon={COMPLETE_SETS_ICON_SRC}
+              iconOffset={{ left: 29, top: 32 }}
+              title={t.completeSets}
+              description={t.completeSetsDesc}
+              buttonLabel={t.completeSets}
+              onSelect={handleCompleteSetSelection}
+            />
+            <OptionCard
+              icon={MODULES_ICON_SRC}
+              iconOffset={{ left: 29, top: 27 }}
+              title={t.modules}
+              description={t.modulesDesc}
+              buttonLabel={t.modules}
+              onSelect={handleModuleSelection}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -84,7 +88,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
   buttonLabel,
   onSelect,
 }) => (
-  <div className="flex flex-col items-center justify-center gap-[30px] w-[580px] h-[500px] p-[60px] bg-gradient-to-b from-ui-surface to-white border-t-[3px] border-ui-dark">
+  <div className="flex flex-col grow items-center justify-center gap-[30px] w-[580px] h-auto p-[60px] bg-gradient-to-b from-ui-surface to-white border-t-[3px] border-ui-dark">
     <div className="relative size-[160px] shrink-0">
       <div className="absolute inset-0 bg-white border-t-[3px] border-b-[3px] border-ui-dark" />
       <img
@@ -106,7 +110,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
 
     <button
       onClick={onSelect}
-      className="flex items-center justify-center bg-white border-[3px] border-ui-muted  hover:border-ui-dark h-[70px] w-[340px] cursor-pointer  transition-colors shrink-0"
+      className="flex items-center mt-auto justify-center bg-white border-[3px] border-ui-muted  hover:border-ui-dark h-[70px] w-[340px] cursor-pointer  transition-colors shrink-0"
     >
       <span className="font-lato font-light text-[25px] text-ui-dark uppercase">
         {buttonLabel}

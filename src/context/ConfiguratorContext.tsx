@@ -1,7 +1,31 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useMaterial } from "./MaterialContext";
 import { extractBaseModuleId, generateInstanceId } from "../utils/moduleId";
+
+function saveSession(key: string, value: unknown) {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+function loadSession<T>(key: string, fallback: T): T {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw === null ? fallback : (JSON.parse(raw) as T);
+  } catch { return fallback; }
+}
+
+function mapToEntries<V>(map: Map<string, V>): [string, V][] {
+  return Array.from(map.entries());
+}
+
+function entriesToMap<V>(entries: [string, V][]): Map<string, V> {
+  return new Map(entries);
+}
+
+const SESSION_KEYS = [
+  "cfg_step", "cfg_type", "cfg_sceneObjects",
+  "cfg_positions", "cfg_rotations", "camera_state", "mat_objects",
+];
 
 export type ConfigurationStep =
   | "welcome"
@@ -340,26 +364,38 @@ const ConfiguratorContext = createContext<ConfiguratorContextType | undefined>(
 export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { setSelectedObjectId } = useMaterial();
-  const [currentStep, setCurrentStep] = useState<ConfigurationStep>("welcome");
+  const { setSelectedObjectId, clearObjects } = useMaterial();
+  const [currentStep, setCurrentStep] = useState<ConfigurationStep>(
+    () => loadSession<ConfigurationStep>("cfg_step", "welcome"),
+  );
   const [configurationType, setConfigurationType] =
-    useState<ConfigurationType>(null);
+    useState<ConfigurationType>(
+      () => loadSession<ConfigurationType>("cfg_type", null),
+    );
   const [selectedModules, setSelectedModules] = useState<Set<string>>(
     new Set(),
   );
   const [selectedCompleteSet, setSelectedCompleteSet] = useState<string | null>(
     null,
   );
-  const [sceneObjects, setSceneObjects] = useState<SceneInstance[]>([]);
+  const [sceneObjects, setSceneObjects] = useState<SceneInstance[]>(
+    () => loadSession<SceneInstance[]>("cfg_sceneObjects", []),
+  );
   const [objectRotations, setObjectRotations] = useState<
     Map<string, [number, number, number]>
-  >(new Map());
+  >(() => entriesToMap(loadSession<[string, [number, number, number]][]>("cfg_rotations", [])));
   const [objectPositions, setObjectPositions] = useState<
     Map<string, [number, number, number]>
-  >(new Map());
+  >(() => entriesToMap(loadSession<[string, [number, number, number]][]>("cfg_positions", [])));
   const [rotationControlId, setRotationControlId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => saveSession("cfg_step", currentStep), [currentStep]);
+  useEffect(() => saveSession("cfg_type", configurationType), [configurationType]);
+  useEffect(() => saveSession("cfg_sceneObjects", sceneObjects), [sceneObjects]);
+  useEffect(() => saveSession("cfg_rotations", mapToEntries(objectRotations)), [objectRotations]);
+  useEffect(() => saveSession("cfg_positions", mapToEntries(objectPositions)), [objectPositions]);
 
   const toggleModule = (moduleId: string) => {
     setSelectedModules((prev) => {
@@ -527,6 +563,8 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const resetConfigurator = () => {
+    SESSION_KEYS.forEach((k) => sessionStorage.removeItem(k));
+    clearObjects();
     setCurrentStep("welcome");
     setConfigurationType(null);
     setSelectedModules(new Set());
