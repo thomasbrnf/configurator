@@ -7,7 +7,7 @@ import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
 import { useEffect, useRef, useState, createContext, useContext, useMemo } from "react";
 import { useMaterial } from "../../context/MaterialContext";
-import { useConfigurator, getModuleSnappingConfig } from "../../context/ConfiguratorContext";
+import { useConfigurator, getModuleSnappingConfig, isCompleteSetId } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 
@@ -182,7 +182,7 @@ function AutoCenterCamera({
       // Calculate optimal camera distance to see all objects
       // Add padding factor to ensure all objects are visible
       const paddingFactor = 1.5;
-      const distance = Math.max(sceneSize * paddingFactor, 3);
+      const distance = Math.max(sceneSize * paddingFactor, 2);
       
       // Position camera at an angle from above and behind
       const cameraHeight = distance * 0.6; // Height from ground
@@ -584,9 +584,9 @@ function ClickHandler({
         const draggedObjectId = sceneObjects[draggedObjectIndex];
         const targetObjectId = sceneObjects[snapTargetIndex];
         
-        // Check if either object is a complete set (contains "sofa-" prefix)
-        const draggedIsCompleteSet = draggedObjectId.startsWith("sofa-");
-        const targetIsCompleteSet = targetObjectId.startsWith("sofa-");
+        // Check if either object is a complete set
+        const draggedIsCompleteSet = isCompleteSetId(draggedObjectId);
+        const targetIsCompleteSet = isCompleteSetId(targetObjectId);
         
         // Don't snap if both are complete sets
         if (draggedIsCompleteSet && targetIsCompleteSet) {
@@ -1044,6 +1044,11 @@ const Scene = () => {
     previousSceneObjectsLength.current = sceneObjects.length;
 
     if (sceneIncreased && selectedObjectId) {
+      // Auto-recenter camera when the first model is placed so it fills the view
+      if (sceneObjects.length === 1) {
+        setRecenterTrigger(prev => prev + 1);
+      }
+
       // Find the index of the newly selected object
       const index = sceneObjects.findIndex((id) => id === selectedObjectId);
       if (index !== -1) {
@@ -1254,7 +1259,7 @@ const Scene = () => {
           enablePan={true}
           enableRotate={rotationControlIndex === null && !isDraggingObject}
           target={[0, 0.2, 0]}
-          minDistance={1}
+          minDistance={1.5}
           maxDistance={50}
           minPolarAngle={0.1}
           maxPolarAngle={Math.PI / 2.1}

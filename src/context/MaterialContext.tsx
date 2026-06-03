@@ -190,3 +190,18 @@ export const useMaterial = () => {
   }
   return context;
 };
+
+// Preload all material images via the browser cache so Three.js finds them warm.
+const _preloadedImages: HTMLImageElement[] = [];
+const _uniqueTexturePaths = new Set<string>();
+for (const group of Object.values(availableMaterials)) {
+  for (const mat of group) {
+    _uniqueTexturePaths.add(mat.diffuse);
+    _uniqueTexturePaths.add(mat.normal);
+  }
+}
+for (const src of _uniqueTexturePaths) {
+  const img = new Image();
+  img.src = src;
+  _preloadedImages.push(img);
+}

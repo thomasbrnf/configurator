@@ -37,7 +37,7 @@ const ModuleSelectionStep: React.FC = () => {
   }, [configurationType, selectedCompleteSet, clearScene, setSelectedCompleteSet]);
 
   const handleBack = () => {
-    setCurrentStep("config-type");
+    setCurrentStep(configurationType === "complete" ? "welcome" : "config-type");
     setModuleCounts(new Map()); // Clear on back
   };
 

@@ -67,6 +67,9 @@ interface Translations {
   "Sofa 2": string;
   "Sofa 3": string;
   "Sofa 4": string;
+  Denver: string;
+  Wizar: string;
+  Preston: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -134,6 +137,9 @@ const translations: Record<Language, Translations> = {
     "Sofa 2": "Kompletna Sofa 2",
     "Sofa 3": "Kompletna Sofa 3",
     "Sofa 4": "Kompletna Sofa 4",
+    Denver: "Denver",
+    Wizar: "Wizar",
+    Preston: "Preston",
   },
   en: {
     // Controls Info
@@ -199,6 +205,9 @@ const translations: Record<Language, Translations> = {
     "Sofa 2": "Sofa 2",
     "Sofa 3": "Sofa 3",
     "Sofa 4": "Sofa 4",
+    Denver: "Denver",
+    Wizar: "Wizar",
+    Preston: "Preston",
   },
 };
 
@@ -218,7 +227,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({
   // Initialize language from localStorage, fallback to "pl"
   const [language, setLanguage] = useState<Language>(() => {
     const savedLanguage = localStorage.getItem("configurator-language");
-    return (savedLanguage === "pl" || savedLanguage === "en") ? savedLanguage : "pl";
+    return (savedLanguage === "pl" || savedLanguage === "en") ? savedLanguage : "en";
   });
 
   // Update localStorage whenever language changes

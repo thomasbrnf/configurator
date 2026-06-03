@@ -25,142 +25,44 @@ export interface CompleteSetDefinition {
   id: string;
   name: string;
   displayName: string;
-  translationKey: keyof {
-    "Sofa 1": string;
-    "Sofa 2": string;
-    "Sofa 3": string;
-    "Sofa 4": string;
-  };
+  translationKey: "Denver" | "Wizar" | "Preston";
   modelPath: string;
   thumbnail?: string;
 }
 
 const BASE = import.meta.env.BASE_URL;
 
-export const availableModules: ModuleDefinition[] = [
-
-
-
-  {
-    id: "sofa part left",
-    name: "Sofa Part Left",
-    displayName: "Sofa Part Left",
-    modelPath: `${BASE}models/sofa part left.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part left.png`,
-    snappingSides: "right", 
-  },
-    {
-    id: "sofa long part left",
-    name: "Sofa Long Part Left",
-    displayName: "Sofa Long Part Left",
-    modelPath: `${BASE}models/sofa long part left.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa long part left.png`,
-    snappingSides: "right", 
-  },
-      {
-    id: "sofa part left exp",
-    name: "Sofa Part Left Expanded",
-    displayName: "Sofa Part Left Expanded",
-    modelPath: `${BASE}models/sofa part left exp.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part left exp.png`,
-    snappingSides: "right", 
-  },
-
-    {
-    id: "sofa part middle",
-    name: "Sofa Part Middle",
-    displayName: "Sofa Part Middle",
-    modelPath: `${BASE}models/sofa part middle.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part middle.png`,
-    snappingSides: "both", 
-  },
-     {
-    id: "sofa part middle wide",
-    name: "Sofa Part Middle Wide",
-    displayName: "Sofa Part Middle Wide",
-    modelPath: `${BASE}models/sofa middle part wide.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa middle part wide.png`,
-    snappingSides: "both", 
-  },
-
-  {
-    id: "sofa part right",
-    name: "Sofa Part Right",
-    displayName: "Sofa Part Right",
-    modelPath: `${BASE}models/sofa part right.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part right.png`,
-    snappingSides: "left", 
-  },
-    {
-    id: "sofa long part right",
-    name: "Sofa Long Part Right",
-    displayName: "Sofa Long Part Right",
-    modelPath: `${BASE}models/sofa long part right.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa long part right.png`,
-    snappingSides: "left", 
-  },
-    {
-    id: "sofa part right exp",
-    name: "Sofa Part Right Expanded",
-    displayName: "Sofa Part Right Expanded",
-    modelPath: `${BASE}models/sofa part right exp.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part right exp.png`,
-    snappingSides: "left", 
-  },
-     {
-    id: "sofa part right corner",
-    name: "Sofa Part Right Corner",
-    displayName: "Sofa Part Right Corner",
-    modelPath: `${BASE}models/sofa part right corner.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa part right corner.png`,
-    snappingSides: "left", 
-  },
-     {
-    id: "poduszka",
-    name: "Poduszka",
-    displayName: "Poduszka",
-    modelPath: `${BASE}models/gala_collezione_KARATO [PODUSZKA].glb`,
-    thumbnail: `${BASE}models/thumbnails/gala_collezione_KARATO [PODUSZKA].png`,
-    snappingSides: "none",
-  },
-
-
-];
+export const availableModules: ModuleDefinition[] = [];
 
 export const availableCompleteSets: CompleteSetDefinition[] = [
   {
-    id: "sofa-1",
-    name: "Sofa 1",
-    displayName: " Sofa 1",
-    translationKey: "Sofa 1",
-    modelPath: `${BASE}models/sofa 1.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa 1.png`,
+    id: "denver",
+    name: "Denver",
+    displayName: "Denver",
+    translationKey: "Denver",
+    modelPath: `${BASE}models/Denver.glb`,
+    thumbnail: `${BASE}models/thumbnails/Denver.png`,
   },
   {
-    id: "sofa-2",
-    name: "Sofa 2",
-    displayName: "Sofa 2",
-    translationKey: "Sofa 2",
-    modelPath: `${BASE}models/sofa 2.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa 2.png`,
+    id: "wizar",
+    name: "Wizar",
+    displayName: "Wizar",
+    translationKey: "Wizar",
+    modelPath: `${BASE}models/Wizar.glb`,
+    thumbnail: `${BASE}models/thumbnails/Wizar.png`,
   },
-    {
-    id: "sofa-3",
-    name: "Sofa 3",
-    displayName: "Sofa 3",
-    translationKey: "Sofa 3",
-    modelPath: `${BASE}models/sofa 3.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa 3.png`,
+  {
+    id: "preston",
+    name: "Preston",
+    displayName: "Preston",
+    translationKey: "Preston",
+    modelPath: `${BASE}models/preston.glb`,
+    thumbnail: `${BASE}models/thumbnails/Preston.png`,
   },
-      {
-    id: "sofa-4",
-    name: "Sofa 4",
-    displayName: "Sofa 4",
-    translationKey: "Sofa 4",
-    modelPath: `${BASE}models/sofa3.glb`,
-    thumbnail: `${BASE}models/thumbnails/sofa3.png`,
-  }
 ];
+
+export const isCompleteSetId = (objectId: string): boolean =>
+  availableCompleteSets.some((s) => s.id === objectId);
 
 // Helper function to get snapping configuration for a module
 export const getModuleSnappingConfig = (objectId: string): SnappingSide => {
@@ -304,7 +206,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addObjectToScene = (objectId: string) => {
-    const isCompleteSet = objectId.startsWith("sofa-");
+    const isCompleteSet = isCompleteSetId(objectId);
     
     // If it's a complete set and there are already objects in the scene
     if (isCompleteSet && sceneObjects.length > 0) {

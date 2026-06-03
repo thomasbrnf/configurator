@@ -6,6 +6,7 @@ import {
   availableModules,
   availableCompleteSets,
 } from "../../context/ConfiguratorContext";
+import { availableMaterials } from "../../context/MaterialContext";
 import { useLoaderStore } from "../../store/loaderStore";
 
 const BASE = import.meta.env.BASE_URL;
@@ -76,7 +77,7 @@ export function DynamicModel({
                                 availableCompleteSets.find((s) => s.id === objectId);
   const modelDefinition = moduleDefinition || completeSetDefinition;
 
-  const modelPath = modelDefinition?.modelPath || `${BASE}models/sofa3.glb`;
+  const modelPath = modelDefinition?.modelPath || `${BASE}models/Denver.glb`;
 
   const { nodes, materials } = useGLTF(modelPath);
 
@@ -125,12 +126,7 @@ export function DynamicModel({
     }
   }, [diffuseMap, normalMap, isLoading]);
 
-  const effectiveUvScale =
-    modelPath.endsWith("models/sofa3.glb")
-      ? 10.5
-      : modelPath.endsWith("models/gala_collezione_KARATO [PODUSZKA].glb")
-      ? 0.5
-      : uvScale;
+  const effectiveUvScale = modelPath.endsWith("models/preston.glb") ? 11.1 : uvScale;
 
   const customMaterials = useMemo(() => {
     const diffuse = diffuseMap.clone();
@@ -236,6 +232,28 @@ export function DynamicModel({
 
         // Use woodTop material (with its AO map) for Sofa_Wood_top meshes
         const originalMat = child.material as THREE.MeshStandardMaterial;
+
+        // Wizar: keep "Material #52.002" as-is (e.g. metal legs/frame)
+        if (modelPath.endsWith("models/Wizar.glb") && originalMat?.name === "Material #52.002") {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          return;
+        }
+
+        // Denver: keep "Material #52" as-is (e.g. metal legs/frame)
+        if (modelPath.endsWith("models/Denver.glb") && originalMat?.name === "Material #52") {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          return;
+        }
+
+        // Preston: keep "Material #52.001" as-is (e.g. metal legs/frame)
+        if (modelPath.endsWith("models/preston.glb") && originalMat?.name === "Material #52.001") {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          return;
+        }
+
         const isWoodTop = originalMat?.name === "Sofa_Wood_top";
         child.material = isWoodTop ? customMaterials.woodTop : customMaterials.base;
         child.castShadow = true;
@@ -304,5 +322,19 @@ availableCompleteSets.forEach((set) => {
   useGLTF.preload(set.modelPath);
 });
 
-// Keep the original sofa preload for backwards compatibility
-useGLTF.preload(`${BASE}models/sofa3.glb`);
+// Preload all material images so the browser cache is warm before Three.js requests them.
+const _imgs: HTMLImageElement[] = [];
+const _seen = new Set<string>();
+for (const group of Object.values(availableMaterials)) {
+  for (const mat of group) {
+    for (const src of [mat.diffuse, mat.normal]) {
+      if (!_seen.has(src)) {
+        _seen.add(src);
+        const img = new Image();
+        img.src = src;
+        _imgs.push(img);
+      }
+    }
+  }
+}
+

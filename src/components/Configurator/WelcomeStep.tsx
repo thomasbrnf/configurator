@@ -3,11 +3,13 @@ import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 const WelcomeStep: React.FC = () => {
-  const { setCurrentStep } = useConfigurator();
+  const { setCurrentStep, setConfigurationType, clearScene } = useConfigurator();
   const { t, language, setLanguage } = useLanguage();
 
   const handleStartConfiguration = () => {
-    setCurrentStep("config-type");
+    clearScene();
+    setConfigurationType("complete");
+    setCurrentStep("module-selection");
   };
 
   const toggleLanguage = () => {
