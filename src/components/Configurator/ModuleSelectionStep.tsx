@@ -16,6 +16,8 @@ const ModuleSelectionStep: React.FC = () => {
     addObjectToScene,
     clearScene,
     sceneObjects,
+    replaceMode,
+    setReplaceMode,
   } = useConfigurator();
 
   // Local state for module counts (moduleId -> count)
@@ -37,16 +39,22 @@ const ModuleSelectionStep: React.FC = () => {
   }, [configurationType, selectedCompleteSet, clearScene, setSelectedCompleteSet]);
 
   const handleBack = () => {
+    setReplaceMode(false);
     setCurrentStep(configurationType === "complete" ? "welcome" : "config-type");
-    setModuleCounts(new Map()); // Clear on back
+    setModuleCounts(new Map());
   };
 
   const handleClose = () => {
+    setReplaceMode(false);
     setCurrentStep("scene");
-    setModuleCounts(new Map()); // Clear on close
+    setModuleCounts(new Map());
   };
 
   const handleCompleteSetSelect = (setId: string) => {
+    if (replaceMode) {
+      clearScene();
+      setReplaceMode(false);
+    }
     setSelectedCompleteSet(setId);
     addObjectToScene(setId);
     setCurrentStep("scene");
@@ -104,20 +112,20 @@ const ModuleSelectionStep: React.FC = () => {
   };
 
   const addModulesToScene = () => {
-    // Add each module the specified number of times with unique IDs
+    if (replaceMode) {
+      clearScene();
+      setReplaceMode(false);
+    }
     let counter = 0;
     moduleCounts.forEach((count, moduleId) => {
       for (let i = 0; i < count; i++) {
-        // Generate unique ID by appending counter, timestamp and random string
-        // Counter ensures uniqueness even if timestamp is the same
         const uniqueId = `${moduleId}-${counter}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
         addObjectToScene(uniqueId);
         counter++;
       }
     });
-    
     setCurrentStep("scene");
-    setModuleCounts(new Map()); // Clear after adding
+    setModuleCounts(new Map());
   };
 
   const isModuleSelected = (moduleId: string) => {
@@ -200,16 +208,16 @@ const ModuleSelectionStep: React.FC = () => {
                 return (
                   <div
                     key={set.id}
-                    className={`bg-white rounded-xl border-2 transition-all duration-300 shadow-lg overflow-hidden relative ${
-                      isAlreadyInScene 
-                        ? "opacity-50 cursor-not-allowed border-gray-300" 
+                    className={`bg-white rounded-xl border-2 transition-all duration-300 shadow-lg overflow-hidden relative flex flex-col ${
+                      isAlreadyInScene
+                        ? "opacity-50 cursor-not-allowed border-gray-300"
                         : selectedCompleteSet === set.id
                           ? "border-[#06402b] ring-2 ring-[#06402b]/20 cursor-pointer hover:shadow-xl"
                           : "border-gray-200 hover:border-[#06402b]/40 cursor-pointer hover:shadow-xl"
                     } group`}
                     onClick={() => !isAlreadyInScene && handleCompleteSetSelect(set.id)}
                   >
-                    <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+                    <div className="h-72 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {set.thumbnail ? (
                         <img
                           src={set.thumbnail}
@@ -233,7 +241,7 @@ const ModuleSelectionStep: React.FC = () => {
                       </svg>
                     )}
                   </div>
-                  <div className="p-4">
+                  <div className="flex flex-col items-center justify-center p-4 text-center">
                     <h3 className="font-bold text-gray-900 mb-2">
                       {t[set.translationKey as keyof typeof t]}
                     </h3>
@@ -400,8 +408,8 @@ const ModuleSelectionStep: React.FC = () => {
                           </svg>
                         )}
                       </div>
-                      <div className="p-3">
-                        <h3 className="font-bold text-gray-900 text-sm mb-1">
+                      <div className="p-3 flex flex-col items-center justify-center text-center">
+                        <h3 className="font-bold text-gray-900 text-base mb-1">
                           {module.displayName}
                         </h3>
                         <p className="text-xs text-gray-600">

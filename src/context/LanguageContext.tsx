@@ -83,23 +83,23 @@ const translations: Record<Language, Translations> = {
 
     // Configurator
     welcome: "Witamy w Konfiguratorze",
-    welcomeSubtitle: "Zaprojektuj swoją wymarzoną sofę",
+    welcomeSubtitle: "Zaprojektuj swoją wymarzoną krzesło",
     startConfiguration: "Rozpocznij Konfigurację",
     chooseConfigType: "Wybierz Typ Konfiguracji",
-    configTypeSubtitle: "Jak chciałbyś skonfigurować swoją sofę?",
+    configTypeSubtitle: "Jak chciałbyś skonfigurować swoje krzesło?",
     completeSets: "Gotowe Zestawy",
     completeSetsDesc: "Wybierz z gotowych konfiguracji",
     modules: "Moduły",
-    modulesDesc: "Zbuduj swoją sofę z pojedynczych modułów",
+    modulesDesc: "Zbuduj swoje krzesło z pojedynczych modułów",
     selectModules: "Wybierz Moduły",
-    selectModulesSubtitle: "Wybierz moduły, które chcesz dodać do swojej sofy",
+    selectModulesSubtitle: "Wybierz moduły, które chcesz dodać do swojego krzesła",
     addToScene: "Dodaj do Sceny",
     backToMenu: "Wróć do Menu",
     back: "Wstecz",
     
     // Module Selection
-    selectCompleteSet: "Wybierz Kompletny Zestaw",
-    selectCompleteSetSubtitle: "Wybierz jeden z gotowych zestawów mebli",
+    selectCompleteSet: "Wybierz swoje krzesło",
+    selectCompleteSetSubtitle: "Wybierz jeden z gotowych kompletów krzeseł",
     clickToSelect2: "Kliknij, aby wybrać",
     alreadyInScene: "Już dodany do sceny",
     selectModulesMultiple: "Wybierz moduły (możesz wybrać wiele)",
@@ -114,9 +114,9 @@ const translations: Record<Language, Translations> = {
     club: "Club",
     granit: "Granit",
     addObject: "Dodaj Obiekt",
-    changeConfigType: "Zmień Typ Konfiguracji",
+    changeConfigType: "Zmień Krzesło",
     addModule: "Dodaj Moduł",
-    addCompleteSet: "Dodaj Zestaw",
+    addCompleteSet: "Dodaj Krzesło",
     material: "Materiał",
     
     // Context Menu
@@ -151,23 +151,23 @@ const translations: Record<Language, Translations> = {
 
     // Configurator
     welcome: "Welcome to the Configurator",
-    welcomeSubtitle: "Design your dream sofa",
+    welcomeSubtitle: "Design your dream chair",
     startConfiguration: "Start Configuration",
     chooseConfigType: "Choose Configuration Type",
-    configTypeSubtitle: "How would you like to configure your sofa?",
+    configTypeSubtitle: "How would you like to configure your chair?",
     completeSets: "Complete Sets",
     completeSetsDesc: "Choose from ready-made configurations",
     modules: "Modules",
-    modulesDesc: "Build your sofa from individual modules",
+    modulesDesc: "Build your chair from individual modules",
     selectModules: "Select Modules",
-    selectModulesSubtitle: "Choose modules to add to your sofa",
+    selectModulesSubtitle: "Choose modules to add to your chair",
     addToScene: "Add to Scene",
     backToMenu: "Back to Menu",
     back: "Back",
     
     // Module Selection
-    selectCompleteSet: "Select Complete Set",
-    selectCompleteSetSubtitle: "Choose one of the ready-made furniture sets",
+    selectCompleteSet: "Choose your chair",
+    selectCompleteSetSubtitle: "Choose one of the ready-made chairs",
     clickToSelect2: "Click to select",
     alreadyInScene: "Already in scene",
     selectModulesMultiple: "Select modules (you can select multiple)",
@@ -182,9 +182,9 @@ const translations: Record<Language, Translations> = {
     club: "Club",
     granit: "Granit",
     addObject: "Add Object",
-    changeConfigType: "Change Configuration Type",
+    changeConfigType: "Change Chair",
     addModule: "Add Module",
-    addCompleteSet: "Add Set",
+    addCompleteSet: "Add Chair",
     material: "Material",
     
     // Context Menu

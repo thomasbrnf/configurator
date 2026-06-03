@@ -52,8 +52,8 @@ async function renderThumbnail(modelPath: string): Promise<string> {
   const dist = maxDim * 1.9;
   const lookAtY = size.y * 0.45;
 
-  // 45° front-right, ~30° elevation — classic product shot angle
-  camera.position.set(dist * 0.72, lookAtY + dist * 0.45, dist * 0.72);
+  // Straight front view — centered, no rotation
+  camera.position.set(0, lookAtY + dist * 0.3, dist);
   camera.lookAt(0, lookAtY, 0);
 
   renderer.render(scene, camera);
@@ -82,16 +82,20 @@ const ThumbnailGenerator: React.FC = () => {
         setStatus(`Rendering ${set.name}…`);
         try {
           const url = await renderThumbnail(set.modelPath);
-          out.push({ name: set.name, url, filename: `${set.name}.png` });
+          const filename = `${set.name}.png`;
+          out.push({ name: set.name, url, filename });
           setResults([...out]);
+          // Auto-download
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          a.click();
         } catch (e) {
           console.error(`Failed to render thumbnail for ${set.name}:`, e);
         }
       }
       if (!cancelled) {
-        setStatus(
-          "Done — save each file to  public/models/thumbnails/",
-        );
+        setStatus("Done — all files downloaded to your Downloads folder.");
         setDone(true);
       }
     })();

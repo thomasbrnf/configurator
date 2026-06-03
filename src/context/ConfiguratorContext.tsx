@@ -147,6 +147,10 @@ interface ConfiguratorContextType {
   rotationControlIndex: number | null;
   setRotationControlIndex: (index: number | null) => void;
 
+  // Replace mode: when opening module selection to replace all scene objects
+  replaceMode: boolean;
+  setReplaceMode: (value: boolean) => void;
+
   // Reset configurator
   resetConfigurator: () => void;
 }
@@ -169,6 +173,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     null,
   );
   const [sceneObjects, setSceneObjects] = useState<string[]>([]);
+  const [replaceMode, setReplaceMode] = useState(false);
   const [objectRotations, setObjectRotations] = useState<
     Map<number, [number, number, number]>
   >(new Map());
@@ -393,6 +398,8 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         setObjectPosition,
         rotationControlIndex,
         setRotationControlIndex,
+        replaceMode,
+        setReplaceMode,
         resetConfigurator,
       }}
     >

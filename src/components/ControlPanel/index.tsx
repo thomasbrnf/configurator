@@ -25,7 +25,7 @@ const materialGroups: MaterialGroup[] = [
 
 export const TopLeftButtons: React.FC = () => {
   const { t } = useLanguage();
-  const { setCurrentStep, configurationType } =
+  const { setCurrentStep, configurationType, setReplaceMode } =
     useConfigurator();
 
   const handleAddModule = () => {
@@ -33,7 +33,8 @@ export const TopLeftButtons: React.FC = () => {
   };
 
   const handleChangeConfigType = () => {
-    setCurrentStep("config-type");
+    setReplaceMode(true);
+    setCurrentStep("module-selection");
   };
 
   return (

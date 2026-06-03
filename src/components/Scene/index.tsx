@@ -40,47 +40,7 @@ function SceneControls() {
   );
 }
 
-function CameraController() {
-  const { camera } = useThree();
 
-  const {
-    enableManualCamera,
-    positionX,
-    positionY,
-    positionZ,
-    fov,
-    targetX,
-    targetY,
-    targetZ,
-  } = useControls(
-    "Camera",
-    {
-      enableManualCamera: { value: false },
-      positionX: { value: 1.7, min: -50, max: 50, step: 0.1 },
-      positionY: { value: 27.8, min: 0.1, max: 50, step: 0.1 },
-      positionZ: { value: 9.1, min: -50, max: 50, step: 0.1 },
-      fov: { value: 60, min: 10, max: 120, step: 1 },
-      targetX: { value: -2.2, min: -10, max: 10, step: 0.1 },
-      targetY: { value: -3.3, min: -10, max: 10, step: 0.1 },
-      targetZ: { value: -6, min: -10, max: 10, step: 0.1 },
-    },
-    { collapsed: true },
-  );
-
-  useFrame(() => {
-    if (camera && camera instanceof THREE.PerspectiveCamera) {
-      camera.fov = fov;
-      camera.updateProjectionMatrix();
-
-      if (enableManualCamera) {
-        camera.position.set(positionX, positionY, positionZ);
-        camera.lookAt(targetX, targetY, targetZ);
-      }
-    }
-  });
-
-  return null;
-}
 
 // Tone Mapping Controller Component
 function ToneMappingController() {
@@ -185,11 +145,11 @@ function AutoCenterCamera({
       const distance = Math.max(sceneSize * paddingFactor, 2);
       
       // Position camera at an angle from above and behind
-      const cameraHeight = distance * 0.6; // Height from ground
+      const cameraHeight = distance * 0.8; // Height from ground
       const cameraBack = distance * 0.8; // Distance back from center
       
       // Set the center point where camera should look at
-      const centerPoint = new THREE.Vector3(centerX, 0.2, centerZ);
+      const centerPoint = new THREE.Vector3(centerX, 0.6, centerZ);
       
       // Update desired target to the center of objects
       desiredTargetRef.current.copy(centerPoint);
@@ -283,16 +243,15 @@ function AutoCenterCamera({
 
     if (count > 0) {
       const centerX = totalX / count;
-      const centerY = totalY / count + 0.2; // Add slight offset for better viewing
+      const centerY = totalY / count;
       const centerZ = totalZ / count;
 
-      desiredTargetRef.current.set(centerX, centerY, centerZ);
+      desiredTargetRef.current.set(centerX, centerY + 0.80, centerZ);
       
       // Initialize current target on first calculation or when scene changes
       if (!initializedRef.current || sceneChanged) {
         currentTargetRef.current.copy(desiredTargetRef.current);
         initializedRef.current = true;
-        // Reset user interaction flag when scene changes
         userHasInteractedRef.current = false;
       }
       
@@ -303,10 +262,10 @@ function AutoCenterCamera({
   // Smooth interpolation using useFrame
   useFrame(() => {
     if (!enabled || !orbitControlsRef.current || isDragging) return;
-    
+
     // Only animate if user hasn't manually interacted
     if (userHasInteractedRef.current) return;
-    
+
     // Smoothly lerp the current target towards the desired target
     currentTargetRef.current.lerp(desiredTargetRef.current, 0.1);
     orbitControlsRef.current.target.copy(currentTargetRef.current);
@@ -315,6 +274,7 @@ function AutoCenterCamera({
 
   return null;
 }
+
 
 // Pan Constraint Component - prevents panning below ground
 function PanConstraint({ 
@@ -839,42 +799,7 @@ function ClickHandler({
   return null;
 }
 
-// Camera animation component for rotation mode
-function RotationModeCamera() {
-  const { camera } = useThree();
-  const { rotationControlIndex } = useConfigurator();
-  const savedCameraPosition = useRef<THREE.Vector3 | null>(null);
 
-  useFrame(() => {
-    if (rotationControlIndex !== null && camera) {
-      // Save original camera position on first activation
-      if (!savedCameraPosition.current) {
-        savedCameraPosition.current = camera.position.clone();
-      }
-
-      // Calculate the position of the object being rotated
-      const objectX = rotationControlIndex * 3;
-      const targetPosition = new THREE.Vector3(objectX, 0, 0);
-
-      // Position camera directly above the object
-      const topViewPosition = new THREE.Vector3(objectX, 5, 0);
-
-      // Smoothly animate camera to top view
-      camera.position.lerp(topViewPosition, 0.1);
-      camera.lookAt(targetPosition);
-    } else if (savedCameraPosition.current) {
-      // Restore camera position when exiting rotation mode
-      camera.position.lerp(savedCameraPosition.current, 0.1);
-
-      // Check if camera is close enough to saved position
-      if (camera.position.distanceTo(savedCameraPosition.current) < 0.1) {
-        savedCameraPosition.current = null;
-      }
-    }
-  });
-
-  return null;
-}
 
 // Snap Indicator Component - shows visual feedback when objects can snap
 function SnapIndicator({ 
@@ -998,6 +923,8 @@ function SceneObjects({ snapPreview }: { snapPreview: {
     </>
   );
 }
+
+
 
 const Scene = () => {
   const { setUvScale, setNormalScale, setMetalness, setRoughness, selectedObjectId } =
@@ -1224,7 +1151,6 @@ const Scene = () => {
         titleBar={{ position: { x: -390, y: 16 } }}
       />
       <Canvas
-        camera={{ position: [0, 2, 2], fov: 60 }}
         shadows
         style={{ width: "100%", height: "100%" }}
         gl={{ 
@@ -1233,10 +1159,9 @@ const Scene = () => {
         }}
         dpr={[1, 2]}
       >
-        <CameraController />
         <ToneMappingController />
-        <RotationModeCamera />
         <PanConstraint orbitControlsRef={orbitControlsRef} />
+     
         <AutoCenterCamera 
           orbitControlsRef={orbitControlsRef}
           objectPositions={objectPositions}
@@ -1258,10 +1183,10 @@ const Scene = () => {
           enableZoom={rotationControlIndex === null && !isDraggingObject}
           enablePan={true}
           enableRotate={rotationControlIndex === null && !isDraggingObject}
-          target={[0, 0.2, 0]}
+
           minDistance={1.5}
           maxDistance={50}
-          minPolarAngle={0.1}
+          minPolarAngle={0.101}
           maxPolarAngle={Math.PI / 2.1}
           enableDamping={true}
           dampingFactor={0.08}
@@ -1311,6 +1236,7 @@ const Scene = () => {
         </group>
       </Canvas>
       <SceneControls />
+  
     </div>
     </SceneContext.Provider>
   );

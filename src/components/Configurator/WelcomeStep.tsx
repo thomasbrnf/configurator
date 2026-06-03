@@ -21,7 +21,7 @@ const WelcomeStep: React.FC = () => {
       {/* Language Switcher */}
       <button
         onClick={toggleLanguage}
-        className="cursor-pointer absolute top-8  px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
+        className="cursor-pointer absolute top-8 right-8 px-4 py-2 bg-white/80 hover:bg-white text-black font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200"
       >
         {language === "pl" ? "EN" : " PL"}
       </button>
