@@ -20,6 +20,7 @@
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
+            
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         button {
@@ -107,23 +108,13 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        const models = [
-         
-            { id: "sofa-1", path: "/models/sofa 1.glb", name: "Sofa 1" },
-            { id: "sofa-2", path: "/models/sofa 2.glb", name: "Sofa 2" },
-            { id: "sofa-3", path: "/models/sofa 3.glb", name: "Sofa 3" },
-             { id: "sofa-4", path: "/models/sofa3.glb", name: "Sofa 4" },
-            { id: "sofa part middle", path: "/models/sofa part middle.glb", name: "Sofa Part Middle" },
-            { id: "sofa long part left", path: "/models/sofa long part left.glb", name: "Sofa Long Part Left" },
-            { id: "sofa long part right", path: "/models/sofa long part right.glb", name: "Sofa Long Part Right" },
-            { id: "sofa part left", path: "/models/sofa part left.glb", name: "Sofa Part Left" },
-            { id: "sofa part right", path: "/models/sofa part right.glb", name: "Sofa Part Right" },
-            { id: "sofa part right exp", path: "/models/sofa part right exp.glb", name: "Sofa Part Right Expanded" },
-            { id: "sofa part left exp", path: "/models/sofa part left exp.glb", name: "Sofa Part Left Expanded" },
-            { id: "sofa middle part wide", path: "/models/sofa middle part wide.glb", name: "Sofa Part Middle Wide" },
-            { id: "sofa part right corner", path: "/models/sofa part right corner.glb", name: "Sofa Part Right Corner" },
-            { id: "gala_collezione_KARATO [PODUSZKA]", path: "/models/gala_collezione_KARATO [PODUSZKA].glb", name: "Gala Collezione KARATO [PODUSZKA]" },
+        // Derive base path from current URL so this works regardless of Vite base config
+        const BASE = window.location.pathname.replace(/\/scripts\/.*$/, '');
 
+        const models = [
+            { id: "Denver",  path: `${BASE}/models/Denver.glb`,  name: "Denver",  skipMaterials: ["Material #52"] },
+            { id: "Wizar",   path: `${BASE}/models/Wizar.glb`,   name: "Wizar",   skipMaterials: ["Material #52.002"] },
+            { id: "Preston", path: `${BASE}/models/preston.glb`, name: "Preston", skipMaterials: ["Material #52.001"], uvRepeat: 11.1 },
         ];
 
         const canvas = document.getElementById('canvas');
@@ -151,7 +142,7 @@
         
         // Load Granit texture once at startup
         // URL encode spaces in path (files in public/ are served from root)
-        const texturePath = '/materials/the%20smallest%20granit/Granit_07_new_3.jpg';
+        const texturePath = `${BASE}/materials/the%20smallest%20granit/Granit_07_new_3.jpg`;
         console.log('Attempting to load texture from:', texturePath);
         
         // Wrap texture loading in a Promise
@@ -180,36 +171,32 @@
 
         async function loadAndCapture(modelInfo) {
             return new Promise((resolve, reject) => {
-                // Clear scene
-                scene.children.forEach(child => {
-                    if (child.type === 'Group') {
-                        scene.remove(child);
-                    }
-                });
+                // Clear previous models from scene
+                scene.children.filter(c => c.type === 'Group').forEach(c => scene.remove(c));
 
                 loader.load(
                     modelInfo.path,
                     (gltf) => {
                         const model = gltf.scene;
-                        
-                        // Apply Granit material to all meshes if texture is loaded (except sofa_legs)
+                        const skip = modelInfo.skipMaterials || [];
+                        const repeat = modelInfo.uvRepeat ?? 5;
+
                         model.traverse((child) => {
                             if (child.isMesh) {
-                                // Skip meshes with geometry name "sofa_legs"
-                                const geometryName = child.geometry?.name?.toLowerCase() || '';
-                                if (geometryName.includes('sofa_legs')) {
-                                    console.log('Skipping texture for sofa_legs geometry');
-                                    return;
-                                }
-                                
+                                const matName = child.material?.name || '';
+                                if (skip.includes(matName)) return; // keep original
+
                                 if (granitTexture) {
+                                    const tex = granitTexture.clone();
+                                    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                                    tex.repeat.set(repeat, repeat);
+                                    tex.needsUpdate = true;
                                     child.material = new THREE.MeshStandardMaterial({
-                                        map: granitTexture,
+                                        map: tex,
                                         roughness: 0.85,
                                         metalness: 0.15,
                                     });
                                 } else {
-                                    // Fallback to a simple gray material if texture isn't loaded
                                     child.material = new THREE.MeshStandardMaterial({
                                         color: 0xcccccc,
                                         roughness: 0.85,
@@ -218,34 +205,26 @@
                                 }
                             }
                         });
-                        
+
                         scene.add(model);
-                        
-                        // Center and frame the model
+
+                        // Sit on ground, center X/Z
                         const box = new THREE.Box3().setFromObject(model);
                         const center = box.getCenter(new THREE.Vector3());
                         const size = box.getSize(new THREE.Vector3());
-                        
-                        model.position.sub(center);
-                        
+                        model.position.set(-center.x, -box.min.y, -center.z);
+
+                        // 45° front-right product-shot angle
                         const maxDim = Math.max(size.x, size.y, size.z);
-                        const distance = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
-                        
-                        // Move camera further back (increased from 1.2 to 1.8)
-                        camera.position.set(0, size.y * 0.3, distance * 1.8);
-                        camera.lookAt(0, 0, 0);
-                        
-                        // Render
+                        const dist = maxDim * 2.6;
+                        const lookAtY = size.y * 0.45;
+                        camera.position.set(dist * 0.72, lookAtY + dist * 0.45, dist * 0.72);
+                        camera.lookAt(0, lookAtY, 0);
+
                         renderer.render(scene, camera);
-                        
-                        // Capture at lower resolution for fast loading
-                        const dataURL = canvas.toDataURL('image/jpeg', 0.7);
-                        
-                        resolve({
-                            id: modelInfo.id,
-                            name: modelInfo.name,
-                            dataURL: dataURL
-                        });
+
+                        const dataURL = canvas.toDataURL('image/png');
+                        resolve({ id: modelInfo.id, name: modelInfo.name, dataURL });
                     },
                     undefined,
                     (error) => {
@@ -307,7 +286,7 @@
         window.downloadAll = function() {
             Object.entries(thumbnails).forEach(([id, dataURL]) => {
                 const link = document.createElement('a');
-                link.download = `${id}-thumbnail.jpg`;
+                link.download = `${id}.png`;
                 link.href = dataURL;
                 link.click();
             });
