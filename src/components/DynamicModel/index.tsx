@@ -322,19 +322,18 @@ availableCompleteSets.forEach((set) => {
   useGLTF.preload(set.modelPath);
 });
 
-// Preload all material images so the browser cache is warm before Three.js requests them.
-const _imgs: HTMLImageElement[] = [];
-const _seen = new Set<string>();
-for (const group of Object.values(availableMaterials)) {
-  for (const mat of group) {
-    for (const src of [mat.diffuse, mat.normal]) {
-      if (!_seen.has(src)) {
-        _seen.add(src);
-        const img = new Image();
-        img.src = src;
-        _imgs.push(img);
-      }
-    }
-  }
-}
+// Pre-fetch every material texture into the browser's HTTP cache AND
+// drei's Suspense cache so fabric switches are instant with no flicker.
+// Native Image elements force the browser to fully download + decode each
+// file now; when THREE.js requests the same URL later it is served from
+// memory without any network round-trip.
+Object.values(availableMaterials)
+  .flat()
+  .forEach(({ diffuse, normal }) => {
+    useTexture.preload([diffuse, normal]);
+    [diffuse, normal].forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  });
 
