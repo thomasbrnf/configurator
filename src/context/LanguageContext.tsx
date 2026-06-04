@@ -218,7 +218,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({
   // Initialize language from localStorage, fallback to "pl"
   const [language, setLanguage] = useState<Language>(() => {
     const savedLanguage = localStorage.getItem("configurator-language");
-    return (savedLanguage === "pl" || savedLanguage === "en") ? savedLanguage : "pl";
+    return (savedLanguage === "pl" || savedLanguage === "en") ? savedLanguage : "en";
   });
 
   // Update localStorage whenever language changes
