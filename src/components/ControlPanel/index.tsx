@@ -6,8 +6,7 @@ import MaterialsModal from "./MaterialsModal";
 
 export { MaterialsModal };
 
-const CONFIG_TYPE_ICON =
-  "https://www.figma.com/api/mcp/asset/56ba5463-2e4d-42f8-8352-68bcb03dc189";
+
 
 const ControlPanel: React.FC = () => {
   const { setCurrentStep, configurationType } = useConfigurator();
@@ -20,11 +19,9 @@ const ControlPanel: React.FC = () => {
       className="shrink-0 flex h-[30px] w-[220px] items-center bg-ui-mid cursor-pointer"
     >
       <div className="size-[30px] shrink-0 flex items-center justify-center">
-        <img
-          src={CONFIG_TYPE_ICON}
-          alt=""
-          className="size-full object-contain rotate-180 -scale-y-100"
-        />
+     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+  <path d="M1.11792 5.80908L11.1179 10.8091L11.1179 0.809082L1.11792 5.80908Z" stroke="white"/>
+</svg>
       </div>
       <span className="flex-1 font-lato font-light text-[15px] text-white uppercase text-center">
         {t.changeConfigType}

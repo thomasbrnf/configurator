@@ -3,6 +3,7 @@ import { useMaterial, availableMaterials } from "../../context/MaterialContext";
 import { useLanguage } from "../../context/LanguageContext";
 import type { MaterialDefinition } from "../../context/MaterialContext";
 
+const BASE = import.meta.env.BASE_URL;
 
 interface MaterialGroup {
   key: string;
@@ -11,39 +12,45 @@ interface MaterialGroup {
 }
 
 const materialGroups: MaterialGroup[] = [
-  {
-    key: "amaral",
-    displayName: "AMARAL",
-    materials: availableMaterials.amaral,
-  },
-  {
-    key: "cremona",
-    displayName: "CREMONA",
-    materials: availableMaterials.cremona,
-  },
+  { key: "amaral", displayName: "AMARAL", materials: availableMaterials.amaral },
+  { key: "cremona", displayName: "CREMONA", materials: availableMaterials.cremona },
   { key: "glow", displayName: "GLOW", materials: availableMaterials.glow },
   { key: "ilias", displayName: "ILIAS", materials: availableMaterials.ilias },
-  {
-    key: "indiana",
-    displayName: "INDIANA",
-    materials: availableMaterials.indiana,
-  },
-  {
-    key: "madras",
-    displayName: "MADRAS",
-    materials: availableMaterials.madras,
-  },
+  { key: "indiana", displayName: "INDIANA", materials: availableMaterials.indiana },
+  { key: "madras", displayName: "MADRAS", materials: availableMaterials.madras },
   { key: "ness", displayName: "NESS", materials: availableMaterials.ness },
   { key: "noma", displayName: "NOMA", materials: availableMaterials.noma },
+  { key: "pegaso", displayName: "PEGASO", materials: availableMaterials.pegaso },
+  { key: "puente", displayName: "PUENTE", materials: availableMaterials.puente },
+];
+
+interface WoodOption {
+  name: string;
+  color: string;
+}
+
+const hardcodedWoodGroups: { key: string; displayName: string; options: WoodOption[] }[] = [
   {
-    key: "pegaso",
-    displayName: "PEGASO",
-    materials: availableMaterials.pegaso,
+    key: "natural",
+    displayName: "NATURAL",
+    options: [
+      { name: "Birch", color: "#E8D5B0" },
+      { name: "Ash", color: "#D4BC8E" },
+      { name: "Pine", color: "#C9A96E" },
+      { name: "Oak", color: "#B8934A" },
+      { name: "Maple", color: "#F0E0C0" },
+    ],
   },
   {
-    key: "puente",
-    displayName: "PUENTE",
-    materials: availableMaterials.puente,
+    key: "stained",
+    displayName: "STAINED",
+    options: [
+      { name: "Honey", color: "#C8903C" },
+      { name: "Walnut", color: "#7B4F2E" },
+      { name: "Chestnut", color: "#954535" },
+      { name: "Ebony", color: "#2C1810" },
+      { name: "White", color: "#F5F0E8" },
+    ],
   },
 ];
 
@@ -53,6 +60,8 @@ const MaterialsModal: React.FC = () => {
     useMaterial();
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [expandedSection, setExpandedSection] = useState<string>("amaral");
+  const [expandedWoodSection, setExpandedWoodSection] = useState<string>("");
+  const [selectedWood, setSelectedWood] = useState<string>("");
 
   const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
 
@@ -65,7 +74,7 @@ const MaterialsModal: React.FC = () => {
   return (
     <div className="fixed top-[90px] right-[50px] z-[200] w-[300px] flex flex-col drop-shadow-[0px_1px_2.5px_rgba(0,0,0,0.3)]">
       {/* Selected module info */}
-      <div className="bg-white flex flex-col  text-left gap-[10px] p-[20px] w-full">
+      <div className="bg-white flex flex-col text-left gap-[10px] p-[20px] w-full">
         <div className="flex flex-col gap-[3px]">
           <span className="font-lato font-light text-[25px] text-ui-dark uppercase leading-none">
             {selectedObject.name}
@@ -73,21 +82,36 @@ const MaterialsModal: React.FC = () => {
           <span className="font-lato font-normal text-[15px] text-ui-dark uppercase leading-none">
             {t.material}: {selectedObject.material.name}
           </span>
+          <span className="font-lato font-normal text-[15px] text-ui-dark uppercase leading-none">
+            wood: {selectedWood || "—"}
+          </span>
         </div>
-        <div
-          className="h-[40px] w-full rounded-[10px] overflow-hidden"
-          style={{
-            backgroundImage: `url('${selectedObject.material.diffuse}')`,
-            backgroundSize: "100%",
-            backgroundPosition: "center",
-          }}
-        />
+
+        {/* Split preview: left = fabric, right = wood */}
+        <div className="h-[40px] w-full rounded-[10px] overflow-hidden flex">
+          <div
+            className="w-1/2 h-full"
+            style={{
+              backgroundImage: `url('${selectedObject.material.diffuse}')`,
+              backgroundSize: "400%",
+              backgroundPosition: "center",
+            }}
+          />
+          <div
+            className="w-1/2 h-full"
+            style={{
+              backgroundImage: `url('${BASE}src/assets/images/wood.png')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+        </div>
       </div>
 
       {/* Collapse toggle */}
       <button
         onClick={() => setIsPanelOpen((v) => !v)}
-        className="bg-[#7E7870] h-[20px] w-full flex items-center justify-center cursor-pointer  transition-colors shrink-0"
+        className="bg-[#7E7870] h-[20px] w-full flex items-center justify-center cursor-pointer transition-colors shrink-0"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -104,9 +128,10 @@ const MaterialsModal: React.FC = () => {
         </svg>
       </button>
 
-      {/* Materials section */}
       {isPanelOpen && (
         <div className="bg-white w-full flex flex-col overflow-y-auto max-h-[calc(100vh-280px)]">
+
+          {/* ── Fabric materials ── */}
           <div className="flex h-[60px] items-center px-[20px] border-b border-ui-dark">
             <span className="font-lato font-light text-[25px] text-ui-dark uppercase">
               {t.materials}
@@ -150,10 +175,7 @@ const MaterialsModal: React.FC = () => {
                 {isExpanded && (
                   <div className="flex flex-col gap-[10px] px-[20px] pb-[20px]">
                     {[0, 1].map((row) => (
-                      <div
-                        key={row}
-                        className="flex items-center justify-between"
-                      >
+                      <div key={row} className="flex items-center justify-between">
                         {group.materials
                           .slice(row * 5, row * 5 + 5)
                           .map((material, idx) => (
@@ -179,9 +201,7 @@ const MaterialsModal: React.FC = () => {
                         {Array.from({
                           length: Math.max(
                             0,
-                            5 -
-                              group.materials.slice(row * 5, row * 5 + 5)
-                                .length,
+                            5 - group.materials.slice(row * 5, row * 5 + 5).length,
                           ),
                         }).map((_, i) => (
                           <div key={`pad-${i}`} className="h-[30px] w-[45px]" />
@@ -193,7 +213,76 @@ const MaterialsModal: React.FC = () => {
               </div>
             );
           })}
-          <p className="uppercase text-[#454343] text-[10px] font-extralight py-1.5">
+
+
+          {/* ── Wood section ── */}
+          <div className="flex h-[60px] items-center px-[20px] border-t border-b border-ui-dark">
+            <span className="font-lato font-light text-[25px] text-ui-dark uppercase">
+              Wood
+            </span>
+          </div>
+
+          {hardcodedWoodGroups.map((group, i) => {
+            const isExpanded = expandedWoodSection === group.key;
+            const isLast = i === hardcodedWoodGroups.length - 1;
+            return (
+              <div
+                onClick={() => setExpandedWoodSection(isExpanded ? "" : group.key)}
+                key={group.key}
+                className={`w-full cursor-pointer ${isLast ? "" : "border-b border-ui-dark"}`}
+              >
+                <div className="flex h-[20px] items-center justify-between px-[20px] py-[20px]">
+                  <span className="font-lato font-normal text-[15px] text-ui-dark uppercase">
+                    {group.displayName}:
+                  </span>
+                  <button
+                    className={`size-[20px] flex items-center justify-center cursor-pointer border border-ui-dark transition-colors ${
+                      isExpanded ? "bg-white" : "bg-ui-dark"
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={`transition-transform ${!isExpanded ? "rotate-180" : ""}`}
+                      width="11"
+                      height="7"
+                      viewBox="0 0 11 7"
+                      fill="none"
+                    >
+                      <path
+                        d="M10.0352 6.27148L5.01758 0L0 6.27148L0.892578 6.98633L5.01758 1.83008L9.14258 6.98633L10.0352 6.27148Z"
+                        className={isExpanded ? "fill-ui-dark" : "fill-white"}
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {isExpanded && (
+                  <div className="flex flex-col gap-[10px] px-[20px] pb-[20px]">
+                    <div className="flex items-center justify-between">
+                      {group.options.map((option, idx) => (
+                        <button
+                          key={idx}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedWood(option.name);
+                          }}
+                          title={option.name}
+                          className={`h-[30px] w-[45px] cursor-pointer overflow-hidden transition-all ${
+                            selectedWood === option.name
+                              ? "border border-ui-dark"
+                              : "border border-transparent hover:border-ui-border"
+                          }`}
+                          style={{ backgroundColor: option.color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <p className="uppercase text-[#454343] text-[10px] font-extralight py-1.5 px-[20px]">
             click on arrow to expend
           </p>
         </div>

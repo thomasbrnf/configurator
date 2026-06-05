@@ -306,7 +306,7 @@
       floor.receiveShadow = true;
       scene.add(floor);
 
-      // ── Fabric texture (AMARAL 790) ───────────────────────────────────────────
+      // ── Fabric texture (INDIANA 6) ───────────────────────────────────────────
 
       const texLoader = new THREE.TextureLoader();
 
@@ -332,8 +332,9 @@
 
       async function loadTextures() {
         const base =
-          "/materials/AMARAL 90  790  10  32/AMARAL 790_BaseColor.jpg";
-        const normal = "/materials/AMARAL 90  790  10  32/790_Normal.jpg";
+          "/materials/INDIANA 1  6  9  12  15  17  21  22/6_BaseColor.jpg";
+        const normal =
+          "/materials/INDIANA 1  6  9  12  15  17  21  22/6_Normal.jpg";
         [baseMap, normalMap] = await Promise.all([
           loadTex(base),
           loadTex(normal),
@@ -381,7 +382,7 @@
 
       // ── Camera framing ────────────────────────────────────────────────────────
 
-      function frameCamera(model, isSet) {
+      function frameCamera(model, info) {
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -393,14 +394,16 @@
         const fovRad = (camera.fov * Math.PI) / 180;
 
         // For sets (wide sofas) fit on height+depth, not width — keeps camera close
-        const frameDim = isSet
+        const frameDim = info.isSet
           ? Math.max(size.y, size.z) * 1.1
           : Math.max(size.x, size.y, size.z);
 
         const dist = frameDim / 2 / Math.tan(fovRad / 2);
 
-        // Straight front-facing: X = 0, camera looks directly at the front face
-        camera.position.set(0, size.y * 2.2, dist * 1.5);
+        // BL–BP is a wide set that needs more breathing room; everything else zooms in closer
+        const distMult = info.id === "set-bl-bp" ? 1.5 : 1.0;
+
+        camera.position.set(0, size.y * 2.2, dist * distMult);
         camera.lookAt(0, size.y * 0.5, 0);
       }
 
@@ -444,7 +447,7 @@
               const fabric = buildFabricMaterial(gltfMats);
               applyMaterials(gltf.scene, fabric);
               scene.add(gltf.scene);
-              frameCamera(gltf.scene, info.isSet);
+              frameCamera(gltf.scene, info);
 
               // Three render passes to let shadows settle
               renderer.render(scene, camera);
@@ -478,7 +481,7 @@
         window.__capturedThumbnails = {};
         window.__thumbnailsComplete = false;
 
-        statusEl.textContent = "Loading CREMONA 02 texture…";
+        statusEl.textContent = "Loading INDIANA 6 texture…";
         await loadTextures();
 
         // Build section containers

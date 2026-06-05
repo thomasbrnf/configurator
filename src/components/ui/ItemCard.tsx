@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface ItemCardProps {
   name: string;
@@ -21,6 +21,8 @@ const ItemCard: React.FC<ItemCardProps> = ({
   overlay,
   imageAspect = "video",
 }) => {
+  const [hovered, setHovered] = useState(false);
+
   const borderColor = selected
     ? "border-ui-dark"
     : disabled
@@ -33,13 +35,16 @@ const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <div
       onClick={disabled ? undefined : onClick}
+      onMouseEnter={disabled ? undefined : () => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       className={`flex flex-col  w-full h-full p-[20px] border-t-[3px] transition-colors ${borderColor} ${
         disabled ? "cursor-not-allowed" : onClick ? "cursor-pointer" : ""
       }`}
       style={{
-        background: selected
-          ? "linear-gradient(180deg, #D4CCBC 0%, #FFF 100%)"
-          : "linear-gradient(180deg, #f3f3f3 0%, #FFF 100%)",
+        background:
+          selected || hovered
+            ? "linear-gradient(180deg, #D4CCBC 0%, #FFF 100%)"
+            : "linear-gradient(180deg, #f3f3f3 0%, #FFF 100%)",
       }}
     >
       <div className="flex justify-between">

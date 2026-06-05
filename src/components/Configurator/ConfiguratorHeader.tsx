@@ -3,10 +3,6 @@ import { useLanguage } from "../../context/LanguageContext";
 import Breadcrumb from "../ui/Breadcrumb";
 import LanguageSwitcher from "../ui/LanguageSwitcher";
 
-const BACK_ICON_SRC =
-  "https://www.figma.com/api/mcp/asset/4729d943-4725-48c1-9c7f-1f31ad5cbed4";
-const CLOSE_ICON_SRC =
-  "https://www.figma.com/api/mcp/asset/c062236d-4842-4363-80cc-35637b6e2a0f";
 
 interface ConfiguratorHeaderProps {
   /** Renders "Sofa configurator" label as the left element (WelcomeStep). */
@@ -46,11 +42,9 @@ const ConfiguratorHeader: React.FC<ConfiguratorHeaderProps> = ({
         className="shrink-0 flex h-[30px] w-[100px] items-center bg-ui-mid cursor-pointer"
       >
         <div className="size-[30px] shrink-0 flex items-center justify-center">
-          <img
-            src={BACK_ICON_SRC}
-            alt=""
-            className="size-full object-contain rotate-180 -scale-y-100"
-          />
+         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+  <path d="M1.11792 5.80908L11.1179 10.8091L11.1179 0.809082L1.11792 5.80908Z" stroke="white"/>
+</svg>
         </div>
         <span className="flex-1 font-lato font-light text-[15px] text-white uppercase text-center">
           {t.back}
@@ -145,12 +139,10 @@ const ConfiguratorHeader: React.FC<ConfiguratorHeaderProps> = ({
             <span className="flex-1 font-lato font-light text-[15px] text-black uppercase text-center">
               {t.close}
             </span>
-            <div className="size-[30px] shrink-0 flex items-center justify-center">
-              <img
-                src={CLOSE_ICON_SRC}
-                alt=""
-                className="size-full object-contain rotate-180 -scale-y-100"
-              />
+            <div className="size-[30px] shrink-0 flex bg-[#7E7870] items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+  <path d="M10 10H7.9895C7.84946 10 7.73693 9.96773 7.65191 9.90318C7.57189 9.83863 7.50688 9.76487 7.45686 9.68188L4.94374 5.84371C4.90373 5.95897 4.85621 6.05809 4.8012 6.14108L2.3931 9.68188C2.33308 9.76026 2.26307 9.83402 2.18305 9.90318C2.10803 9.96773 2.008 10 1.88297 10H0L3.6009 4.85477L0.142536 0H2.15304C2.29307 0 2.3931 0.0184417 2.45311 0.0553251C2.51813 0.0875979 2.57814 0.142923 2.63316 0.221301L5.10128 3.88658C5.15129 3.77132 5.2113 3.65606 5.28132 3.5408L7.54689 0.255879C7.6019 0.16828 7.66192 0.103735 7.72693 0.0622411C7.79195 0.020747 7.87447 0 7.97449 0H9.90248L6.4141 4.7787L10 10Z" fill="white"/>
+</svg>
             </div>
           </button>
         )}
