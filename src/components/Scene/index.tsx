@@ -1216,6 +1216,7 @@ const Scene = () => {
       <Leva
         collapsed={true}
         oneLineLabels={true}
+        hidden
         titleBar={{ position: { x: -390, y: 16 } }}
       />
       <Canvas
@@ -1254,7 +1255,9 @@ const Scene = () => {
           enablePan={true}
           enableRotate={rotationControlIndex === null && !isDraggingObject}
           target={[0, 0.2, 0]}
-          minDistance={1}
+          // Keep the camera outside the furniture: zoom close to the surface
+          // but never penetrate into the model (target sits at the sofa center).
+          minDistance={2}
           maxDistance={50}
           minPolarAngle={0.1}
           maxPolarAngle={Math.PI / 2.1}
