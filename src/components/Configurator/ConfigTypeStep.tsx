@@ -31,19 +31,19 @@ const ConfigTypeStep: React.FC = () => {
         onClose={
           sceneObjects.length > 0 ? () => setCurrentStep("scene") : undefined
         }
-        breadcrumb={["HOME", "CONFIGURATION TYPE"]}
+        breadcrumb={[t.home, t.changeConfigType]}
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col items-center px-5 pt-[140px] pb-10">
+        <div className="flex flex-col px-[100px] pt-[140px] pb-10">
           {/* Page title */}
-          <div className="w-full max-w-[1160px] flex flex-col gap-[5px] mb-[40px]">
+          <div className="w-full flex flex-col gap-[5px] mb-[40px]">
             <h1 className="font-lato font-medium text-[45px] text-black leading-none">
-              {t.chooseConfigType}
+              {t.chooseConfigType.split("\n").map((line, i, arr) => (
+                <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+              ))}
             </h1>
-            <p className="font-lato font-light text-[25px] text-black leading-normal">
-              {t.configTypeSubtitle}
-            </p>
+         
           </div>
 
           {/* Two option cards */}
@@ -83,7 +83,6 @@ interface OptionCardProps {
 const OptionCard: React.FC<OptionCardProps> = ({
   icon,
   iconOffset,
-  title,
   description,
   buttonLabel,
   onSelect,
@@ -100,9 +99,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
     </div>
 
     <div className="flex flex-col items-center gap-[10px] w-full text-center">
-      <span className="font-lato font-light text-[35px] text-black uppercase leading-none h-[50px] flex items-center">
-        {title}
-      </span>
+      
       <span className="font-lato font-[300] text-[25px] text-ui-dark leading-normal">
         {description}
       </span>

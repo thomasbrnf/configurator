@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMaterial, availableMaterials } from "../../context/MaterialContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { extractBaseModuleId } from "../../utils/moduleId";
 import type { MaterialDefinition } from "../../context/MaterialContext";
 
 const BASE = import.meta.env.BASE_URL;
@@ -17,11 +18,11 @@ const materialGroups: MaterialGroup[] = [
   { key: "glow", displayName: "GLOW", materials: availableMaterials.glow },
   { key: "ilias", displayName: "ILIAS", materials: availableMaterials.ilias },
   { key: "indiana", displayName: "INDIANA", materials: availableMaterials.indiana },
-  { key: "madras", displayName: "MADRAS", materials: availableMaterials.madras },
   { key: "ness", displayName: "NESS", materials: availableMaterials.ness },
   { key: "noma", displayName: "NOMA", materials: availableMaterials.noma },
-  { key: "pegaso", displayName: "PEGASO", materials: availableMaterials.pegaso },
   { key: "puente", displayName: "PUENTE", materials: availableMaterials.puente },
+    { key: "pegaso", displayName: "PEGASO SKÓRA", materials: availableMaterials.pegaso },
+    { key: "madras", displayName: "MADRAS SKÓRA", materials: availableMaterials.madras },
 ];
 
 interface WoodOption {
@@ -54,6 +55,19 @@ const hardcodedWoodGroups: { key: string; displayName: string; options: WoodOpti
   },
 ];
 
+// Base module / complete-set IDs that may select a wood finish.
+// Maps to these .glb files:
+//   BAR(2z)S.glb                                                      → BAR(2z)S
+//   BAR(2z)L.glb                                                      → BAR(2z)L
+//   BAR(2z) L - 1(70) TVBBe - ... - 2(160) FFBBW PRO - BP(b).glb      → set-bar-bp
+//   BL - 2(160) FFBBW PRO - EN(2) - 1(70)TVBB (aku) - ... - BP(b).glb → set-bl-full
+const WOOD_ALLOWED_IDS = new Set([
+  "BAR(2z)S",
+  "BAR(2z)L",
+  "set-bar-bp",
+  "set-bl-full",
+]);
+
 const MaterialsModal: React.FC = () => {
   const { t } = useLanguage();
   const { setCurrentMaterial, currentMaterial, selectedObjectId, objects } =
@@ -64,6 +78,10 @@ const MaterialsModal: React.FC = () => {
   const [selectedWood, setSelectedWood] = useState<string>("");
 
   const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
+
+  const showWood =
+    selectedObjectId !== null &&
+    WOOD_ALLOWED_IDS.has(extractBaseModuleId(selectedObjectId));
 
   const isMaterialActive = (material: MaterialDefinition) =>
     currentMaterial.name === material.name &&
@@ -82,29 +100,33 @@ const MaterialsModal: React.FC = () => {
           <span className="font-lato font-normal text-[15px] text-ui-dark uppercase leading-none">
             {t.material}: {selectedObject.material.name}
           </span>
-          <span className="font-lato font-normal text-[15px] text-ui-dark uppercase leading-none">
-            wood: {selectedWood || "—"}
-          </span>
+          {showWood && (
+            <span className="font-lato font-normal text-[15px] text-ui-dark uppercase leading-none">
+              wood: {selectedWood || "—"}
+            </span>
+          )}
         </div>
 
         {/* Split preview: left = fabric, right = wood */}
         <div className="h-[40px] w-full rounded-[10px] overflow-hidden flex">
           <div
-            className="w-1/2 h-full"
+            className={`${showWood ? "w-1/2" : "w-full"} h-full`}
             style={{
               backgroundImage: `url('${selectedObject.material.diffuse}')`,
               backgroundSize: "400%",
               backgroundPosition: "center",
             }}
           />
-          <div
-            className="w-1/2 h-full"
-            style={{
-              backgroundImage: `url('${BASE}src/assets/images/wood.png')`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          />
+          {showWood && (
+            <div
+              className="w-1/2 h-full"
+              style={{
+                backgroundImage: `url('${BASE}src/assets/images/wood.png')`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -149,7 +171,7 @@ const MaterialsModal: React.FC = () => {
               >
                 <div className="flex h-[20px] items-center justify-between px-[20px] py-[20px]">
                   <span className="font-lato font-normal text-[15px] text-ui-dark uppercase">
-                    {group.displayName}:
+                    {group.displayName}
                   </span>
                   <button
                     className={`size-[20px] flex items-center justify-center cursor-pointer border border-ui-dark transition-colors ${
@@ -215,12 +237,14 @@ const MaterialsModal: React.FC = () => {
           })}
 
 
-          {/* ── Wood section ── */}
-          <div className="flex h-[60px] items-center px-[20px] border-t border-b border-ui-dark">
-            <span className="font-lato font-light text-[25px] text-ui-dark uppercase">
-              Wood
-            </span>
-          </div>
+          {/* ── Wood section (only for wood-enabled models) ── */}
+          {showWood && (
+            <>
+              <div className="flex h-[60px] items-center px-[20px] border-t border-b border-ui-dark">
+                <span className="font-lato font-light text-[25px] text-ui-dark uppercase">
+                  Wood
+                </span>
+              </div>
 
           {hardcodedWoodGroups.map((group, i) => {
             const isExpanded = expandedWoodSection === group.key;
@@ -281,6 +305,8 @@ const MaterialsModal: React.FC = () => {
               </div>
             );
           })}
+            </>
+          )}
 
           <p className="uppercase text-[#454343] text-[10px] font-extralight py-1.5 px-[20px]">
             click on arrow to expend

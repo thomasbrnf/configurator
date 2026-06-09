@@ -265,14 +265,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP.glb`,
     thumbnail: `${BASE}models/thumbnails/set-blb-ke.jpg`,
   },
-  {
-    id: "set-blb-ke-open",
-    name: "BL(b) KE open",
-    displayName: "BL(b) PRO – EN – KE SP (open)",
-    translationKey: "BL(b) PRO – EN – KE SP (open)",
-    modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP open.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-blb-ke-open.jpg`,
-  },
+  
   {
     id: "set-bar-bp",
     name: "BAR BP",

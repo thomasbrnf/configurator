@@ -50,6 +50,17 @@ interface Translations {
   addCompleteSet: string;
   material: string;
 
+  // Header
+  sofaConfigurator: string;
+
+  // Buttons
+  recenter: string;
+
+  // Breadcrumbs
+  home: string;
+  moduleSelect: string;
+  editor: string;
+
   // Context Menu
   delete: string;
   rotate: string;
@@ -80,18 +91,18 @@ const translations: Record<Language, Translations> = {
     recenterCamera: "Wyśrodkuj kamerę",
 
     // Configurator
-    welcome: "Witamy w Konfiguratorze",
+    welcome: "Witamy w konfiguratorze",
     welcomeSubtitle: "Zaprojektuj swoją wymarzoną sofę",
     startConfiguration: "Rozpocznij Konfigurację",
-    chooseConfigType: "Wybierz Typ Konfiguracji",
+    chooseConfigType: "Jak chciałbyś skonfigurować \n swoją sofę?",
     configTypeSubtitle: "Jak chciałbyś skonfigurować swoją sofę?",
-    completeSets: "Gotowe Zestawy",
-    completeSetsDesc: "Wybierz z gotowych konfiguracji",
+    completeSets: "Zestawy",
+    completeSetsDesc: "Wybierz gotowe rozwiązanie",
     modules: "Moduły",
-    modulesDesc: "Zbuduj swoją sofę z pojedynczych modułów",
+    modulesDesc: "Zaprojektuj swój układ",
     selectModules: "Wybierz Moduły",
     selectModulesSubtitle: "Wybierz moduły, które chcesz dodać do swojej sofy",
-    addToScene: "Dodaj do Sceny",
+    addToScene: "STWÓRZ SOFE",
     backToMenu: "Wróć do Menu",
     back: "Wstecz",
     close: "Zamknij",
@@ -101,7 +112,7 @@ const translations: Record<Language, Translations> = {
     selectCompleteSetSubtitle: "Wybierz jeden z gotowych zestawów mebli",
     clickToSelect2: "Kliknij, aby wybrać",
     alreadyInScene: "Już dodany do sceny",
-    selectModulesMultiple: "Wybierz moduły (możesz wybrać wiele)",
+    selectModulesMultiple: "Zbuduj własną konfigurację, wybierając poszczególne moduły",
     buildOwnConfiguration:
       "Zbuduj własną konfigurację wybierając poszczególne moduły",
     clearSelection: "Wyczyść wybór",
@@ -118,6 +129,17 @@ const translations: Record<Language, Translations> = {
     addModule: "Dodaj Moduł",
     addCompleteSet: "Dodaj Zestaw",
     material: "Materiał",
+
+    // Header
+    sofaConfigurator: "Sofa Konfigurator",
+
+    // Buttons
+    recenter: "Wyśrodkuj",
+
+    // Breadcrumbs
+    home: "Start",
+    moduleSelect: "Wybór modułów",
+    editor: "Edytor",
 
     // Context Menu
     delete: "Usuń",
@@ -146,19 +168,22 @@ const translations: Record<Language, Translations> = {
     dragToRotate: "Drag in empty space – rotate camera",
     recenterCamera: "Recenter Camera",
 
+    // Header
+    sofaConfigurator: "Sofa Configurator",
+
     // Configurator
-    welcome: "Welcome to the Configurator",
+    welcome: "Welcome to the configurator",
     welcomeSubtitle: "Design your dream sofa",
     startConfiguration: "Start Configuration",
-    chooseConfigType: "Choose Configuration Type",
+    chooseConfigType: "How would you like to configure \n your sofa?",
     configTypeSubtitle: "How would you like to configure your sofa?",
     completeSets: "Complete Sets",
-    completeSetsDesc: "Choose from ready-made configurations",
+    completeSetsDesc: "Choose a ready-made solution",
     modules: "Modules",
-    modulesDesc: "Build your sofa from individual modules",
+    modulesDesc: "Design your own layout",
     selectModules: "Select Modules",
     selectModulesSubtitle: "Choose modules to add to your sofa",
-    addToScene: "Add to Scene",
+    addToScene: "CREATE SOFA",
     backToMenu: "Back to Menu",
     back: "Back",
     close: "Close",
@@ -168,7 +193,7 @@ const translations: Record<Language, Translations> = {
     selectCompleteSetSubtitle: "Choose one of the ready-made furniture sets",
     clickToSelect2: "Click to select",
     alreadyInScene: "Already in scene",
-    selectModulesMultiple: "Select modules (you can select multiple)",
+    selectModulesMultiple: "Build your own configuration by selecting individual modules",
     buildOwnConfiguration:
       "Build your own configuration by selecting individual modules",
     clearSelection: "Clear selection",
@@ -185,6 +210,14 @@ const translations: Record<Language, Translations> = {
     addModule: "Add Module",
     addCompleteSet: "Add Set",
     material: "Material",
+
+    // Buttons
+    recenter: "Recenter",
+
+    // Breadcrumbs
+    home: "Home",
+    moduleSelect: "Module Select",
+    editor: "Editor",
 
     // Context Menu
     delete: "Delete",

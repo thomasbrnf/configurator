@@ -15,16 +15,16 @@ const WelcomeStep: React.FC = () => {
 
       <div className="absolute top-[95px] left-0 right-0 bottom-0 flex">
         {/* Left column: title, subtitle, CTA */}
-        <div className="relative z-10 w-1/2 flex flex-col text-start justify-center pl-[130px] pr-8">
-          <h1 className="font-lato font-light text-ui-dark text-[72px] leading-[87%] mb-6 w-[580px]">
+        <div className="relative z-10 w-1/2 flex flex-col text-start justify-center px-[100px]">
+          <h1 className="font-lato font-light text-ui-dark text-[72px] leading-[87%] mb-6">
             {t.welcome}
           </h1>
-          <p className="font-lato font-thin text-ui-dark text-[39px] leading-none mb-10 w-[580px]">
+          <p className="font-lato font-thin text-ui-dark text-[39px] leading-none mb-10">
             {t.welcomeSubtitle}
           </p>
           <button
             onClick={() => setCurrentStep("config-type")}
-            className="flex items-center bg-white border-[3px] border-ui-dark hover:border-[#D4CCBC] h-[70px] w-[460px] cursor-pointer hover:bg-[#D4CCBC] "
+            className="flex items-center bg-white border-[3px] border-ui-dark hover:border-[#D4CCBC] h-[70px] w-[460px] cursor-pointer hover:bg-[#D4CCBC]"
           >
             <span className="flex-1 font-lato font-light text-[25px] text-black uppercase text-center">
               {t.startConfiguration}
@@ -47,7 +47,7 @@ const WelcomeStep: React.FC = () => {
         </div>
 
         {/* Right column: sofa illustration */}
-        <div className="relative z-0 w-1/2 -ml-20 overflow-hidden">
+        <div className="relative z-0 w-1/2 overflow-hidden">
           <img
             src={SOFA_IMAGE_SRC}
             alt="Sofa preview"

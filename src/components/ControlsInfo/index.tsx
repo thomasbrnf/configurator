@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useMaterial } from "../../context/MaterialContext";
 import { useConfigurator } from "../../context/ConfiguratorContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface ControlsInfoProps {
   onRecenter?: () => void;
@@ -15,8 +16,8 @@ const ControlsInfo = ({
 }: ControlsInfoProps) => {
   const { selectedObjectId } = useMaterial();
   const { removeObjectById } = useConfigurator();
+  const { t } = useLanguage();
 
-  const isObjectSelected = selectedObjectId !== null;
 
   useEffect(() => {
     if (onToggleAutoCenter) {
@@ -40,7 +41,6 @@ const ControlsInfo = ({
 
   return (
     <div className="fixed left-[100px] bottom-[60px] z-50 flex flex-col gap-[10px]">
-      {isObjectSelected && (
         <div className="flex flex-col gap-[10px]">
           {/* <button
             className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors"
@@ -62,31 +62,9 @@ const ControlsInfo = ({
             </svg>
             {rotateHoverSvg}
           </button> */}
-          <button
-            onClick={() => removeObjectById(selectedObjectId!)}
-            className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-[#EE4848] transition-colors"
-            title="Delete"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="24"
-              viewBox="0 0 20 24"
-              fill="none"
-            >
-              <path d="M2.21538 3.58194H5.90769H9.6H13.2923H16.9846V22.9254H13.2923H9.6H5.90769H2.21538V3.58194Z" />
-              <path
-                className="fill-ui-dark group-hover:fill-white transition-colors"
-                d="M18.0923 2.50731V24H1.10769V2.50731H18.0923ZM14.4 21.8507H15.8769V4.65658H14.4V21.8507ZM10.7077 21.8507H12.1846V4.65658H10.7077V21.8507ZM7.01538 21.8507H8.49231V4.65658H7.01538V21.8507ZM3.32308 21.8507H4.8V4.65658H3.32308V21.8507Z"
-              />
-              <path
-                className="fill-ui-dark group-hover:fill-white transition-colors"
-                d="M11.6185 0V2.50748H19.2V3.94033H0V2.50748H7.58149V0H11.6185ZM9.05841 2.50748H10.1416V1.43285H9.05841V2.50748Z"
-              />
-            </svg>
-          </button>
+      
 
-          {/* <button
+          <button
             className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] opacity-40 cursor-not-allowed"
             title="Copy (coming soon)"
             disabled
@@ -115,14 +93,9 @@ const ControlsInfo = ({
                 d="M20 8.4C20 8.17909 19.8209 8 19.6 8H7.6C7.37909 8 7.2 8.17909 7.2 8.4V23.6C7.2 23.8209 7.37909 24 7.6 24H19.6C19.8209 24 20 23.8209 20 23.6V8.4ZM22.4 23.6C22.4 25.1464 21.1464 26.4 19.6 26.4H7.6C6.0536 26.4 4.8 25.1464 4.8 23.6V8.4C4.8 6.8536 6.0536 5.6 7.6 5.6H19.6C21.1464 5.6 22.4 6.8536 22.4 8.4V23.6Z"
               />
             </svg>
-          </button> */}
-        </div>
-      )}
+          </button>
 
-      {/* Camera + utility buttons */}
-      <div className="flex gap-[10px]">
-        <div className="relative">
-          <button className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark group transition-colors">
+            <button className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark group transition-colors">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="6"
@@ -133,6 +106,36 @@ const ControlsInfo = ({
               <path
                 className="fill-ui-dark group-hover:fill-white transition-colors"
                 d="M4.7884 5.67013V18.4H1.64916V7.6H0V5.67013H1.64916H4.7884ZM5.21878 1.96035C5.21878 2.22504 5.16393 2.47318 5.05422 2.70479C4.94452 2.93639 4.79684 3.13904 4.61118 3.31274C4.43397 3.48645 4.223 3.62706 3.97827 3.73459C3.73355 3.83385 3.47194 3.88348 3.19346 3.88348C2.92342 3.88348 2.66604 3.83385 2.42131 3.73459C2.18502 3.62706 1.97827 3.48645 1.80106 3.31274C1.62384 3.13904 1.48038 2.93639 1.37068 2.70479C1.26941 2.47318 1.21878 2.22504 1.21878 1.96035C1.21878 1.68739 1.26941 1.43097 1.37068 1.1911C1.48038 0.951225 1.62384 0.744437 1.80106 0.570735C1.97827 0.397033 2.18502 0.260553 2.42131 0.161295C2.66604 0.0537649 2.92342 0 3.19346 0C3.47194 0 3.73355 0.0537649 3.97827 0.161295C4.223 0.260553 4.43397 0.397033 4.61118 0.570735C4.79684 0.744437 4.94452 0.951225 5.05422 1.1911C5.16393 1.43097 5.21878 1.68739 5.21878 1.96035Z"
+              />
+            </svg>
+          </button>
+        </div>
+
+
+      {/* Camera + utility buttons */}
+      <div className="flex gap-[10px]">
+        <div className="relative">
+      
+                <button
+            onClick={() => removeObjectById(selectedObjectId!)}
+            className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-[#EE4848] transition-colors"
+            title="Delete"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="24"
+              viewBox="0 0 20 24"
+              fill="none"
+            >
+              <path d="M2.21538 3.58194H5.90769H9.6H13.2923H16.9846V22.9254H13.2923H9.6H5.90769H2.21538V3.58194Z" />
+              <path
+                className="fill-ui-dark group-hover:fill-white transition-colors"
+                d="M18.0923 2.50731V24H1.10769V2.50731H18.0923ZM14.4 21.8507H15.8769V4.65658H14.4V21.8507ZM10.7077 21.8507H12.1846V4.65658H10.7077V21.8507ZM7.01538 21.8507H8.49231V4.65658H7.01538V21.8507ZM3.32308 21.8507H4.8V4.65658H3.32308V21.8507Z"
+              />
+              <path
+                className="fill-ui-dark group-hover:fill-white transition-colors"
+                d="M11.6185 0V2.50748H19.2V3.94033H0V2.50748H7.58149V0H11.6185ZM9.05841 2.50748H10.1416V1.43285H9.05841V2.50748Z"
               />
             </svg>
           </button>
@@ -152,34 +155,7 @@ const ControlsInfo = ({
           )} */}
         </div>
 
-        {onRecenter && (
-          <button
-            onClick={handleViewReset}
-            className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] w-[130px] items-center cursor-pointer hover:bg-ui-dark group transition-colors"
-          >
-            <div className="size-[40px] shrink-0 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="19"
-                viewBox="0 0 24 19"
-                fill="none"
-              >
-                <path
-                  className="fill-ui-dark group-hover:fill-white transition-colors"
-                  d="M21.8788 5.68969V2.04604H18.1016V0H21.7045C22.3244 0 22.8619 0.219549 23.3171 0.658658C23.7723 1.09776 24 1.61627 24 2.21421V5.68969H21.8788ZM0 5.68969V2.21421C0 1.61627 0.227599 1.09776 0.682807 0.658658C1.13802 0.219549 1.67554 0 2.29539 0H5.89829V2.04604H2.12106V5.68969H0ZM18.1016 18.6667V16.6206H21.8788V12.977H24V16.4525C24 17.0503 23.7723 17.5689 23.3171 18.008C22.8619 18.4471 22.3244 18.6667 21.7045 18.6667H18.1016ZM2.29539 18.6667C1.67554 18.6667 1.13802 18.4471 0.682807 18.008C0.227599 17.5689 0 17.0503 0 16.4525V12.977H2.12106V16.6206H5.89829V18.6667H2.29539ZM3.8644 14.9389V3.72773H20.1355V14.9389H3.8644ZM5.98546 12.8929H18.0144V5.77377H5.98546V12.8929Z"
-                />
-              </svg>
-            </div>
-            <span className="flex-1 font-lato font-light text-[20px] text-ui-dark group-hover:text-white transition-colors uppercase text-center">
-              View
-            </span>
-          </button>
-        )}
-      </div>
-
-      {/* PDF download */}
-      <button className="bg-white w-full drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] items-center cursor-pointer hover:bg-[#D4CCBC] group transition-colors">
+              <button className="bg-white w-full drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] items-center cursor-pointer hover:bg-[#D4CCBC] group transition-colors">
         <div className="size-[40px] shrink-0 flex items-center justify-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -199,9 +175,37 @@ const ControlsInfo = ({
           </svg>
         </div>
         <span className="flex-1 font-lato font-light text-[20px] text-ui-dark group-hover:text-black transition-colors uppercase text-center">
-          pdf file
+          pdf 
         </span>
       </button>
+      </div>
+
+      {/* PDF download */}
+     
+        {onRecenter && (
+          <button
+            onClick={handleViewReset}
+            className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] px-2 gap-2 items-center cursor-pointer hover:bg-ui-dark group transition-colors"
+          >
+            <div className="size-[40px] shrink-0 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="19"
+                viewBox="0 0 24 19"
+                fill="none"
+              >
+                <path
+                  className="fill-ui-dark group-hover:fill-white transition-colors"
+                  d="M21.8788 5.68969V2.04604H18.1016V0H21.7045C22.3244 0 22.8619 0.219549 23.3171 0.658658C23.7723 1.09776 24 1.61627 24 2.21421V5.68969H21.8788ZM0 5.68969V2.21421C0 1.61627 0.227599 1.09776 0.682807 0.658658C1.13802 0.219549 1.67554 0 2.29539 0H5.89829V2.04604H2.12106V5.68969H0ZM18.1016 18.6667V16.6206H21.8788V12.977H24V16.4525C24 17.0503 23.7723 17.5689 23.3171 18.008C22.8619 18.4471 22.3244 18.6667 21.7045 18.6667H18.1016ZM2.29539 18.6667C1.67554 18.6667 1.13802 18.4471 0.682807 18.008C0.227599 17.5689 0 17.0503 0 16.4525V12.977H2.12106V16.6206H5.89829V18.6667H2.29539ZM3.8644 14.9389V3.72773H20.1355V14.9389H3.8644ZM5.98546 12.8929H18.0144V5.77377H5.98546V12.8929Z"
+                />
+              </svg>
+            </div>
+            <span className="flex-1 font-lato font-light text-[20px] text-ui-dark group-hover:text-white transition-colors uppercase text-center">
+              {t.recenter}
+            </span>
+          </button>
+        )}
     </div>
   );
 };

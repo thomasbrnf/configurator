@@ -104,7 +104,7 @@
       <span id="progress"></span>
     </div>
 
-    <canvas id="canvas" width="480" height="320"></canvas>
+    <canvas id="canvas" width="960" height="640" style="width:480px;height:320px"></canvas>
     <div id="output"></div>
 
     <script type="importmap">
@@ -270,30 +270,31 @@
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0xf2f0ed);
 
-      const camera = new THREE.PerspectiveCamera(38, 480 / 320, 0.01, 500);
+      const camera = new THREE.PerspectiveCamera(38, 960 / 640, 0.01, 500);
       const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
         preserveDrawingBuffer: true,
       });
-      renderer.setSize(480, 320);
-      renderer.setPixelRatio(1);
+      renderer.setSize(960, 640);
+      renderer.setPixelRatio(2);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
+      // Lowered so pale fabrics (e.g. CREMONA 02, cream ~RGB 208) don't blow out to white
+      renderer.toneMappingExposure = 0.75;
 
-      // Lighting — matches the app scene
-      const ambient = new THREE.AmbientLight(0xffffff, 1.8);
+      // Lighting — tuned to keep light fabrics from clipping while showing weave detail
+      const ambient = new THREE.AmbientLight(0xffffff, 1.0);
       scene.add(ambient);
 
-      const key = new THREE.DirectionalLight(0xfff5e8, 2.8);
+      const key = new THREE.DirectionalLight(0xfff5e8, 1.5);
       key.position.set(-3, 6, 5);
       key.castShadow = true;
-      key.shadow.mapSize.set(512, 512);
+      key.shadow.mapSize.set(1024, 1024);
       scene.add(key);
 
-      const fill = new THREE.DirectionalLight(0xe8f0ff, 1.2);
+      const fill = new THREE.DirectionalLight(0xe8f0ff, 0.6);
       fill.position.set(5, 4, -3);
       scene.add(fill);
 
@@ -306,7 +307,7 @@
       floor.receiveShadow = true;
       scene.add(floor);
 
-      // ── Fabric texture (INDIANA 6) ───────────────────────────────────────────
+      // ── Fabric texture (CREMONA 02) ──────────────────────────────────────────
 
       const texLoader = new THREE.TextureLoader();
 
@@ -331,10 +332,10 @@
       let normalMap = null;
 
       async function loadTextures() {
-        const base =
-          "/materials/INDIANA 1  6  9  12  15  17  21  22/6_BaseColor.jpg";
-        const normal =
-          "/materials/INDIANA 1  6  9  12  15  17  21  22/6_Normal.jpg";
+        // Use data URLs injected by the Node.js runner (avoids URL-encoding issues
+        // with double-space folder names). Fall back to HTTP fetch if running standalone.
+        const base   = window.__fabricBaseDataURL   || "/materials/CREMONA 02  24  96  81  77  34/02_BaseColor.jpg";
+        const normal = window.__fabricNormalDataURL || "/materials/CREMONA 02  24  96  81  77  34/02_Normal.jpg";
         [baseMap, normalMap] = await Promise.all([
           loadTex(base),
           loadTex(normal),
@@ -342,8 +343,12 @@
         if (baseMap) {
           baseMap.repeat.set(31, 31);
           baseMap.colorSpace = THREE.SRGBColorSpace;
+          baseMap.needsUpdate = true;
         }
-        if (normalMap) normalMap.repeat.set(31, 31);
+        if (normalMap) {
+          normalMap.repeat.set(31, 31);
+          normalMap.needsUpdate = true;
+        }
       }
 
       // ── Material application — mirrors DynamicModel exactly ───────────────────
@@ -403,7 +408,7 @@
         // BL–BP is a wide set that needs more breathing room; everything else zooms in closer
         const distMult = info.id === "set-bl-bp" ? 1.5 : 1.0;
 
-        camera.position.set(0, size.y * 2.2, dist * distMult);
+        camera.position.set(0, size.y * 2.2, dist * distMult * 1.25);
         camera.lookAt(0, size.y * 0.5, 0);
       }
 
@@ -449,12 +454,10 @@
               scene.add(gltf.scene);
               frameCamera(gltf.scene, info);
 
-              // Three render passes to let shadows settle
-              renderer.render(scene, camera);
-              renderer.render(scene, camera);
-              renderer.render(scene, camera);
+              // Multiple render passes to let textures and shadows fully settle
+              for (let i = 0; i < 6; i++) renderer.render(scene, camera);
 
-              resolve(canvas.toDataURL("image/jpeg", 0.88));
+              resolve(canvas.toDataURL("image/jpeg", 1.0));
             },
             undefined,
             (err) => reject(err),
@@ -481,7 +484,7 @@
         window.__capturedThumbnails = {};
         window.__thumbnailsComplete = false;
 
-        statusEl.textContent = "Loading INDIANA 6 texture…";
+        statusEl.textContent = "Loading CREMONA 02 texture…";
         await loadTextures();
 
         // Build section containers

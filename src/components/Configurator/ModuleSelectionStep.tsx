@@ -110,7 +110,7 @@ const ModuleSelectionStep: React.FC = () => {
         <ConfiguratorHeader
           onBack={handleBack}
           onClose={sceneObjects.length > 0 ? handleClose : undefined}
-          breadcrumb={["HOME", "CONFIGURATION TYPE", "COMPLETE SETS"]}
+          breadcrumb={[t.home, t.changeConfigType, t.completeSets]}
         />
 
         <div className="pt-[95px] flex flex-col px-[100px] flex-1 text-left overflow-hidden">
@@ -158,7 +158,7 @@ const ModuleSelectionStep: React.FC = () => {
       <ConfiguratorHeader
         onBack={handleBack}
         onClose={sceneObjects.length > 0 ? handleClose : undefined}
-        breadcrumb={["HOME", "CONFIGURATION TYPE", "MODULE SELECT"]}
+        breadcrumb={[t.home, t.changeConfigType, t.moduleSelect]}
       />
 
       <div className="pt-[95px] flex w-full flex-col   px-[100px] flex-1 text-left overflow-hidden">
@@ -166,9 +166,7 @@ const ModuleSelectionStep: React.FC = () => {
           <h2 className="font-lato font-medium text-[25px] text-black leading-none">
             {t.selectModulesMultiple}
           </h2>
-          <p className="font-lato font-light text-[20px] text-black leading-normal">
-            {t.buildOwnConfiguration}
-          </p>
+     
         </div>
 
         <div className="flex-1 overflow-y-auto ">

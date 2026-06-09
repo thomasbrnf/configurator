@@ -28,30 +28,6 @@ function saveSession(key: string, value: unknown) {
   try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
 }
 
-function loadSession<T>(key: string, fallback: T): T {
-  try {
-    const raw = sessionStorage.getItem(key);
-    return raw === null ? fallback : (JSON.parse(raw) as T);
-  } catch { return fallback; }
-}
-
-interface CameraState {
-  position: { x: number; y: number; z: number };
-  target: { x: number; y: number; z: number };
-}
-
-function CameraRestorer({ orbitControlsRef }: { orbitControlsRef: React.MutableRefObject<any> }) {
-  const { camera } = useThree();
-  useEffect(() => {
-    const saved = loadSession<CameraState | null>("camera_state", null);
-    if (!saved || !orbitControlsRef.current) return;
-    camera.position.set(saved.position.x, saved.position.y, saved.position.z);
-    orbitControlsRef.current.target.set(saved.target.x, saved.target.y, saved.target.z);
-    orbitControlsRef.current.update();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return null;
-}
 import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useObjectSelection } from "../../hooks/useObjectSelection";
@@ -200,8 +176,6 @@ function AutoCenterCamera({
   const initializedRef = useRef(false);
   const userHasInteractedRef = useRef(false);
   const previousSceneCountRef = useRef(0);
-  // Used to skip camera move on session restore (camera already set by CameraRestorer)
-  const isFirstMountRef = useRef(true);
 
   // Compute world-space bounding box of every DynamicModel group in the scene
   const computeBounds = useCallback((): THREE.Box3 => {
@@ -217,16 +191,16 @@ function AutoCenterCamera({
   }, [scene]);
 
   // Derive ideal target and camera position from actual model bounds.
-  // footprint diagonal → back = diagonal × 1.3, height = diagonal × 0.6
-  // (elevation angle ≈ 25° regardless of model scale)
+  // footprint diagonal → back = diagonal × 0.9, height = diagonal × 0.45
+  // (tighter framing so the camera sits closer to the model)
   const cameraFromBounds = useCallback((bounds: THREE.Box3) => {
     const center = new THREE.Vector3();
     const size = new THREE.Vector3();
     bounds.getCenter(center);
     bounds.getSize(size);
     const footprint = Math.sqrt(size.x * size.x + size.z * size.z);
-    const back = Math.max(footprint * 1.3, 2.0);
-    const height = Math.max(footprint * 0.6, 1.5);
+    const back = Math.max(footprint * 0.9, 1.4);
+    const height = Math.max(footprint * 0.45, 1.0);
     return {
       target: new THREE.Vector3(center.x, Math.max(center.y, 0.2), center.z),
       cameraPos: new THREE.Vector3(center.x, center.y + height, center.z + back),
@@ -242,18 +216,26 @@ function AutoCenterCamera({
     return () => controls.removeEventListener("start", handleStart);
   }, [orbitControlsRef]);
 
-  // Manual recenter button — resets interaction flag and fully repositions
+  // Manual recenter button / refresh — resets interaction flag and fully
+  // repositions. Retries across frames until model bounds are available, since
+  // on a page refresh the GLB models load asynchronously after this fires.
   useEffect(() => {
     if (recenterTrigger === 0 || sceneObjects.length === 0 || isDragging) return;
     userHasInteractedRef.current = false;
-    const raf = requestAnimationFrame(() => {
+    let raf = 0;
+    let attempts = 0;
+    const tryRecenter = () => {
       const bounds = computeBounds();
-      if (bounds.isEmpty()) return;
+      if (bounds.isEmpty()) {
+        if (attempts++ < 600) raf = requestAnimationFrame(tryRecenter);
+        return;
+      }
       const { target, cameraPos } = cameraFromBounds(bounds);
       desiredTargetRef.current.copy(target);
       currentTargetRef.current.copy(target);
       desiredCameraRef.current = cameraPos.clone();
-    });
+    };
+    raf = requestAnimationFrame(tryRecenter);
     return () => cancelAnimationFrame(raf);
   }, [recenterTrigger, sceneObjects, isDragging, computeBounds, cameraFromBounds]);
 
@@ -267,7 +249,6 @@ function AutoCenterCamera({
       initializedRef.current = false;
       previousSceneCountRef.current = 0;
       userHasInteractedRef.current = false;
-      isFirstMountRef.current = true;
       return;
     }
 
@@ -276,12 +257,6 @@ function AutoCenterCamera({
     previousSceneCountRef.current = sceneObjects.length;
     userHasInteractedRef.current = false;
 
-    // On the very first mount with a saved camera (session restore),
-    // skip repositioning so the user's last camera angle is preserved.
-    const skipCameraMove =
-      isFirstMountRef.current && !!sessionStorage.getItem("camera_state");
-    isFirstMountRef.current = false;
-
     const raf = requestAnimationFrame(() => {
       const bounds = computeBounds();
       if (bounds.isEmpty()) return;
@@ -289,17 +264,22 @@ function AutoCenterCamera({
       desiredTargetRef.current.copy(target);
       if (!initializedRef.current || sceneChanged) {
         currentTargetRef.current.copy(target);
-        if (!skipCameraMove) desiredCameraRef.current = cameraPos.clone();
+        desiredCameraRef.current = cameraPos.clone();
         initializedRef.current = true;
       }
     });
     return () => cancelAnimationFrame(raf);
   }, [sceneObjects, objectPositions, enabled, isDragging, computeBounds, cameraFromBounds]);
 
-  // Smooth lerp every frame — drives orbit target and camera position
+  // Smooth lerp every frame — drives orbit target and camera position.
+  // A pending recenter (desiredCameraRef set) animates to completion even when
+  // continuous auto-follow is disabled, so the recenter button / refresh works.
   useFrame(() => {
-    if (!enabled || !orbitControlsRef.current || isDragging) return;
+    if (!orbitControlsRef.current || isDragging) return;
     if (userHasInteractedRef.current) return;
+
+    const hasPendingRecenter = desiredCameraRef.current !== null;
+    if (!enabled && !hasPendingRecenter) return;
 
     currentTargetRef.current.lerp(desiredTargetRef.current, 0.1);
     orbitControlsRef.current.target.copy(currentTargetRef.current);
@@ -653,6 +633,15 @@ const Scene = () => {
     setRecenterTrigger((prev) => prev + 1);
   };
 
+  // On refresh, recenter once when session-restored objects appear
+  const hasRecenteredOnMountRef = useRef(false);
+  useEffect(() => {
+    if (!hasRecenteredOnMountRef.current && sceneObjects.length > 0) {
+      hasRecenteredOnMountRef.current = true;
+      setRecenterTrigger((prev) => prev + 1);
+    }
+  }, [sceneObjects]);
+
   const handleDragUpdate = (
     instanceId: string,
     position: [number, number, number],
@@ -848,6 +837,7 @@ const Scene = () => {
 
         {import.meta.env.DEV && (
           <Leva
+          hidden={true}
             collapsed={true}
             oneLineLabels={true}
           />
@@ -865,7 +855,6 @@ const Scene = () => {
           <CameraController />
           <ToneMappingController />
           <RotationModeCamera />
-          <CameraRestorer orbitControlsRef={orbitControlsRef} />
           <PanConstraint orbitControlsRef={orbitControlsRef} />
           <AutoCenterCamera
             orbitControlsRef={orbitControlsRef}
