@@ -30,6 +30,7 @@ function saveSession(key: string, value: unknown) {
 
 import { useConfigurator } from "../../context/ConfiguratorContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useLoaderStore } from "../../store/loaderStore";
 import { useObjectSelection } from "../../hooks/useObjectSelection";
 import { useDragAndSnap } from "../../hooks/useDragAndSnap";
 
@@ -152,6 +153,11 @@ function ToneMappingController() {
   return null;
 }
 
+// Camera fly-to easing — smooth nonlinear acceleration then deceleration.
+const CAMERA_FLY_DURATION = 900; // ms
+const easeInOutCubic = (t: number): number =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
 // Auto Center Camera Component
 function AutoCenterCamera({
   orbitControlsRef,
@@ -160,6 +166,7 @@ function AutoCenterCamera({
   enabled = true,
   isDragging = false,
   recenterTrigger = 0,
+  manualRecenterTrigger = 0,
 }: {
   orbitControlsRef: React.MutableRefObject<any>;
   objectPositions: Map<string, [number, number, number]>;
@@ -167,12 +174,22 @@ function AutoCenterCamera({
   enabled?: boolean;
   isDragging?: boolean;
   recenterTrigger?: number;
+  manualRecenterTrigger?: number;
 }) {
   const { camera, scene } = useThree();
   const desiredTargetRef = useRef(new THREE.Vector3(0, 0.2, 0));
   const currentTargetRef = useRef(new THREE.Vector3(0, 0.2, 0));
   // Desired camera world position — null means "no animation in progress"
   const desiredCameraRef = useRef<THREE.Vector3 | null>(null);
+  // Active eased fly-to. Captures the start camera/target so each frame can
+  // interpolate deterministically along easeInOutCubic; null when idle.
+  const tweenRef = useRef<{
+    startPos: THREE.Vector3;
+    endPos: THREE.Vector3;
+    startTarget: THREE.Vector3;
+    endTarget: THREE.Vector3;
+    startTime: number;
+  } | null>(null);
   const initializedRef = useRef(false);
   const userHasInteractedRef = useRef(false);
   const previousSceneCountRef = useRef(0);
@@ -191,27 +208,46 @@ function AutoCenterCamera({
   }, [scene]);
 
   // Derive ideal target and camera position from actual model bounds.
-  // footprint diagonal → back = diagonal × 0.9, height = diagonal × 0.45
-  // (tighter framing so the camera sits closer to the model)
-  const cameraFromBounds = useCallback((bounds: THREE.Box3) => {
+  // zoomFactor < 1 brings the camera closer; default 1 = normal spawn distance.
+  const cameraFromBounds = useCallback((bounds: THREE.Box3, zoomFactor = 1.0) => {
     const center = new THREE.Vector3();
     const size = new THREE.Vector3();
     bounds.getCenter(center);
     bounds.getSize(size);
     const footprint = Math.sqrt(size.x * size.x + size.z * size.z);
-    const back = Math.max(footprint * 0.9, 1.4);
-    const height = Math.max(footprint * 0.45, 1.0);
+    const back = Math.max(footprint * 0.9 * zoomFactor, 1.4 * zoomFactor);
+    const height = Math.max(footprint * 0.45 * zoomFactor, 1.0 * zoomFactor);
     return {
       target: new THREE.Vector3(center.x, Math.max(center.y, 0.2), center.z),
       cameraPos: new THREE.Vector3(center.x, center.y + height, center.z + back),
     };
   }, []);
 
+  // Mirror the isDragging prop into a ref so effects can read it without
+  // listing it as a dependency (otherwise drag-end re-fires those effects).
+  const isDraggingRef = useRef(isDragging);
+  useEffect(() => { isDraggingRef.current = isDragging; }, [isDragging]);
+
+  // When the user starts dragging an object, immediately cancel any in-flight
+  // camera animation so it won't resume and snap the view once drag ends.
+  useEffect(() => {
+    if (isDragging) {
+      desiredCameraRef.current = null;
+      tweenRef.current = null;
+      userHasInteractedRef.current = true;
+    }
+  }, [isDragging]);
+
   // Track manual camera interaction so auto-center stops after user touches orbit
   useEffect(() => {
     const controls = orbitControlsRef.current;
     if (!controls) return;
-    const handleStart = () => { userHasInteractedRef.current = true; };
+    const handleStart = () => {
+      userHasInteractedRef.current = true;
+      // Grabbing the camera mid-flight cancels the eased fly-to immediately.
+      desiredCameraRef.current = null;
+      tweenRef.current = null;
+    };
     controls.addEventListener("start", handleStart);
     return () => controls.removeEventListener("start", handleStart);
   }, [orbitControlsRef]);
@@ -219,8 +255,10 @@ function AutoCenterCamera({
   // Manual recenter button / refresh — resets interaction flag and fully
   // repositions. Retries across frames until model bounds are available, since
   // on a page refresh the GLB models load asynchronously after this fires.
+  // isDragging is intentionally read via ref so drag-end does not re-fire this.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (recenterTrigger === 0 || sceneObjects.length === 0 || isDragging) return;
+    if (recenterTrigger === 0 || sceneObjects.length === 0 || isDraggingRef.current) return;
     userHasInteractedRef.current = false;
     let raf = 0;
     let attempts = 0;
@@ -232,12 +270,34 @@ function AutoCenterCamera({
       }
       const { target, cameraPos } = cameraFromBounds(bounds);
       desiredTargetRef.current.copy(target);
-      currentTargetRef.current.copy(target);
+      // Do NOT copy to currentTargetRef — let useFrame lerp from wherever it is.
       desiredCameraRef.current = cameraPos.clone();
     };
     raf = requestAnimationFrame(tryRecenter);
     return () => cancelAnimationFrame(raf);
-  }, [recenterTrigger, sceneObjects, isDragging, computeBounds, cameraFromBounds]);
+  }, [recenterTrigger, sceneObjects, computeBounds, cameraFromBounds]);
+
+  // Manual recenter button — same logic, smooth travel.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (manualRecenterTrigger === 0 || sceneObjects.length === 0 || isDraggingRef.current) return;
+    userHasInteractedRef.current = false;
+    let raf = 0;
+    let attempts = 0;
+    const tryRecenter = () => {
+      const bounds = computeBounds();
+      if (bounds.isEmpty()) {
+        if (attempts++ < 600) raf = requestAnimationFrame(tryRecenter);
+        return;
+      }
+      const { target, cameraPos } = cameraFromBounds(bounds);
+      desiredTargetRef.current.copy(target);
+      // Do NOT copy to currentTargetRef — let useFrame lerp from wherever it is.
+      desiredCameraRef.current = cameraPos.clone();
+    };
+    raf = requestAnimationFrame(tryRecenter);
+    return () => cancelAnimationFrame(raf);
+  }, [manualRecenterTrigger, sceneObjects, computeBounds, cameraFromBounds]);
 
   // Auto-center when scene changes (objects added / removed)
   useEffect(() => {
@@ -263,7 +323,8 @@ function AutoCenterCamera({
       const { target, cameraPos } = cameraFromBounds(bounds);
       desiredTargetRef.current.copy(target);
       if (!initializedRef.current || sceneChanged) {
-        currentTargetRef.current.copy(target);
+        // Let the fly-to ease the target from wherever it is rather than
+        // snapping it; the useFrame tween animates camera + target together.
         desiredCameraRef.current = cameraPos.clone();
         initializedRef.current = true;
       }
@@ -275,25 +336,159 @@ function AutoCenterCamera({
   // A pending recenter (desiredCameraRef set) animates to completion even when
   // continuous auto-follow is disabled, so the recenter button / refresh works.
   useFrame(() => {
-    if (!orbitControlsRef.current || isDragging) return;
-    if (userHasInteractedRef.current) return;
+    const controls = orbitControlsRef.current;
+    if (!controls || isDragging) return;
 
-    const hasPendingRecenter = desiredCameraRef.current !== null;
-    if (!enabled && !hasPendingRecenter) return;
-
-    currentTargetRef.current.lerp(desiredTargetRef.current, 0.1);
-    orbitControlsRef.current.target.copy(currentTargetRef.current);
-
+    // Eased fly-to: while a destination camera position is pending, animate the
+    // camera AND the orbit target together along an easeInOutCubic time curve so
+    // the view glides from its current spot to the model instead of snapping.
     if (desiredCameraRef.current) {
-      camera.position.lerp(desiredCameraRef.current, 0.08);
-      if (camera.position.distanceTo(desiredCameraRef.current) < 0.05) {
-        camera.position.copy(desiredCameraRef.current);
-        desiredCameraRef.current = null;
+      const dest = desiredCameraRef.current;
+      // (Re)start the tween on a new destination, or if it changed mid-flight
+      // (e.g. recenter pressed again) — capture the live start pose each time.
+      if (!tweenRef.current || !tweenRef.current.endPos.equals(dest)) {
+        tweenRef.current = {
+          startPos: camera.position.clone(),
+          endPos: dest.clone(),
+          startTarget: controls.target.clone(),
+          endTarget: desiredTargetRef.current.clone(),
+          startTime: performance.now(),
+        };
       }
+      const tw = tweenRef.current;
+      const t = Math.min(
+        (performance.now() - tw.startTime) / CAMERA_FLY_DURATION,
+        1,
+      );
+      const e = easeInOutCubic(t);
+      camera.position.lerpVectors(tw.startPos, tw.endPos, e);
+      currentTargetRef.current.lerpVectors(tw.startTarget, tw.endTarget, e);
+      controls.target.copy(currentTargetRef.current);
+      controls.update();
+      if (t >= 1) {
+        camera.position.copy(tw.endPos);
+        currentTargetRef.current.copy(tw.endTarget);
+        desiredCameraRef.current = null;
+        tweenRef.current = null;
+      }
+      return;
     }
 
-    orbitControlsRef.current.update();
+    if (userHasInteractedRef.current || !enabled) return;
+
+    // Continuous soft target-follow while auto-centring is on and no explicit
+    // fly is in progress — keeps the view centred as objects move/resize.
+    if (currentTargetRef.current.distanceTo(desiredTargetRef.current) > 0.005) {
+      currentTargetRef.current.lerp(desiredTargetRef.current, 0.1);
+      controls.target.copy(currentTargetRef.current);
+      controls.update();
+    }
   });
+
+  return null;
+}
+
+// Camera Collision Constraint - prevents the camera from entering the model
+// while leaving pan/rotate/zoom otherwise untouched. Maintains a bounding
+// sphere around every model in the scene and, on each OrbitControls "change",
+// pushes the camera back out to the sphere surface if it has moved inside.
+function CameraCollisionConstraint({
+  orbitControlsRef,
+  sceneObjects,
+  objectPositions,
+  objectRotations,
+}: {
+  orbitControlsRef: React.MutableRefObject<any>;
+  sceneObjects: { instanceId: string }[];
+  objectPositions: Map<string, [number, number, number]>;
+  objectRotations: Map<string, [number, number, number]>;
+}) {
+  const { camera, scene } = useThree();
+  // One collision sphere per model. Empty means "nothing to collide with yet".
+  const spheresRef = useRef<THREE.Sphere[]>([]);
+  const tmpDirRef = useRef(new THREE.Vector3());
+
+  // Recompute one collision sphere per model whenever the scene changes — not
+  // just on add/remove, but also when an object is moved or rotated, so each
+  // sphere travels with its model. GLB models load asynchronously, so retry
+  // across frames until at least one group has bounds (mirrors AutoCenterCamera).
+  useEffect(() => {
+    if (sceneObjects.length === 0) {
+      spheresRef.current = [];
+      return;
+    }
+    let raf = 0;
+    let attempts = 0;
+    const compute = () => {
+      scene.updateMatrixWorld(true);
+      const spheres: THREE.Sphere[] = [];
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Group && obj.userData.objectId) {
+          const objBox = new THREE.Box3().setFromObject(obj);
+          if (objBox.isEmpty()) return;
+          const sphere = new THREE.Sphere();
+          objBox.getBoundingSphere(sphere);
+          sphere.radius *= 1.05; // small padding
+          spheres.push(sphere);
+        }
+      });
+      if (spheres.length === 0) {
+        if (attempts++ < 600) raf = requestAnimationFrame(compute);
+        return;
+      }
+      spheresRef.current = spheres;
+    };
+    raf = requestAnimationFrame(compute);
+    return () => cancelAnimationFrame(raf);
+  }, [sceneObjects, objectPositions, objectRotations, scene]);
+
+  // Push the camera back out of any model it has entered. The camera can sit
+  // inside several overlapping spheres at once, so iterate: each pass finds the
+  // deepest penetration and resolves it, repeating until clear (or a cap).
+  useEffect(() => {
+    const controls = orbitControlsRef.current;
+    if (!controls) return;
+
+    const handleChange = () => {
+      const spheres = spheresRef.current;
+      if (spheres.length === 0) return;
+
+      let corrected = false;
+      for (let pass = 0; pass < 8; pass++) {
+        // Find the sphere the camera has penetrated most deeply this pass.
+        let worst: THREE.Sphere | null = null;
+        let worstPenetration = 0;
+        for (const sphere of spheres) {
+          const distance = camera.position.distanceTo(sphere.center);
+          const penetration = sphere.radius - distance;
+          if (penetration > worstPenetration) {
+            worst = sphere;
+            worstPenetration = penetration;
+          }
+        }
+        if (!worst) break;
+
+        // Project the camera out to that sphere's surface. When it sits exactly
+        // at the center the direction is zero, so fall back to avoid a NaN.
+        const dir = tmpDirRef.current.subVectors(camera.position, worst.center);
+        if (dir.lengthSq() < 1e-8) {
+          dir.set(0, 0, 1);
+        } else {
+          dir.normalize();
+        }
+        camera.position.copy(worst.center).addScaledVector(dir, worst.radius);
+        corrected = true;
+      }
+
+      // Re-sync controls so the corrected position sticks without jitter. This
+      // may re-dispatch "change", but the camera is now outside every sphere so
+      // the re-entrant call breaks immediately — no infinite loop.
+      if (corrected) controls.update();
+    };
+
+    controls.addEventListener("change", handleChange);
+    return () => controls.removeEventListener("change", handleChange);
+  }, [orbitControlsRef, camera]);
 
   return null;
 }
@@ -343,7 +538,7 @@ function ClickHandler({
 }) {
   const { gl, scene } = useThree();
   const { selectedObjectId, setSelectedObjectId } = useMaterial();
-  const { objectPositions } = useConfigurator();
+  const { objectPositions, objectRotations } = useConfigurator();
 
   const isRotatingRef = useRef(false);
   const mouseDownRef = useRef<{ x: number; y: number } | null>(null);
@@ -359,6 +554,7 @@ function ClickHandler({
   const drag = useDragAndSnap({
     sceneObjects,
     objectPositions,
+    objectRotations,
     onDragUpdate,
     onSnapPreview,
     onDragStateChange,
@@ -609,11 +805,13 @@ const Scene = () => {
     setRotationControlId,
     setObjectPosition,
     objectPositions,
+    objectRotations,
   } = useConfigurator();
   const { t } = useLanguage();
 
   const [isDraggingObject, setIsDraggingObject] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
+  const [manualRecenterTrigger, setManualRecenterTrigger] = useState(0);
   const [isAutoCenterEnabled, setIsAutoCenterEnabled] = useState(true);
   const [snapPreview, setSnapPreview] = useState<{
     fromId: string;
@@ -629,8 +827,23 @@ const Scene = () => {
     previousSceneObjectsLength.current = sceneObjects.length;
   }, [sceneObjects]);
 
+  // When new objects are spawned, briefly show the spinner to mask the initial
+  // camera-recenter snap. We trigger showLoader for one frame then immediately
+  // call hideLoader so the spinner's built-in 400 ms fade-out covers the start
+  // of the camera animation without showing a long blocking overlay.
+  const spawnSpinnerRafRef = useRef<number>(0);
+  useEffect(() => {
+    if (sceneObjects.length <= previousSceneObjectsLength.current) return;
+    const { showLoader, hideLoader } = useLoaderStore.getState();
+    showLoader("");
+    cancelAnimationFrame(spawnSpinnerRafRef.current);
+    spawnSpinnerRafRef.current = requestAnimationFrame(() => {
+      hideLoader();
+    });
+  }, [sceneObjects.length]);
+
   const handleRecenter = () => {
-    setRecenterTrigger((prev) => prev + 1);
+    setManualRecenterTrigger((prev) => prev + 1);
   };
 
   // On refresh, recenter once when session-restored objects appear
@@ -856,6 +1069,12 @@ const Scene = () => {
           <ToneMappingController />
           <RotationModeCamera />
           <PanConstraint orbitControlsRef={orbitControlsRef} />
+          <CameraCollisionConstraint
+            orbitControlsRef={orbitControlsRef}
+            sceneObjects={sceneObjects}
+            objectPositions={objectPositions}
+            objectRotations={objectRotations}
+          />
           <AutoCenterCamera
             orbitControlsRef={orbitControlsRef}
             objectPositions={objectPositions}
@@ -863,6 +1082,7 @@ const Scene = () => {
             enabled={rotationControlId === null && !isAutoCenterEnabled}
             isDragging={isDraggingObject}
             recenterTrigger={recenterTrigger}
+            manualRecenterTrigger={manualRecenterTrigger}
           />
           <ClickHandler
             sceneObjects={sceneObjects}
@@ -935,7 +1155,7 @@ const Scene = () => {
 
           <group>
             <Environment
-              preset={environmentControls.preset as any}
+              files={`${import.meta.env.BASE_URL}hdri/empty_warehouse_01_1k.hdr`}
               background={environmentControls.background}
               blur={environmentControls.blur}
               environmentIntensity={environmentControls.environmentIntensity}

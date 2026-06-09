@@ -21,12 +21,12 @@ export interface MaterialDefinition {
 export interface MaterialLibrary {
   amaral: MaterialDefinition[];
   cremona: MaterialDefinition[];
-  glow: MaterialDefinition[];
   ilias: MaterialDefinition[];
   indiana: MaterialDefinition[];
   madras: MaterialDefinition[];
   ness: MaterialDefinition[];
   noma: MaterialDefinition[];
+  otaru: MaterialDefinition[];
   pegaso: MaterialDefinition[];
   puente: MaterialDefinition[];
 }
@@ -81,271 +81,266 @@ export const availableMaterials: MaterialLibrary = {
   amaral: [
     {
       name: "AMARAL 90",
-      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 90_BaseColor.jpg`,
-      normal: `${MAT}AMARAL 90  790  10  32/90_Normal.jpg`,
+      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 90_BaseColor.webp`,
+      normal: `${MAT}AMARAL 90  790  10  32/90_Normal.webp`,
     },
     {
       name: "AMARAL 790",
-      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 790_BaseColor.jpg`,
-      normal: `${MAT}AMARAL 90  790  10  32/790_Normal.jpg`,
+      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 790_BaseColor.webp`,
+      normal: `${MAT}AMARAL 90  790  10  32/790_Normal.webp`,
     },
     {
       name: "AMARAL 10",
-      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 10_BaseColor.jpg`,
-      normal: `${MAT}AMARAL 90  790  10  32/10_Normal.jpg`,
+      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 10_BaseColor.webp`,
+      normal: `${MAT}AMARAL 90  790  10  32/10_Normal.webp`,
     },
     {
       name: "AMARAL 32",
-      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 32_BaseColor.jpg`,
-      normal: `${MAT}AMARAL 90  790  10  32/32_Normal.jpg`,
+      diffuse: `${MAT}AMARAL 90  790  10  32/AMARAL 32_BaseColor.webp`,
+      normal: `${MAT}AMARAL 90  790  10  32/32_Normal.webp`,
     },
   ],
   cremona: [
     {
       name: "CREMONA 02",
-      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/02_BaseColor.jpg`,
-      normal: `${MAT}CREMONA 02  24  96  81  77  34/02_Normal.jpg`,
+      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/02_BaseColor.webp`,
+      normal: `${MAT}CREMONA 02  24  96  81  77  34/02_Normal.webp`,
     },
     {
       name: "CREMONA 24",
-      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/24_BaseColor.jpg`,
-      normal: `${MAT}CREMONA 02  24  96  81  77  34/24_Normal.jpg`,
+      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/24_BaseColor.webp`,
+      normal: `${MAT}CREMONA 02  24  96  81  77  34/24_Normal.webp`,
     },
     {
       name: "CREMONA 96",
-      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/96_BaseColor.jpg`,
-      normal: `${MAT}CREMONA 02  24  96  81  77  34/96_Normal.jpg`,
+      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/96_BaseColor.webp`,
+      normal: `${MAT}CREMONA 02  24  96  81  77  34/96_Normal.webp`,
     },
     {
       name: "CREMONA 81",
-      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/81_BaseColor.jpg`,
-      normal: `${MAT}CREMONA 02  24  96  81  77  34/81_Normal.jpg`,
+      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/81_BaseColor.webp`,
+      normal: `${MAT}CREMONA 02  24  96  81  77  34/81_Normal.webp`,
     },
     {
       name: "CREMONA 77",
-      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/77_BaseColor.jpg`,
-      normal: `${MAT}CREMONA 02  24  96  81  77  34/77_Normal.jpg`,
+      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/77_BaseColor.webp`,
+      normal: `${MAT}CREMONA 02  24  96  81  77  34/77_Normal.webp`,
     },
     {
       name: "CREMONA 34",
-      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/34_BaseColor.jpg`,
-      normal: `${MAT}CREMONA 02  24  96  81  77  34/34_Normal.jpg`,
+      diffuse: `${MAT}CREMONA 02  24  96  81  77  34/34_BaseColor.webp`,
+      normal: `${MAT}CREMONA 02  24  96  81  77  34/34_Normal.webp`,
     },
   ],
-  glow: [
+  otaru: [
     {
-      name: "GLOW 12",
-      diffuse: `${MAT}GLOW 12  136  324  03  214  52  503/12_BaseColor.jpg`,
-      normal: `${MAT}GLOW 12  136  324  03  214  52  503/Glow_Normal.jpg`,
+      name: "OTARU 02",
+      diffuse: `${MAT}OTARU 02 27 300 605 611 612 615/02_BaseColor.webp`,
+      normal: `${MAT}OTARU 02 27 300 605 611 612 615/Otaru_Normal.webp`,
     },
     {
-      name: "GLOW 136",
-      diffuse: `${MAT}GLOW 12  136  324  03  214  52  503/136_BaseColor.jpg`,
-      normal: `${MAT}GLOW 12  136  324  03  214  52  503/Glow_Normal.jpg`,
+      name: "OTARU 27",
+      diffuse: `${MAT}OTARU 02 27 300 605 611 612 615/27_BaseColor.webp`,
+      normal: `${MAT}OTARU 02 27 300 605 611 612 615/Otaru_Normal.webp`,
     },
     {
-      name: "GLOW 324",
-      diffuse: `${MAT}GLOW 12  136  324  03  214  52  503/324_BaseColor.jpg`,
-      normal: `${MAT}GLOW 12  136  324  03  214  52  503/Glow_Normal.jpg`,
+      name: "OTARU 300",
+      diffuse: `${MAT}OTARU 02 27 300 605 611 612 615/300_BaseColor.webp`,
+      normal: `${MAT}OTARU 02 27 300 605 611 612 615/Otaru_Normal.webp`,
     },
     {
-      name: "GLOW 03",
-      diffuse: `${MAT}GLOW 12  136  324  03  214  52  503/03_BaseColor.jpg`,
-      normal: `${MAT}GLOW 12  136  324  03  214  52  503/Glow_Normal.jpg`,
+      name: "OTARU 605",
+      diffuse: `${MAT}OTARU 02 27 300 605 611 612 615/605_BaseColor.webp`,
+      normal: `${MAT}OTARU 02 27 300 605 611 612 615/Otaru_Normal.webp`,
     },
     {
-      name: "GLOW 214",
-      diffuse: `${MAT}GLOW 12  136  324  03  214  52  503/214_BaseColor.jpg`,
-      normal: `${MAT}GLOW 12  136  324  03  214  52  503/Glow_Normal.jpg`,
+      name: "OTARU 611",
+      diffuse: `${MAT}OTARU 02 27 300 605 611 612 615/611_BaseColor.webp`,
+      normal: `${MAT}OTARU 02 27 300 605 611 612 615/Otaru_Normal.webp`,
     },
     {
-      name: "GLOW 52",
-      diffuse: `${MAT}GLOW 12  136  324  03  214  52  503/52_BaseColor.jpg`,
-      normal: `${MAT}GLOW 12  136  324  03  214  52  503/Glow_Normal.jpg`,
+      name: "OTARU 612",
+      diffuse: `${MAT}OTARU 02 27 300 605 611 612 615/612_BaseColor.webp`,
+      normal: `${MAT}OTARU 02 27 300 605 611 612 615/Otaru_Normal.webp`,
     },
     {
-      name: "GLOW 503",
-      diffuse: `${MAT}GLOW 12  136  324  03  214  52  503/503_BaseColor.jpg`,
-      normal: `${MAT}GLOW 12  136  324  03  214  52  503/Glow_Normal.jpg`,
+      name: "OTARU 615",
+      diffuse: `${MAT}OTARU 02 27 300 605 611 612 615/615_BaseColor.webp`,
+      normal: `${MAT}OTARU 02 27 300 605 611 612 615/Otaru_Normal.webp`,
     },
   ],
   ilias: [
     {
       name: "ILIAS 13",
-      diffuse: `${MAT}ILIAS 13  18  06/13_BaseColor.jpg`,
-      normal: `${MAT}ILIAS 13  18  06/13_Normal.jpg`,
+      diffuse: `${MAT}ILIAS 13  18  06/13_BaseColor.webp`,
+      normal: `${MAT}ILIAS 13  18  06/13_Normal.webp`,
     },
     {
       name: "ILIAS 18",
-      diffuse: `${MAT}ILIAS 13  18  06/18_BaseColor.jpg`,
-      normal: `${MAT}ILIAS 13  18  06/18_Normal.jpg`,
+      diffuse: `${MAT}ILIAS 13  18  06/18_BaseColor.webp`,
+      normal: `${MAT}ILIAS 13  18  06/18_Normal.webp`,
     },
     {
       name: "ILIAS 06",
-      diffuse: `${MAT}ILIAS 13  18  06/06_BaseColor.jpg`,
-      normal: `${MAT}ILIAS 13  18  06/06_Normal.jpg`,
+      diffuse: `${MAT}ILIAS 13  18  06/06_BaseColor.webp`,
+      normal: `${MAT}ILIAS 13  18  06/06_Normal.webp`,
     },
   ],
   indiana: [
     {
       name: "INDIANA 1",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/1_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/1_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/1_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/1_Normal.webp`,
     },
     {
       name: "INDIANA 6",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/6_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/6_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/6_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/6_Normal.webp`,
     },
     {
       name: "INDIANA 9",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/9_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/9_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/9_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/9_Normal.webp`,
     },
     {
       name: "INDIANA 12",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/12_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/12_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/12_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/12_Normal.webp`,
     },
     {
       name: "INDIANA 15",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/15_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/15_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/15_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/15_Normal.webp`,
     },
     {
       name: "INDIANA 17",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/17_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/17_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/17_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/17_Normal.webp`,
     },
     {
       name: "INDIANA 21",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/21_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/21_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/21_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/21_Normal.webp`,
     },
     {
       name: "INDIANA 22",
-      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/22_BaseColor.jpg`,
-      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/22_Normal.jpg`,
+      diffuse: `${MAT}INDIANA 1  6  9  12  15  17  21  22/22_BaseColor.webp`,
+      normal: `${MAT}INDIANA 1  6  9  12  15  17  21  22/22_Normal.webp`,
     },
   ],
   madras: [
     {
       name: "MADRAS 230",
-      diffuse: `${MAT}MADRAS 230 310 220/230_BaseColor.jpg`,
-      normal: `${MAT}MADRAS 230 310 220/230_Normal.jpg`,
+      diffuse: `${MAT}MADRAS 230 310 220/230_BaseColor.webp`,
+      normal: `${MAT}MADRAS 230 310 220/230_Normal.webp`,
     },
     {
       name: "MADRAS 310",
-      diffuse: `${MAT}MADRAS 230 310 220/310_BaseColor.jpg`,
-      normal: `${MAT}MADRAS 230 310 220/310_Normal.jpg`,
+      diffuse: `${MAT}MADRAS 230 310 220/310_BaseColor.webp`,
+      normal: `${MAT}MADRAS 230 310 220/310_Normal.webp`,
     },
     {
       name: "MADRAS 220",
-      diffuse: `${MAT}MADRAS 230 310 220/220_BaseColor.jpg`,
-      normal: `${MAT}MADRAS 230 310 220/220_Normal.jpg`,
+      diffuse: `${MAT}MADRAS 230 310 220/220_BaseColor.webp`,
+      normal: `${MAT}MADRAS 230 310 220/220_Normal.webp`,
     },
   ],
   ness: [
     {
       name: "NESS 09",
-      diffuse: `${MAT}NESS 15  09  25  56  96/09_ness_BaseColor.jpg`,
-      normal: `${MAT}NESS 15  09  25  56  96/09_ness_Normal.jpg`,
+      diffuse: `${MAT}NESS 15  09  25  56  96/09 ness_BaseColor.webp`,
+      normal: `${MAT}NESS 15  09  25  56  96/09  ness_Normal.webp`,
     },
     {
       name: "NESS 15",
-      diffuse: `${MAT}NESS 15  09  25  56  96/15_ness_BaseColor.jpg`,
-      normal: `${MAT}NESS 15  09  25  56  96/15_ness_Normal.jpg`,
+      diffuse: `${MAT}NESS 15  09  25  56  96/15 ness_BaseColor.webp`,
+      normal: `${MAT}NESS 15  09  25  56  96/Ness_Normal.webp`,
     },
     {
       name: "NESS 25",
-      diffuse: `${MAT}NESS 15  09  25  56  96/25_ness_BaseColor.jpg`,
-      normal: `${MAT}NESS 15  09  25  56  96/25_ness_Normal.jpg`,
+      diffuse: `${MAT}NESS 15  09  25  56  96/25 ness_BaseColor.webp`,
+      normal: `${MAT}NESS 15  09  25  56  96/Ness_Normal.webp`,
     },
     {
       name: "NESS 56",
-      diffuse: `${MAT}NESS 15  09  25  56  96/56_ness_BaseColor.jpg`,
-      normal: `${MAT}NESS 15  09  25  56  96/56_ness_Normal.jpg`,
+      diffuse: `${MAT}NESS 15  09  25  56  96/56 ness_BaseColor.webp`,
+      normal: `${MAT}NESS 15  09  25  56  96/Ness_Normal.webp`,
     },
     {
       name: "NESS 96",
-      diffuse: `${MAT}NESS 15  09  25  56  96/96_ness_BaseColor.jpg`,
-      normal: `${MAT}NESS 15  09  25  56  96/96_ness_Normal.jpg`,
+      diffuse: `${MAT}NESS 15  09  25  56  96/96 ness_BaseColor.webp`,
+      normal: `${MAT}NESS 15  09  25  56  96/Ness_Normal.webp`,
     },
   ],
   noma: [
     {
       name: "NOMA 26",
-      diffuse: `${MAT}NOMA 26  55  97  29  05/26_BaseColor.jpg`,
-      normal: `${MAT}NOMA 26  55  97  29  05/26_Normal.jpg`,
+      diffuse: `${MAT}NOMA 26  55  97  29  05/26_BaseColor.webp`,
+      normal: `${MAT}NOMA 26  55  97  29  05/26_Normal.webp`,
     },
     {
       name: "NOMA 55",
-      diffuse: `${MAT}NOMA 26  55  97  29  05/55_BaseColor.jpg`,
-      normal: `${MAT}NOMA 26  55  97  29  05/55_Normal.jpg`,
+      diffuse: `${MAT}NOMA 26  55  97  29  05/55_BaseColor.webp`,
+      normal: `${MAT}NOMA 26  55  97  29  05/55_Normal.webp`,
     },
     {
       name: "NOMA 97",
-      diffuse: `${MAT}NOMA 26  55  97  29  05/97_BaseColor.jpg`,
-      normal: `${MAT}NOMA 26  55  97  29  05/97_Normal.jpg`,
+      diffuse: `${MAT}NOMA 26  55  97  29  05/97_BaseColor.webp`,
+      normal: `${MAT}NOMA 26  55  97  29  05/97_Normal.webp`,
     },
     {
       name: "NOMA 29",
-      diffuse: `${MAT}NOMA 26  55  97  29  05/29_BaseColor.jpg`,
-      normal: `${MAT}NOMA 26  55  97  29  05/29_Normal.jpg`,
+      diffuse: `${MAT}NOMA 26  55  97  29  05/29_BaseColor.webp`,
+      normal: `${MAT}NOMA 26  55  97  29  05/29_Normal.webp`,
     },
     {
       name: "NOMA 05",
-      diffuse: `${MAT}NOMA 26  55  97  29  05/05_BaseColor.jpg`,
-      normal: `${MAT}NOMA 26  55  97  29  05/05_Normal.jpg`,
+      diffuse: `${MAT}NOMA 26  55  97  29  05/05_BaseColor.webp`,
+      normal: `${MAT}NOMA 26  55  97  29  05/05_Normal.webp`,
     },
   ],
   pegaso: [
     {
       name: "PEGASO 2450",
-      diffuse: `${MAT}PEGASO 2840 2450 2960/2450_BaseColor.jpg`,
-      normal: `${MAT}PEGASO 2840 2450 2960/2450_Normal.jpg`,
+      diffuse: `${MAT}PEGASO 2840 2450 2960/2450_BaseColor.webp`,
+      normal: `${MAT}PEGASO 2840 2450 2960/2450_Normal.webp`,
     },
     {
       name: "PEGASO 2840",
-      diffuse: `${MAT}PEGASO 2840 2450 2960/2840_BaseColor.jpg`,
-      normal: `${MAT}PEGASO 2840 2450 2960/2840_Normal.jpg`,
+      diffuse: `${MAT}PEGASO 2840 2450 2960/2840_BaseColor.webp`,
+      normal: `${MAT}PEGASO 2840 2450 2960/2840_Normal.webp`,
     },
     {
       name: "PEGASO 2960",
-      diffuse: `${MAT}PEGASO 2840 2450 2960/2960_BaseColor.jpg`,
-      normal: `${MAT}PEGASO 2840 2450 2960/2960_Normal.jpg`,
+      diffuse: `${MAT}PEGASO 2840 2450 2960/2960_BaseColor.webp`,
+      normal: `${MAT}PEGASO 2840 2450 2960/2960_Normal.webp`,
     },
   ],
   puente: [
     {
       name: "PUENTE 15",
-      diffuse: `${MAT}PUENTE 15  56  33  09  06  29/15_BaseColor.jpg`,
-      normal: `${MAT}PUENTE 15  56  33  09  06  29/15_Normal.jpg`,
+      diffuse: `${MAT}PUENTE 15  56  33  06  29/15_BaseColor.webp`,
+      normal: `${MAT}PUENTE 15  56  33  06  29/15_Normal.webp`,
     },
     {
       name: "PUENTE 56",
-      diffuse: `${MAT}PUENTE 15  56  33  09  06  29/56_BaseColor.jpg`,
-      normal: `${MAT}PUENTE 15  56  33  09  06  29/56_Normal.jpg`,
+      diffuse: `${MAT}PUENTE 15  56  33  06  29/56_BaseColor.webp`,
+      normal: `${MAT}PUENTE 15  56  33  06  29/56_Normal.webp`,
     },
     {
       name: "PUENTE 33",
-      diffuse: `${MAT}PUENTE 15  56  33  09  06  29/33_BaseColor.jpg`,
-      normal: `${MAT}PUENTE 15  56  33  09  06  29/33_Normal.jpg`,
-    },
-    {
-      name: "PUENTE 09",
-      diffuse: `${MAT}PUENTE 15  56  33  09  06  29/09_BaseColor.jpg`,
-      normal: `${MAT}PUENTE 15  56  33  09  06  29/09_Normal.jpg`,
+      diffuse: `${MAT}PUENTE 15  56  33  06  29/33_BaseColor.webp`,
+      normal: `${MAT}PUENTE 15  56  33  06  29/33_Normal.webp`,
     },
     {
       name: "PUENTE 06",
-      diffuse: `${MAT}PUENTE 15  56  33  09  06  29/06_BaseColor.jpg`,
-      normal: `${MAT}PUENTE 15  56  33  09  06  29/06_Normal.jpg`,
+      diffuse: `${MAT}PUENTE 15  56  33  06  29/06_BaseColor.webp`,
+      normal: `${MAT}PUENTE 15  56  33  06  29/06_Normal.webp`,
     },
     {
       name: "PUENTE 29",
-      diffuse: `${MAT}PUENTE 15  56  33  09  06  29/29_BaseColor.jpg`,
-      normal: `${MAT}PUENTE 15  56  33  09  06  29/29_Normal.jpg`,
+      diffuse: `${MAT}PUENTE 15  56  33  06  29/29_BaseColor.webp`,
+      normal: `${MAT}PUENTE 15  56  33  06  29/29_Normal.webp`,
     },
   ],
 };
@@ -371,8 +366,8 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   // Legacy support - get material of selected object
   const currentMaterial = selectedObjectId
     ? objects.find((obj) => obj.id === selectedObjectId)?.material ||
-      availableMaterials.amaral[0]
-    : availableMaterials.amaral[0];
+      availableMaterials.cremona[0]
+    : availableMaterials.cremona[0];
 
   const setCurrentMaterial = (material: MaterialDefinition) => {
     if (selectedObjectId) {
@@ -476,7 +471,7 @@ export const MATERIAL_PBR_DEFAULTS: Record<
     sheenRoughness: 0.93,
     envMapIntensity: 0.15,
   },
-  glow: {
+  otaru: {
     uvScale: 18.2,
     normalScale: 1.55,
     roughness: 0.98,

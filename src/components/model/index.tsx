@@ -54,9 +54,9 @@ export function Model(
 
   const [diffuseMap, normalMap] = useTexture([
     objectMaterial?.diffuse ||
-      `${BASE}materials/the smallest granit/Granit_01_new_3.jpg`,
+      `${BASE}materials/the smallest granit/Granit_01_new_3.webp`,
     objectMaterial?.normal ||
-      `${BASE}materials/the smallest granit/Granit_normal_map_5.jpg`,
+      `${BASE}materials/the smallest granit/Granit_normal_map_5.webp`,
   ]);
 
   const customMaterial = useMemo(() => {

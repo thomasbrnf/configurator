@@ -85,7 +85,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "1(70)TVBB aku",
     displayName: "1(70)TVBB aku",
     modelPath: `${BASE}models/moduls/1(70)TVBB aku.glb`,
-    thumbnail: `${BASE}models/thumbnails/1(70)TVBB aku.jpg`,
+    thumbnail: `${BASE}models/thumbnails/1(70)TVBB aku.webp`,
     category: "standard",
     snappingSides: "both",
   },
@@ -94,7 +94,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "1D70(1)SBB",
     displayName: "1D70(1)SBB",
     modelPath: `${BASE}models/moduls/1D70(1)SBB.glb`,
-    thumbnail: `${BASE}models/thumbnails/1D70(1)SBB.jpg`,
+    thumbnail: `${BASE}models/thumbnails/1D70(1)SBB.webp`,
     category: 'standardLong',
     snappingSides: "both",
   },
@@ -103,7 +103,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "2(160)FBBW PRO",
     displayName: "2(160)FBBW PRO",
     modelPath: `${BASE}models/moduls/2(160)FBBW PRO.glb`,
-    thumbnail: `${BASE}models/thumbnails/2(160)FBBW PRO.jpg`,
+    thumbnail: `${BASE}models/thumbnails/2(160)FBBW PRO.webp`,
     category: "wide",
     snappingSides: "both",
   },
@@ -112,7 +112,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "BAR(2z)L",
     displayName: "BAR(2z)L",
     modelPath: `${BASE}models/moduls/BAR(2z)L.glb`,
-    thumbnail: `${BASE}models/thumbnails/BAR(2z)L.jpg`,
+    thumbnail: `${BASE}models/thumbnails/BAR(2z)L.webp`,
     category: "light",
     snappingSides: "both",
   },
@@ -121,7 +121,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "BAR(2z)S",
     displayName: "BAR(2z)S",
     modelPath: `${BASE}models/moduls/BAR(2z)S.glb`,
-    thumbnail: `${BASE}models/thumbnails/BAR(2z)S.jpg`,
+    thumbnail: `${BASE}models/thumbnails/BAR(2z)S.webp`,
     category: "light",
     snappingSides: "both",
   },
@@ -130,7 +130,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "BAR",
     displayName: "BAR",
     modelPath: `${BASE}models/moduls/BAR.glb`,
-    thumbnail: `${BASE}models/thumbnails/BAR.jpg`,
+    thumbnail: `${BASE}models/thumbnails/BAR.webp`,
     category: "light",
     snappingSides: "both",
   },
@@ -139,7 +139,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "BL (b)",
     displayName: "BL (b)",
     modelPath: `${BASE}models/moduls/BL (b).glb`,
-    thumbnail: `${BASE}models/thumbnails/BL (b).jpg`,
+    thumbnail: `${BASE}models/thumbnails/BL (b).webp`,
     category: "thin",
     snappingSides: "right",
   },
@@ -148,7 +148,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "BL",
     displayName: "BL",
     modelPath: `${BASE}models/moduls/BL.glb`,
-    thumbnail: `${BASE}models/thumbnails/BL.jpg`,
+    thumbnail: `${BASE}models/thumbnails/BL.webp`,
     category: "extralight",
     snappingSides: "right",
   },
@@ -157,7 +157,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "BP (b)",
     displayName: "BP (b)",
     modelPath: `${BASE}models/moduls/BP (b).glb`,
-    thumbnail: `${BASE}models/thumbnails/BP (b).jpg`,
+    thumbnail: `${BASE}models/thumbnails/BP (b).webp`,
     category: "thin",
     snappingSides: "left",
   },
@@ -166,7 +166,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "BP",
     displayName: "BP",
     modelPath: `${BASE}models/moduls/BP.glb`,
-    thumbnail: `${BASE}models/thumbnails/BP.jpg`,
+    thumbnail: `${BASE}models/thumbnails/BP.webp`,
     category: "extralight",
     snappingSides: "left",
   },
@@ -175,7 +175,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "EN(2)L",
     displayName: "EN(2)L",
     modelPath: `${BASE}models/moduls/EN(2)L.glb`,
-    thumbnail: `${BASE}models/thumbnails/EN(2)L.jpg`,
+    thumbnail: `${BASE}models/thumbnails/EN(2)L.webp`,
     category: "corner",
     snappingSides: "right",
   },
@@ -184,7 +184,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "EN(2)R",
     displayName: "EN(2)R",
     modelPath: `${BASE}models/moduls/EN(2)R.glb`,
-    thumbnail: `${BASE}models/thumbnails/EN(2)R.jpg`,
+    thumbnail: `${BASE}models/thumbnails/EN(2)R.webp`,
     category: "corner",
     snappingSides: "left",
   },
@@ -193,7 +193,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "KE(70)SL",
     displayName: "KE(70)SL",
     modelPath: `${BASE}models/moduls/KE(70)SL.glb`,
-    thumbnail: `${BASE}models/thumbnails/KE(70)SL.jpg`,
+    thumbnail: `${BASE}models/thumbnails/KE(70)SL.webp`,
     category: "cornerWider",
     snappingSides: "right",
   },
@@ -202,7 +202,7 @@ export const availableModules: ModuleDefinition[] = [
     name: "KE(70)SP",
     displayName: "KE(70)SP",
     modelPath: `${BASE}models/moduls/KE(70)SP.glb`,
-    thumbnail: `${BASE}models/thumbnails/KE(70)SP.jpg`,
+    thumbnail: `${BASE}models/thumbnails/KE(70)SP.webp`,
     category: "cornerWider",
     snappingSides: "left",
   },
@@ -215,7 +215,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BL – BP",
     translationKey: "BL – BP",
     modelPath: `${BASE}models/BL - 2(160) FFBBW - BP.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bl-bp.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-bp.webp`,
   },
   {
     id: "set-bl-bp-open",
@@ -223,7 +223,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BL – BP (open)",
     translationKey: "BL – BP (open)",
     modelPath: `${BASE}models/BL - 2(160) FFBBW - BP open.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bl-bp-open.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-bp-open.webp`,
   },
   {
     id: "set-bl-sbb-bp",
@@ -231,7 +231,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BL PRO – SBB – BP",
     translationKey: "BL PRO – SBB – BP",
     modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp.webp`,
   },
   {
     id: "set-bl-sbb-bp-open",
@@ -239,7 +239,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BL PRO – SBB – BP (open)",
     translationKey: "BL PRO – SBB – BP (open)",
     modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - 1D70(1)SBB - BP open.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp-open.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-sbb-bp-open.webp`,
   },
   {
     id: "set-bl-full",
@@ -247,7 +247,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BL PRO – EN – TVBB – BAR – BP(b)",
     translationKey: "BL PRO full",
     modelPath: `${BASE}models/BL - 2(160) FFBBW PRO - EN(2) - 1(70)TVBB (aku) - BAR(2)S - 1(70) BB - BP(b).glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bl-full.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-full.webp`,
   },
   {
     id: "set-bl-full-open",
@@ -255,7 +255,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BL PRO – EN – TVBB – BAR – BP(b) (open)",
     translationKey: "BL PRO full (open)",
     modelPath: `${BASE}models/BL - 2(160)FFBBW PRO - EN(2) - 1(70)TVBB(aku) - BAR(2)S- 1(70)BB - BP(b) open.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bl-full-open.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bl-full-open.webp`,
   },
   {
     id: "set-blb-ke",
@@ -263,16 +263,23 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BL(b) PRO – EN – KE SP",
     translationKey: "BL(b) PRO – EN – KE SP",
     modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-blb-ke.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-blb-ke.webp`,
   },
-  
+  {
+    id: "set-blb-ke-open",
+    name: "BL(b) KE open",
+    displayName: "BL(b) PRO – EN – KE SP (open)",
+    translationKey: "BL(b) PRO – EN – KE SP (open)",
+    modelPath: `${BASE}models/BL(b) - 2(160) FFBBW PRO - EN(2) - KE(70) SP open.glb`,
+    thumbnail: `${BASE}models/thumbnails/set-blb-ke-open.webp`,
+  },
   {
     id: "set-bar-bp",
     name: "BAR BP",
     displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b)",
     translationKey: "BAR(2z)L full",
     modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b).glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bar-bp.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bar-bp.webp`,
   },
   {
     id: "set-bar-bp-open",
@@ -280,7 +287,7 @@ export const availableCompleteSets: CompleteSetDefinition[] = [
     displayName: "BAR(2z)L – TVBB – EN – PRO – BP(b) (open)",
     translationKey: "BAR(2z)L full (open)",
     modelPath: `${BASE}models/BAR(2z) L - 1(70) TVBBe - 1(70)BB - EN(2) - 2(160) FFBBW PRO - BP(b) open.glb`,
-    thumbnail: `${BASE}models/thumbnails/set-bar-bp-open.jpg`,
+    thumbnail: `${BASE}models/thumbnails/set-bar-bp-open.webp`,
   },
 ];
 
@@ -320,7 +327,12 @@ interface ConfiguratorContextType {
   addObjectToScene: (objectId: string) => void;
   removeObjectFromScene: (objectId: string) => void;
   removeObjectById: (instanceId: string) => void;
+  duplicateObject: (instanceId: string) => void;
   clearScene: () => void;
+
+  // Model bounding sizes (keyed by baseModuleId) — registered by DynamicModel on load
+  objectBoundingSizes: Map<string, [number, number, number]>;
+  registerObjectSize: (moduleId: string, size: [number, number, number]) => void;
 
   // Object rotations (keyed by instanceId) - [x, y, z] in radians
   objectRotations: Map<string, [number, number, number]>;
@@ -357,7 +369,8 @@ const ConfiguratorContext = createContext<ConfiguratorContextType | undefined>(
 export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { setSelectedObjectId, clearObjects } = useMaterial();
+  const { setSelectedObjectId, clearObjects, objects, getObjectMaterial, addObject } =
+    useMaterial();
   const [currentStep, setCurrentStep] = useState<ConfigurationStep>(
     () => loadSession<ConfigurationStep>("cfg_step", "welcome"),
   );
@@ -383,6 +396,18 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   const [rotationControlId, setRotationControlId] = useState<string | null>(
     null,
   );
+  const [objectBoundingSizes, setObjectBoundingSizes] = useState<
+    Map<string, [number, number, number]>
+  >(new Map());
+
+  const registerObjectSize = (moduleId: string, size: [number, number, number]) => {
+    setObjectBoundingSizes((prev) => {
+      if (prev.get(moduleId)?.[0] === size[0] && prev.get(moduleId)?.[2] === size[2]) return prev;
+      const next = new Map(prev);
+      next.set(moduleId, size);
+      return next;
+    });
+  };
 
   useEffect(() => saveSession("cfg_step", currentStep), [currentStep]);
   useEffect(() => saveSession("cfg_type", configurationType), [configurationType]);
@@ -406,9 +431,39 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     setSelectedModules(new Set());
   };
 
+  // Returns the X center coordinate for a new object placed to the right of
+  // whatever is currently rightmost in `currentPositions`.
+  // Reads only from `currentPositions` — never from the `sceneObjects` closure —
+  // so it chains correctly across multiple functional setState calls in one flush.
+  const computeRightSpawnX = (
+    incomingModuleId: string,
+    currentPositions: Map<string, [number, number, number]>,
+  ): number => {
+    if (currentPositions.size === 0) return 0;
+
+    let rightmostX = -Infinity;
+    let rightmostBaseId = '';
+    for (const [instId, pos] of currentPositions) {
+      if (pos[0] > rightmostX) {
+        rightmostX = pos[0];
+        rightmostBaseId = extractBaseModuleId(instId);
+      }
+    }
+    if (rightmostX === -Infinity) return 0;
+
+    const rightSize = objectBoundingSizes.get(rightmostBaseId);
+    const rightHalfW = rightSize
+      ? Math.sqrt(rightSize[0] * rightSize[0] + rightSize[2] * rightSize[2]) / 2
+      : 0.75;
+
+    const newSize = objectBoundingSizes.get(incomingModuleId);
+    const newHalfW = newSize ? newSize[0] / 2 : 0.75;
+
+    return rightmostX + rightHalfW + 0.1 + newHalfW;
+  };
+
   const addModulesToScene = () => {
     let counter = 0;
-    const startIndex = sceneObjects.length;
     const instances: SceneInstance[] = Array.from(selectedModules).map(
       (moduleId) => {
         const instanceId = generateInstanceId(moduleId, counter++);
@@ -418,8 +473,11 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     setSceneObjects((prev) => [...prev, ...instances]);
     setObjectPositions((prev) => {
       const next = new Map(prev);
-      instances.forEach((inst, i) => {
-        next.set(inst.instanceId, [(startIndex + i) * 1.9, 0, 0]);
+      // Build positions left-to-right by accumulating into `next` so each
+      // module is placed right of the previous one (existing or just added).
+      instances.forEach((inst) => {
+        const spawnX = computeRightSpawnX(inst.moduleId, next);
+        next.set(inst.instanceId, [spawnX, 0, 0]);
       });
       return next;
     });
@@ -463,9 +521,11 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         });
       }
     } else if (!isCompleteSet) {
+      // Use prev (not sceneObjects closure) so this chains correctly when called
+      // in a tight loop — each call's prev reflects positions from previous calls.
       setObjectPositions((prev) => {
         const next = new Map(prev);
-        next.set(instanceId, [prev.size * 1.9, 0, 0]);
+        next.set(instanceId, [computeRightSpawnX(moduleId, prev), 0, 0]);
         return next;
       });
     }
@@ -495,6 +555,63 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     if (rotationControlId === instanceId) {
       setRotationControlId(null);
     }
+  };
+
+  const duplicateObject = (instanceId: string) => {
+    const baseModuleId = extractBaseModuleId(instanceId);
+    const newInstanceId = generateInstanceId(baseModuleId, 0);
+    const instance: SceneInstance = {
+      instanceId: newInstanceId,
+      moduleId: baseModuleId,
+    };
+
+    // Inherit the source's fabric material (DynamicModel's mount-time addObject is a
+    // no-op when the id already exists, so this pre-seeded material wins).
+    const sourceMaterial = getObjectMaterial(instanceId);
+    if (sourceMaterial) {
+      const sourceObject = objects.find((o) => o.id === instanceId);
+      addObject({
+        id: newInstanceId,
+        name: sourceObject?.name || baseModuleId,
+        material: sourceMaterial,
+      });
+    }
+
+    // Inherit rotation and place the copy beside the source without overlapping.
+    const sourceRotation = objectRotations.get(instanceId);
+    const sourcePosition = objectPositions.get(instanceId) || [0, 0, 0];
+
+    // Compute safe X offset from stored bounding size.
+    // Use the footprint diagonal so any rotation is covered, plus a small gap.
+    const storedSize = objectBoundingSizes.get(baseModuleId);
+    const offsetX = storedSize
+      ? Math.sqrt(storedSize[0] * storedSize[0] + storedSize[2] * storedSize[2]) + 0.1
+      : 1.5;
+
+    setSceneObjects((prev) => {
+      const index = prev.findIndex((inst) => inst.instanceId === instanceId);
+      if (index === -1) return [...prev, instance];
+      const next = [...prev];
+      next.splice(index + 1, 0, instance);
+      return next;
+    });
+    setObjectPositions((prev) => {
+      const next = new Map(prev);
+      next.set(newInstanceId, [
+        sourcePosition[0] + offsetX,
+        sourcePosition[1],
+        sourcePosition[2],
+      ]);
+      return next;
+    });
+    if (sourceRotation) {
+      setObjectRotations((prev) => {
+        const next = new Map(prev);
+        next.set(newInstanceId, [...sourceRotation] as [number, number, number]);
+        return next;
+      });
+    }
+    setSelectedObjectId(newInstanceId);
   };
 
   const clearScene = () => {
@@ -585,6 +702,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         addObjectToScene,
         removeObjectFromScene,
         removeObjectById,
+        duplicateObject,
         clearScene,
         objectRotations,
         setObjectRotation,
@@ -595,6 +713,8 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         rotationControlId,
         setRotationControlId,
         resetConfigurator,
+        objectBoundingSizes,
+        registerObjectSize,
       }}
     >
       {children}

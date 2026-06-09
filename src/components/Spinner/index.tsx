@@ -1,31 +1,44 @@
+import { useEffect, useState } from "react";
 import { useLoaderStore } from "../../store/loaderStore";
 import { useLanguage } from "../../context/LanguageContext";
 import "./spinner.css";
 
 const Spinner = () => {
   const { isLoading, loadingMessage } = useLoaderStore();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
+  const [visible, setVisible] = useState(isLoading);
+  const [fadeOut, setFadeOut] = useState(false);
 
-  if (!isLoading) return null;
-
-  // Map Polish messages to English
-  const translateMessage = (message: string) => {
-    if (language === "en") {
-      const translations: Record<string, string> = {
-        "Ładowanie obiektu...": "Loading object...",
-        "Ładowanie materiału...": "Loading material...",
-        "Zmienianie materiału...": "Changing material...",
-        "Ładowanie...": "Loading...",
-      };
-      return translations[message] || message;
+  useEffect(() => {
+    if (isLoading) {
+      setFadeOut(false);
+      setVisible(true);
+    } else if (visible) {
+      setFadeOut(true);
+      const timer = setTimeout(() => setVisible(false), 400);
+      return () => clearTimeout(timer);
     }
-    return message;
+  }, [isLoading]);
+
+  if (!visible) return null;
+
+  const messageMap: Record<string, string> = {
+    "Ładowanie sofy...": t.loadingObject,
+    "Ładowanie materiału...": t.loadingMaterial,
+    "Zmienianie materiału...": t.changingMaterial,
+    "Ładowanie...": t.loading,
   };
 
+  const label = messageMap[loadingMessage] ?? loadingMessage;
+
   return (
-    <div className="spin-loader">
-      <div className="spinner"></div>
-      <div className="loader-text">{translateMessage(loadingMessage)}</div>
+    <div className={`sp-overlay${fadeOut ? " sp-fade-out" : ""}`}>
+      <div className="sp-box">
+        <p className="sp-message">{label}</p>
+        <div className="sp-bar-track">
+          <div className="sp-bar-indeterminate" />
+        </div>
+      </div>
     </div>
   );
 };

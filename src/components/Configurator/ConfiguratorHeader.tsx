@@ -74,11 +74,12 @@ const ConfiguratorHeader: React.FC<ConfiguratorHeaderProps> = ({
         <div className="flex-1 h-[3px] bg-ui-mid" />
 
         <div className="shrink-0 px-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="126"
-            height="30"
-            viewBox="11.06 6 77.51 18.47"
+          <a href="https://www.galameble.com/en/" target="_blank" rel="noopener noreferrer">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="126"
+              height="30"
+              viewBox="11.06 6 77.51 18.47"
             fill="none"
           >
             <path
@@ -126,6 +127,7 @@ const ConfiguratorHeader: React.FC<ConfiguratorHeaderProps> = ({
               fill="#7E7870"
             />
           </svg>
+          </a>
         </div>
 
         <LanguageSwitcher />

@@ -5,7 +5,7 @@ import {
   getModuleSnappingConfig,
   getModuleCategory,
 } from "../context/ConfiguratorContext";
-import { getSnapConfig } from "../data/snapDistances";
+import { getSnapConfig, halfExtentAlong } from "../data/snapDistances";
 
 export interface SnapPreview {
   fromId: string;
@@ -21,6 +21,7 @@ interface SceneInstanceRef {
 interface UseDragAndSnapOptions {
   sceneObjects: SceneInstanceRef[];
   objectPositions: Map<string, [number, number, number]>;
+  objectRotations: Map<string, [number, number, number]>;
   onDragUpdate: (
     instanceId: string,
     position: [number, number, number],
@@ -30,9 +31,19 @@ interface UseDragAndSnapOptions {
   SNAP_DISTANCE?: number;
 }
 
+// World direction of a module's local +X ("right") face after a q·90° Y rotation,
+// as a cardinal [x, z] unit vector. q = [0,1,2,3] → 0/90/180/270°.
+const RIGHT_DIR: [number, number][] = [
+  [1, 0],
+  [0, -1],
+  [-1, 0],
+  [0, 1],
+];
+
 export function useDragAndSnap({
   sceneObjects,
   objectPositions,
+  objectRotations,
   onDragUpdate,
   onSnapPreview,
   onDragStateChange,
@@ -76,6 +87,56 @@ export function useDragAndSnap({
     }
   }
 
+  // Slide the dragged module's footprint out of every other module's footprint
+  // on the XZ plane. Footprints are axis-aligned rectangles derived from each
+  // module's category + 90° rotation quadrant (same data the snap path uses).
+  // Resolution pushes along the axis of least penetration; a few passes let the
+  // module settle when wedged against several neighbours at once.
+  function resolveCollision(
+    draggedId: string,
+    x: number,
+    z: number,
+  ): [number, number] {
+    const dCat = getModuleCategory(draggedId);
+    const dq = quadrant(draggedId);
+    const dHalfX = halfExtentAlong(dCat, dq, "x");
+    const dHalfZ = halfExtentAlong(dCat, dq, "z");
+
+    let px = x;
+    let pz = z;
+
+    for (let pass = 0; pass < 4; pass++) {
+      let moved = false;
+      sceneObjects.forEach((inst, index) => {
+        if (inst.instanceId === draggedId) return;
+
+        const oPos = objectPositions.get(inst.instanceId) || [index * 1.9, 0, 0];
+        const oCat = getModuleCategory(inst.instanceId);
+        const oq = quadrant(inst.instanceId);
+        const sumX = dHalfX + halfExtentAlong(oCat, oq, "x");
+        const sumZ = dHalfZ + halfExtentAlong(oCat, oq, "z");
+
+        const dx = px - oPos[0];
+        const dz = pz - oPos[2];
+        const overlapX = sumX - Math.abs(dx);
+        const overlapZ = sumZ - Math.abs(dz);
+        // No overlap if separated on either axis.
+        if (overlapX <= 0 || overlapZ <= 0) return;
+
+        // Push out along whichever axis needs the smaller correction.
+        if (overlapX < overlapZ) {
+          px += dx >= 0 ? overlapX : -overlapX;
+        } else {
+          pz += dz >= 0 ? overlapZ : -overlapZ;
+        }
+        moved = true;
+      });
+      if (!moved) break;
+    }
+
+    return [px, pz];
+  }
+
   function updateDrag(event: MouseEvent, canvasRect: DOMRect) {
     if (draggedInstanceIdRef.current === null) return;
 
@@ -101,6 +162,17 @@ export function useDragAndSnap({
     intersectionPoint.add(dragOffset.current);
 
     const draggedId = draggedInstanceIdRef.current;
+
+    // Prevent the dragged module from being pushed into another module: clamp
+    // the proposed position so its footprint can't overlap any other module's.
+    const [resolvedX, resolvedZ] = resolveCollision(
+      draggedId,
+      intersectionPoint.x,
+      intersectionPoint.z,
+    );
+    intersectionPoint.x = resolvedX;
+    intersectionPoint.z = resolvedZ;
+
     const draggedSnapping = getModuleSnappingConfig(draggedId);
 
     let closestId: string | null = null;
@@ -151,6 +223,33 @@ export function useDragAndSnap({
     ]);
   }
 
+  // 90° rotation quadrant of a module from its Y rotation: 0/1/2/3 → 0/90/180/270°.
+  function quadrant(instanceId: string): number {
+    const ry = objectRotations.get(instanceId)?.[1] ?? 0;
+    return ((Math.round(ry / (Math.PI / 2)) % 4) + 4) % 4;
+  }
+
+  // World-space directions of a module's ACTIVE snapping faces, accounting for rotation.
+  function worldSideDirs(instanceId: string): [number, number][] {
+    const snapping = getModuleSnappingConfig(instanceId);
+    if (snapping === "none") return [];
+    const right = RIGHT_DIR[quadrant(instanceId)];
+    const left: [number, number] = [-right[0], -right[1]];
+    if (snapping === "both") return [right, left];
+    if (snapping === "right") return [right];
+    if (snapping === "left") return [left];
+    return [];
+  }
+
+  function hasSideFacing(
+    instanceId: string,
+    dir: [number, number],
+  ): boolean {
+    return worldSideDirs(instanceId).some(
+      (s) => s[0] === dir[0] && s[1] === dir[1],
+    );
+  }
+
   function commitSnap(): boolean {
     const draggedId = draggedInstanceIdRef.current;
     const targetId = snapTargetIdRef.current;
@@ -179,34 +278,64 @@ export function useDragAndSnap({
 
     const draggedCat = getModuleCategory(draggedId);
     const targetCat = getModuleCategory(targetId);
+    // getSnapConfig also gates BLOCKED pairs (e.g. light↔light) — keep that for all cases.
     const config = getSnapConfig(draggedCat, targetCat);
     if (!config) return false;
 
-    let snapPos: [number, number, number] | null = null;
+    // World connection axis + sign: the dominant separation axis decides whether the
+    // modules meet left-right (x) or front-back (z); the sign says which side.
+    const axis: "x" | "z" = absX > absZ ? "x" : "z";
+    const delta = axis === "x" ? dx : dz;
+    const sign = delta > 0 ? 1 : -1;
 
-    if (absX > absZ) {
-      // Left-right snapping only
-      const isRight = dx > 0;
-      const draggedSide = isRight ? "left" : "right";
-      const targetSide = isRight ? "right" : "left";
-      const canDragged =
-        draggedSnapping === "both" || draggedSnapping === draggedSide;
-      const canTarget =
-        targetSnapping === "both" || targetSnapping === targetSide;
-      if (canDragged && canTarget) {
-        snapPos = [
-          targetPos[0] + (dx > 0 ? config.xDist : -config.xDist),
-          targetPos[1],
-          targetPos[2] + config.zShift,
-        ];
-      }
+    // Unit vector pointing from the dragged module toward the target (the face that must
+    // be active on the dragged side), and its opposite for the target.
+    const contactFromDragged: [number, number] =
+      axis === "x" ? [-sign, 0] : [0, -sign];
+    const contactFromTarget: [number, number] = [
+      -contactFromDragged[0],
+      -contactFromDragged[1],
+    ];
+
+    // Both modules must present an active snapping face toward the contact (rotation-aware).
+    if (
+      !hasSideFacing(draggedId, contactFromDragged) ||
+      !hasSideFacing(targetId, contactFromTarget)
+    ) {
+      return false;
     }
 
-    if (snapPos) {
-      onDragUpdate(draggedId, snapPos);
-      return true;
+    const qD = quadrant(draggedId);
+    const qT = quadrant(targetId);
+    const perpAxis: "x" | "z" = axis === "x" ? "z" : "x";
+
+    let gap: number;
+    let perpOffset: number;
+    if (qD === 0 && qT === 0 && axis === "x") {
+      // Unrotated row case — preserve the exact hand-tuned table behaviour.
+      gap = config.xDist;
+      perpOffset = config.zShift;
+    } else {
+      // Rotation-aware: derive the center-to-center gap from per-category footprints,
+      // and align centers on the perpendicular axis (corner pairs have zShift 0).
+      gap =
+        halfExtentAlong(draggedCat, qD, axis) +
+        halfExtentAlong(targetCat, qT, axis);
+      perpOffset = 0;
     }
-    return false;
+
+    const snapPos: [number, number, number] = [
+      targetPos[0],
+      targetPos[1],
+      targetPos[2],
+    ];
+    snapPos[axis === "x" ? 0 : 2] =
+      targetPos[axis === "x" ? 0 : 2] + sign * gap;
+    snapPos[perpAxis === "x" ? 0 : 2] =
+      targetPos[perpAxis === "x" ? 0 : 2] + perpOffset;
+
+    onDragUpdate(draggedId, snapPos);
+    return true;
   }
 
   function endDrag() {

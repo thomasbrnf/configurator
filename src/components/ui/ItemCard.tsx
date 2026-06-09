@@ -37,7 +37,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
       onClick={disabled ? undefined : onClick}
       onMouseEnter={disabled ? undefined : () => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`flex flex-col  w-full h-full p-[20px] border-t-[3px] transition-colors ${borderColor} ${
+      className={`flex flex-col  w-full h-full p-[clamp(12px,1.04vw,20px)] border-t-[3px] transition-colors ${borderColor} ${
         disabled ? "cursor-not-allowed" : onClick ? "cursor-pointer" : ""
       }`}
       style={{
@@ -49,7 +49,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
     >
       <div className="flex justify-between">
         <div className="flex flex-col leading-normal min-w-0">
-          <span className="font-lato font-light text-[25px] text-black uppercase">
+          <span className="font-lato font-light text-[clamp(15px,1.3vw,25px)] text-black uppercase">
             {name}
           </span>
         </div>
@@ -70,7 +70,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
         </svg>
       </div>
 
-      <span className="font-lato mt-auto mb-5 font-normal text-[15px] text-ui-dark">
+      <span className="font-lato mt-auto mb-5 font-normal text-[clamp(11px,0.78vw,15px)] text-ui-dark">
         {subtitle}
       </span>
 
@@ -80,7 +80,6 @@ const ItemCard: React.FC<ItemCardProps> = ({
             src={thumbnail}
             alt={name}
             className="absolute inset-0 size-full object-cover"
-            loading="lazy"
           />
         ) : (
           <div className="absolute inset-0 bg-gray-100" />

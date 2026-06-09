@@ -291,7 +291,7 @@
       const key = new THREE.DirectionalLight(0xfff5e8, 1.5);
       key.position.set(-3, 6, 5);
       key.castShadow = true;
-      key.shadow.mapSize.set(1024, 1024);
+      key.shadow.mapSize.set(4096, 4096);
       scene.add(key);
 
       const fill = new THREE.DirectionalLight(0xe8f0ff, 0.6);
@@ -455,9 +455,9 @@
               frameCamera(gltf.scene, info);
 
               // Multiple render passes to let textures and shadows fully settle
-              for (let i = 0; i < 6; i++) renderer.render(scene, camera);
+              for (let i = 0; i < 16; i++) renderer.render(scene, camera);
 
-              resolve(canvas.toDataURL("image/jpeg", 1.0));
+              resolve(canvas.toDataURL("image/webp", 0.92));
             },
             undefined,
             (err) => reject(err),

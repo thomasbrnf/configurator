@@ -42,6 +42,7 @@ interface Translations {
   // Control Panel
   controlPanel: string;
   materials: string;
+  leather: string;
   club: string;
   granit: string;
   addObject: string;
@@ -59,6 +60,7 @@ interface Translations {
   // Breadcrumbs
   home: string;
   moduleSelect: string;
+  setSelect: string;
   editor: string;
 
   // Context Menu
@@ -73,6 +75,10 @@ interface Translations {
   loadingMaterial: string;
   changingMaterial: string;
   loading: string;
+  firstLoadTitle: string;
+  firstLoadModels: string;
+  firstLoadTextures: string;
+  firstLoadDone: string;
 
   // Complete Set Names
   "Sofa 1": string;
@@ -97,9 +103,9 @@ const translations: Record<Language, Translations> = {
     chooseConfigType: "Jak chciałbyś skonfigurować \n swoją sofę?",
     configTypeSubtitle: "Jak chciałbyś skonfigurować swoją sofę?",
     completeSets: "Zestawy",
-    completeSetsDesc: "Wybierz gotowe rozwiązanie",
+    completeSetsDesc: "Wybierz gotowe \n rozwiązanie",
     modules: "Moduły",
-    modulesDesc: "Zaprojektuj swój układ",
+    modulesDesc: "Zaprojektuj \n swój układ",
     selectModules: "Wybierz Moduły",
     selectModulesSubtitle: "Wybierz moduły, które chcesz dodać do swojej sofy",
     addToScene: "STWÓRZ SOFE",
@@ -122,6 +128,7 @@ const translations: Record<Language, Translations> = {
     // Control Panel
     controlPanel: "Panel Sterowania",
     materials: "Materiały",
+    leather: "Skóra",
     club: "Club",
     granit: "Granit",
     addObject: "Dodaj Obiekt",
@@ -131,14 +138,15 @@ const translations: Record<Language, Translations> = {
     material: "Materiał",
 
     // Header
-    sofaConfigurator: "Sofa Konfigurator",
+    sofaConfigurator: "Sofa konfigurator",
 
     // Buttons
     recenter: "Wyśrodkuj",
 
     // Breadcrumbs
-    home: "Start",
+    home: "Home",
     moduleSelect: "Wybór modułów",
+    setSelect: "Zestaw",
     editor: "Edytor",
 
     // Context Menu
@@ -149,10 +157,14 @@ const translations: Record<Language, Translations> = {
     finishRotation: "Zakończ Obracanie",
 
     // Loader
-    loadingObject: "Ładowanie obiektu...",
+    loadingObject: "Ładowanie sofy...",
     loadingMaterial: "Ładowanie materiału...",
     changingMaterial: "Zmienianie materiału...",
     loading: "Ładowanie...",
+    firstLoadTitle: "Przygotowywanie konfiguratora",
+    firstLoadModels: "Pobieranie modeli",
+    firstLoadTextures: "Pobieranie tekstur",
+    firstLoadDone: "Gotowe",
 
     // Complete Set Names
     "Sofa 1": "Kompletna Sofa",
@@ -169,7 +181,7 @@ const translations: Record<Language, Translations> = {
     recenterCamera: "Recenter Camera",
 
     // Header
-    sofaConfigurator: "Sofa Configurator",
+    sofaConfigurator: "Sofa configurator",
 
     // Configurator
     welcome: "Welcome to the configurator",
@@ -178,9 +190,9 @@ const translations: Record<Language, Translations> = {
     chooseConfigType: "How would you like to configure \n your sofa?",
     configTypeSubtitle: "How would you like to configure your sofa?",
     completeSets: "Complete Sets",
-    completeSetsDesc: "Choose a ready-made solution",
+    completeSetsDesc: "Choose a \n ready-made solution",
     modules: "Modules",
-    modulesDesc: "Design your own layout",
+    modulesDesc: "Design \n your own layout",
     selectModules: "Select Modules",
     selectModulesSubtitle: "Choose modules to add to your sofa",
     addToScene: "CREATE SOFA",
@@ -203,6 +215,7 @@ const translations: Record<Language, Translations> = {
     // Control Panel
     controlPanel: "Control Panel",
     materials: "Materials",
+    leather: "Leather",
     club: "Club",
     granit: "Granit",
     addObject: "Add Object",
@@ -217,6 +230,7 @@ const translations: Record<Language, Translations> = {
     // Breadcrumbs
     home: "Home",
     moduleSelect: "Module Select",
+    setSelect: "Set",
     editor: "Editor",
 
     // Context Menu
@@ -227,10 +241,14 @@ const translations: Record<Language, Translations> = {
     finishRotation: "Finish Rotation",
 
     // Loader
-    loadingObject: "Loading object...",
+    loadingObject: "Loading sofa...",
     loadingMaterial: "Loading material...",
     changingMaterial: "Changing material...",
     loading: "Loading...",
+    firstLoadTitle: "Preparing the configurator",
+    firstLoadModels: "Downloading models",
+    firstLoadTextures: "Downloading textures",
+    firstLoadDone: "Done",
 
     // Complete Set Names
     "Sofa 1": "Sofa 1",

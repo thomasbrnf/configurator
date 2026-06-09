@@ -150,3 +150,44 @@ export function getSnapConfig(
   if (BLOCKED.has(key)) return null;
   return TABLE[key] ?? null;
 }
+
+/**
+ * Per-category footprint half-extents, used only for the rotation-aware snap path.
+ * `halfWidth` is half the module's local X extent, `halfDepth` half the local Z extent.
+ *
+ * Seeded by decomposing the pairwise TABLE above (same-category xDist/2 → halfWidth,
+ * zDist/2 → halfDepth). corner / cornerWider — the main rotation targets — decompose
+ * cleanly; light/extralight/thin/standardLong depths are approximate and may need a
+ * small visual tuning pass.
+ */
+export interface ModuleDimensions {
+  halfWidth: number;
+  halfDepth: number;
+}
+
+export const MODULE_DIMENSIONS: Record<ModuleCategory, ModuleDimensions> = {
+  standard: { halfWidth: 0.35, halfDepth: 0.515 },
+  standardLong: { halfWidth: 0.35, halfDepth: 0.515 },
+  wide: { halfWidth: 0.805, halfDepth: 0.6 },
+  light: { halfWidth: 0.21, halfDepth: 0.515 },
+  extralight: { halfWidth: 0.11, halfDepth: 0.385 },
+  thin: { halfWidth: 0.08, halfDepth: 0.385 },
+  corner: { halfWidth: 0.515, halfDepth: 0.515 },
+  cornerWider: { halfWidth: 0.515, halfDepth: 0.515 },
+};
+
+/**
+ * Half-extent a module occupies along a WORLD axis, given its 90° rotation quadrant.
+ *  - quadrant even (0 / 180°): local X ↔ world X, local Z ↔ world Z
+ *  - quadrant odd  (90 / 270°): local X ↔ world Z, local Z ↔ world X
+ */
+export function halfExtentAlong(
+  category: ModuleCategory,
+  quadrant: number,
+  worldAxis: "x" | "z",
+): number {
+  const dims = MODULE_DIMENSIONS[category];
+  const isOdd = quadrant % 2 !== 0;
+  if (worldAxis === "x") return isOdd ? dims.halfDepth : dims.halfWidth;
+  return isOdd ? dims.halfWidth : dims.halfDepth;
+}

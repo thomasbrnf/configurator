@@ -146,9 +146,9 @@ async function main() {
     );
 
     for (const [id, dataURL] of entries) {
-      const b64 = dataURL.replace(/^data:image\/jpeg;base64,/, "");
+      const b64 = dataURL.replace(/^data:image\/webp;base64,/, "");
       const buf = Buffer.from(b64, "base64");
-      const fname = `${id}.jpg`;
+      const fname = `${id}.webp`;
       await writeFile(join(OUT_DIR, fname), buf);
       console.log(`  ✓  ${fname}`);
     }

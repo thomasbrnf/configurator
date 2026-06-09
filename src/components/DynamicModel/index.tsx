@@ -5,6 +5,7 @@ import { useMaterial, availableMaterials } from "../../context/MaterialContext";
 import {
   availableModules,
   availableCompleteSets,
+  useConfigurator,
 } from "../../context/ConfiguratorContext";
 import { useLoaderStore } from "../../store/loaderStore";
 import { extractBaseModuleId } from "../../utils/moduleId";
@@ -24,6 +25,7 @@ export function DynamicModel({
   rotation = [0, 0, 0],
   scale = [1, 1, 1],
 }: DynamicModelProps) {
+  const { registerObjectSize } = useConfigurator();
   const {
     selectedObjectId,
     uvScale,
@@ -68,11 +70,7 @@ export function DynamicModel({
       addObject({
         id: objectId,
         name: modelDefinition?.displayName || objectId,
-        material: objectMaterial || {
-          name: "AMARAL 90",
-          diffuse: `${BASE}materials/AMARAL 90  790  10  32/AMARAL 90_BaseColor.jpg`,
-          normal: `${BASE}materials/AMARAL 90  790  10  32/90_Normal.jpg`,
-        },
+        material: objectMaterial || availableMaterials.cremona[0],
       });
     }
   }, [
@@ -84,10 +82,8 @@ export function DynamicModel({
   ]);
 
   const [diffuseMap, normalMap] = useTexture([
-    objectMaterial?.diffuse ||
-      `${BASE}materials/AMARAL 90  790  10  32/AMARAL 90_BaseColor.jpg`,
-    objectMaterial?.normal ||
-      `${BASE}materials/AMARAL 90  790  10  32/90_Normal.jpg`,
+    objectMaterial?.diffuse || availableMaterials.cremona[0].diffuse,
+    objectMaterial?.normal || availableMaterials.cremona[0].normal,
   ]);
 
   // Hide loader when textures are loaded
@@ -228,6 +224,16 @@ export function DynamicModel({
 
   const groupRef = useRef<THREE.Group>(null);
 
+  // Register this module's bounding box size so duplicateObject can compute safe offsets.
+  useEffect(() => {
+    const box = new THREE.Box3().setFromObject(clonedObject);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    if (size.x > 0) {
+      registerObjectSize(baseModuleId, [size.x, size.y, size.z]);
+    }
+  }, [clonedObject, baseModuleId, registerObjectSize]);
+
   // Re-apply whenever fabricMaterial is recreated (new texture or PBR change)
   useEffect(() => {
     if (groupRef.current) applyMaterials(groupRef.current);
@@ -269,14 +275,9 @@ export function DynamicModel({
   );
 }
 
-// Preload all available models
-availableModules.forEach((module) => {
-  useGLTF.preload(module.modelPath);
-});
-
-availableCompleteSets.forEach((set) => {
-  useGLTF.preload(set.modelPath);
-});
+// Models are NOT preloaded — each GLB is large and is loaded on demand the
+// first time its module/set is rendered (useGLTF inside the component). This
+// keeps the initial page load light; only the selected model is fetched.
 
 // Pre-fetch every material texture into the browser's HTTP cache AND
 // drei's Suspense cache so fabric switches are instant with no flicker.

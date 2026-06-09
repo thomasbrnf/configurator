@@ -8,9 +8,11 @@ import { useLanguage } from "../../context/LanguageContext";
 import { generateInstanceId } from "../../utils/moduleId";
 import ConfiguratorHeader from "./ConfiguratorHeader";
 import ItemCard from "../ui/ItemCard";
+import { useLoaderStore } from "../../store/loaderStore";
 
 const ModuleSelectionStep: React.FC = () => {
   const { t } = useLanguage();
+  const { showLoader, hideLoader } = useLoaderStore();
   const {
     configurationType,
     selectedCompleteSet,
@@ -52,6 +54,8 @@ const ModuleSelectionStep: React.FC = () => {
   };
 
   const handleCompleteSetSelect = (setId: string) => {
+    showLoader("Ładowanie sofy...");
+    setTimeout(hideLoader, 500);
     setSelectedCompleteSet(setId);
     addObjectToScene(setId);
     setCurrentStep("scene");
@@ -92,6 +96,8 @@ const ModuleSelectionStep: React.FC = () => {
   const clearModules = () => setModuleCounts(new Map());
 
   const addModulesToScene = () => {
+    showLoader("Ładowanie sofy...");
+    setTimeout(hideLoader, 500);
     let counter = 0;
     moduleCounts.forEach((count, moduleId) => {
       for (let i = 0; i < count; i++) {
@@ -114,11 +120,11 @@ const ModuleSelectionStep: React.FC = () => {
         />
 
         <div className="pt-[95px] flex flex-col px-[100px] flex-1 text-left overflow-hidden">
-          <div className=" pt-[25px] pb-[35px] shrink-0">
-            <h2 className="font-lato font-medium text-[25px] text-black leading-none">
+          <div className="pt-[clamp(16px,1.3vw,25px)] pb-[clamp(20px,1.82vw,35px)] shrink-0">
+            <h2 className="font-lato font-medium text-[clamp(18px,1.3vw,25px)] text-black leading-none">
               {t.selectCompleteSet}
             </h2>
-            <p className="font-lato font-light text-[20px] text-black leading-normal">
+            <p className="font-lato font-light text-[clamp(15px,1.04vw,20px)] text-black leading-normal">
               {t.selectCompleteSetSubtitle}
             </p>
           </div>
@@ -161,12 +167,12 @@ const ModuleSelectionStep: React.FC = () => {
         breadcrumb={[t.home, t.changeConfigType, t.moduleSelect]}
       />
 
-      <div className="pt-[95px] flex w-full flex-col   px-[100px] flex-1 text-left overflow-hidden">
-        <div className=" pt-[25px] pb-[35px] shrink-0">
-          <h2 className="font-lato font-medium text-[25px] text-black leading-none">
+      <div className="pt-[95px] flex w-full flex-col px-[100px] flex-1 text-left overflow-hidden">
+        <div className="pt-[clamp(16px,1.3vw,25px)] pb-[clamp(20px,1.82vw,35px)] shrink-0">
+          <h2 className="font-lato font-medium text-[clamp(18px,1.3vw,25px)] text-black leading-none">
             {t.selectModulesMultiple}
           </h2>
-     
+
         </div>
 
         <div className="flex-1 overflow-y-auto ">
@@ -214,11 +220,11 @@ const ModuleSelectionStep: React.FC = () => {
           </div>
         </div>
 
-        <div className="h-[88px] bg-white shrink-0 flex items-center justify-center gap-3.75">
+        <div className="h-[clamp(64px,4.6vw,88px)] bg-white shrink-0 flex items-center justify-center gap-3.75">
           <button
             onClick={addModulesToScene}
             disabled={moduleCounts.size === 0}
-            className={`flex items-center justify-center bg-white border-[3px] h-[60px] w-[300px] transition-colors font-lato font-light text-[20px] uppercase ${
+            className={`flex items-center justify-center bg-white border-[3px] h-[clamp(46px,3.13vw,60px)] w-[clamp(200px,15.6vw,300px)] transition-colors font-lato font-light text-[clamp(15px,1.04vw,20px)] uppercase ${
               moduleCounts.size > 0
                 ? "border-[#757575] hover:border-ui-dark text-black  cursor-pointer"
                 : "border-ui-border text-ui-border cursor-not-allowed"
@@ -231,7 +237,7 @@ const ModuleSelectionStep: React.FC = () => {
             onClick={clearModules}
             disabled={moduleCounts.size === 0}
             title={t.clearSelection}
-            className={`flex items-center justify-center bg-white border-[3px] h-[60px] w-[60px] transition-colors ${
+            className={`flex items-center justify-center bg-white border-[3px] h-[clamp(46px,3.13vw,60px)] w-[clamp(46px,3.13vw,60px)] transition-colors ${
               moduleCounts.size > 0
                 ? "border-[#757575] hover:border-ui-dark hover:bg-[#EE4848] hover:text-white cursor-pointer"
                 : "border-ui-border  cursor-not-allowed opacity-40"
