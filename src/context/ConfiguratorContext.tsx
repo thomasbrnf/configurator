@@ -2,6 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useMaterial } from "./MaterialContext";
 import { extractBaseModuleId, generateInstanceId } from "../utils/moduleId";
+import {
+  worldHalfExtent,
+  quadrantFromRotationY,
+  footprintOverlapsAny,
+  resolveFootprintOut,
+  type Footprint,
+} from "../utils/footprint";
 
 function saveSession(key: string, value: unknown) {
   try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
@@ -24,7 +31,7 @@ function entriesToMap<V>(entries: [string, V][]): Map<string, V> {
 
 const SESSION_KEYS = [
   "cfg_step", "cfg_type", "cfg_sceneObjects",
-  "cfg_positions", "cfg_rotations", "camera_state", "mat_objects",
+  "cfg_positions", "cfg_rotations", "cfg_connections", "camera_state", "mat_objects",
 ];
 
 export type ConfigurationStep =
@@ -34,7 +41,14 @@ export type ConfigurationStep =
   | "scene";
 export type ConfigurationType = "complete" | "modules" | null;
 
-export type SnappingSide = "left" | "right" | "both" | "none";
+export type SnappingSide =
+  | "left"
+  | "right"
+  | "both"
+  | "none"
+  | "front"
+  | "left-front"
+  | "right-front";
 export type ModuleCategory =
   | "standard"
   | "standardLong"
@@ -177,7 +191,7 @@ export const availableModules: ModuleDefinition[] = [
     modelPath: `${BASE}models/moduls/EN(2)L.glb`,
     thumbnail: `${BASE}models/thumbnails/EN(2)L.webp`,
     category: "corner",
-    snappingSides: "right",
+    snappingSides: "right-front",
   },
   {
     id: "EN(2)R",
@@ -186,7 +200,7 @@ export const availableModules: ModuleDefinition[] = [
     modelPath: `${BASE}models/moduls/EN(2)R.glb`,
     thumbnail: `${BASE}models/thumbnails/EN(2)R.webp`,
     category: "corner",
-    snappingSides: "left",
+    snappingSides: "left-front",
   },
   {
     id: "KE(70)SL",
@@ -346,6 +360,15 @@ interface ConfiguratorContextType {
     axis: "x" | "y" | "z",
     delta: number,
   ) => void;
+  // Rotate the module 90°, but only if it isn't snapped to another module and
+  // the rotated footprint has room (pushing it clear of neighbours if needed).
+  // Returns false (no-op) when blocked. See tryRotateObject.
+  tryRotateObject: (instanceId: string, direction: "left" | "right") => boolean;
+
+  // Snap connections between modules (unordered pairs). Drives rotation gating.
+  connectModules: (a: string, b: string) => void;
+  disconnectModule: (instanceId: string) => void;
+  isModuleConnected: (instanceId: string) => boolean;
 
   // Object positions (keyed by instanceId) - [x, y, z]
   objectPositions: Map<string, [number, number, number]>;
@@ -396,6 +419,11 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   const [rotationControlId, setRotationControlId] = useState<string | null>(
     null,
   );
+  // Unordered snap-connection pairs, stored as sorted "idA|idB" keys. A module
+  // is "connected" while it appears in any pair; rotation is disabled for it.
+  const [connections, setConnections] = useState<Set<string>>(
+    () => new Set(loadSession<string[]>("cfg_connections", [])),
+  );
   const [objectBoundingSizes, setObjectBoundingSizes] = useState<
     Map<string, [number, number, number]>
   >(new Map());
@@ -414,6 +442,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => saveSession("cfg_sceneObjects", sceneObjects), [sceneObjects]);
   useEffect(() => saveSession("cfg_rotations", mapToEntries(objectRotations)), [objectRotations]);
   useEffect(() => saveSession("cfg_positions", mapToEntries(objectPositions)), [objectPositions]);
+  useEffect(() => saveSession("cfg_connections", Array.from(connections)), [connections]);
 
   const toggleModule = (moduleId: string) => {
     setSelectedModules((prev) => {
@@ -552,6 +581,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
       next.delete(instanceId);
       return next;
     });
+    disconnectModule(instanceId);
     if (rotationControlId === instanceId) {
       setRotationControlId(null);
     }
@@ -618,6 +648,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     setSceneObjects([]);
     setObjectRotations(new Map());
     setObjectPositions(new Map());
+    setConnections(new Set());
     setRotationControlId(null);
   };
 
@@ -661,6 +692,113 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
+  // --- Snap-connection tracking (drives rotation gating) ---
+  const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+
+  const connectModules = (a: string, b: string) => {
+    if (a === b) return;
+    setConnections((prev) => {
+      const key = pairKey(a, b);
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  };
+
+  const disconnectModule = (instanceId: string) => {
+    setConnections((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      prev.forEach((key) => {
+        const sep = key.indexOf("|");
+        if (key.slice(0, sep) === instanceId || key.slice(sep + 1) === instanceId) {
+          changed = true;
+          return;
+        }
+        next.add(key);
+      });
+      return changed ? next : prev;
+    });
+  };
+
+  const isModuleConnected = (instanceId: string): boolean => {
+    for (const key of connections) {
+      const sep = key.indexOf("|");
+      if (key.slice(0, sep) === instanceId || key.slice(sep + 1) === instanceId) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Rotate 90° with the rules: connected modules can't rotate; before rotating,
+  // verify the rotated (X/Z-swapped) footprint has room — if it would overlap a
+  // neighbour, push the module to the nearest clear spot; if it can't be cleared
+  // (boxed in), cancel entirely. Returns whether the rotation was applied.
+  const tryRotateObject = (
+    instanceId: string,
+    direction: "left" | "right",
+  ): boolean => {
+    if (isModuleConnected(instanceId)) return false;
+
+    const delta = direction === "left" ? Math.PI / 2 : -Math.PI / 2;
+    const currentRot = objectRotations.get(instanceId) || [0, 0, 0];
+    const newQuadrant = quadrantFromRotationY(currentRot[1] + delta);
+
+    const effPos = (id: string): [number, number, number] => {
+      const p = objectPositions.get(id);
+      if (p) return p;
+      const idx = sceneObjects.findIndex((o) => o.instanceId === id);
+      return [idx * 1.9, 0, 0];
+    };
+    const sizeOf = (id: string) => objectBoundingSizes.get(extractBaseModuleId(id));
+    const footprintAt = (id: string, quadrant: number): Footprint => {
+      const p = effPos(id);
+      const cat = getModuleCategory(id);
+      const size = sizeOf(id);
+      return {
+        x: p[0],
+        z: p[2],
+        hx: worldHalfExtent(size, cat, quadrant, "x"),
+        hz: worldHalfExtent(size, cat, quadrant, "z"),
+      };
+    };
+
+    const moved = footprintAt(instanceId, newQuadrant);
+    const obstacles = sceneObjects
+      .filter((o) => o.instanceId !== instanceId)
+      .map((o) =>
+        footprintAt(
+          o.instanceId,
+          quadrantFromRotationY((objectRotations.get(o.instanceId) || [0, 0, 0])[1]),
+        ),
+      );
+
+    const pos = effPos(instanceId);
+    let nextPos: [number, number, number] | null = null;
+    if (footprintOverlapsAny(moved, obstacles)) {
+      const cleared = resolveFootprintOut(moved, obstacles);
+      if (!cleared) return false; // boxed in — no room to rotate
+      nextPos = [cleared[0], pos[1], cleared[1]];
+    }
+
+    if (nextPos) {
+      setObjectPositions((prev) => {
+        const next = new Map(prev);
+        next.set(instanceId, nextPos!);
+        return next;
+      });
+    }
+    setObjectRotations((prev) => {
+      const next = new Map(prev);
+      const cur = next.get(instanceId) || [0, 0, 0];
+      next.set(instanceId, [cur[0], cur[1] + delta, cur[2]]);
+      return next;
+    });
+    return true;
+  };
+
   const setObjectPosition = (
     instanceId: string,
     position: [number, number, number],
@@ -682,6 +820,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     setSceneObjects([]);
     setObjectRotations(new Map());
     setObjectPositions(new Map());
+    setConnections(new Set());
     setRotationControlId(null);
   };
 
@@ -708,6 +847,10 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         setObjectRotation,
         rotateObject,
         updateObjectRotation,
+        tryRotateObject,
+        connectModules,
+        disconnectModule,
+        isModuleConnected,
         objectPositions,
         setObjectPosition,
         rotationControlId,

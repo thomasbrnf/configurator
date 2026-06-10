@@ -1,24 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
-import { availableModules, availableCompleteSets } from "../../context/ConfiguratorContext";
-import { availableMaterials } from "../../context/MaterialContext";
+import { availableMaterials, lowResUrl, thumbUrl } from "../../context/MaterialContext";
 import "./first-time-loader.css";
 
 const STORAGE_KEY = "gala_configurator_visited";
 
-function getModelUrls(): string[] {
-  const mods = availableModules.map((m) => m.modelPath);
-  const sets = availableCompleteSets.map((s) => s.modelPath);
-  return [...mods, ...sets];
-}
-
+// Warm only the light asset tiers: 256px swatch thumbs (~0.6 MB total) and the
+// 1K diffuse/normal maps the 3D model actually uses (~30 MB total). The large
+// 2K originals (modal preview) and the GLB models are loaded on demand instead
+// of bulk-downloaded behind this gate.
 function getTextureUrls(): string[] {
   const seen = new Set<string>();
   const urls: string[] = [];
+  const add = (url: string) => {
+    if (!seen.has(url)) { seen.add(url); urls.push(url); }
+  };
   for (const group of Object.values(availableMaterials)) {
     for (const mat of group) {
-      if (!seen.has(mat.diffuse)) { seen.add(mat.diffuse); urls.push(mat.diffuse); }
-      if (!seen.has(mat.normal)) { seen.add(mat.normal); urls.push(mat.normal); }
+      add(thumbUrl(mat.diffuse));
+      add(lowResUrl(mat.diffuse));
+      add(lowResUrl(mat.normal));
     }
   }
   return urls;
@@ -29,7 +30,7 @@ function getTextureUrls(): string[] {
 export default function FirstTimeLoader() {
   const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
-  const [phase, setPhase] = useState<"models" | "textures" | "done">("models");
+  const [phase, setPhase] = useState<"textures" | "done">("textures");
   const [current, setCurrent] = useState(0);
   const [total, setTotal] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
@@ -43,21 +44,10 @@ export default function FirstTimeLoader() {
 
     setVisible(true);
 
-    const modelUrls = getModelUrls();
     const textureUrls = getTextureUrls();
 
     async function run() {
-      // Phase 1: models
-      setPhase("models");
-      setTotal(modelUrls.length);
-      setCurrent(0);
-      let done = 0;
-      for (const url of modelUrls) {
-        try { await fetch(url); } catch {}
-        setCurrent(++done);
-      }
-
-      // Phase 2: textures (batched)
+      // Warm the light texture tiers (batched). Models load on demand.
       setPhase("textures");
       setTotal(textureUrls.length);
       setCurrent(0);
@@ -86,11 +76,7 @@ export default function FirstTimeLoader() {
   if (!visible) return null;
 
   const phaseLabel =
-    phase === "models"
-      ? t.firstLoadModels
-      : phase === "textures"
-        ? t.firstLoadTextures
-        : t.firstLoadDone;
+    phase === "textures" ? t.firstLoadTextures : t.firstLoadDone;
 
   const progress = total > 0 ? Math.round((current / total) * 100) : 0;
 

@@ -31,10 +31,26 @@ export interface MaterialLibrary {
   puente: MaterialDefinition[];
 }
 
+/** Per-object surface tuning. Each scene object owns its own copy so two
+ *  modules with different fabrics keep independent looks. */
+export interface PbrSettings {
+  uvScale: number;
+  normalScale: number;
+  metalness: number;
+  roughness: number;
+  sheen: number;
+  sheenRoughness: number;
+  envMapIntensity: number;
+  aoMapIntensity: number;
+}
+
 export interface SceneObject {
   id: string;
   name: string;
   material: MaterialDefinition;
+  /** Surface tuning for this object. Seeded from the material-family defaults
+   *  when the object is added or its material changes. */
+  pbr?: PbrSettings;
 }
 
 interface MaterialContextType {
@@ -51,6 +67,11 @@ interface MaterialContextType {
   clearObjects: () => void;
   getObjectMaterial: (id: string) => MaterialDefinition | undefined;
   setObjectMaterial: (id: string, material: MaterialDefinition) => void;
+  /** Resolved PBR for an object — its stored override, or the family defaults
+   *  derived from its current material when no override exists yet. */
+  getObjectPbr: (id: string) => PbrSettings;
+  /** Patch the stored PBR for an object (used by the Leva tuning panel). */
+  setObjectPbr: (id: string, patch: Partial<PbrSettings>) => void;
 
   uvScale: number;
   setUvScale: (scale: number) => void;
@@ -345,6 +366,19 @@ export const availableMaterials: MaterialLibrary = {
   ],
 };
 
+// Texture variant helpers. The paths above point at the original 2048px
+// BaseColor/Normal maps. At build-prep time we generate sibling files:
+//   *_1k.webp    — 1024px, used on the 3D model. The model tiles each texture
+//                  16-20x (see uvScale), so 1K is more on-surface detail than
+//                  any screen can resolve.
+//   *_thumb.webp — 256px, used for the swatch grid in the materials panel.
+// The original 2K diffuse is loaded only for the large modal preview, where
+// fabric quality is actually inspected (one image at a time, on demand).
+export const lowResUrl = (tex: string): string =>
+  tex.replace(/\.webp$/, "_1k.webp");
+export const thumbUrl = (diffuse: string): string =>
+  diffuse.replace(/\.webp$/, "_thumb.webp");
+
 export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -378,7 +412,10 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   const addObject = (object: SceneObject) => {
     setObjects((prev) => {
       if (prev.some((o) => o.id === object.id)) return prev;
-      return [...prev, object];
+      return [
+        ...prev,
+        { ...object, pbr: object.pbr ?? defaultPbrForMaterial(object.material.name) },
+      ];
     });
   };
 
@@ -400,8 +437,36 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const setObjectMaterial = (id: string, material: MaterialDefinition) => {
+    // Changing the fabric re-seeds this object's surface tuning from the new
+    // material family's defaults, so each (module, material) pair gets the
+    // look intended for that fabric.
     setObjects((prev) =>
-      prev.map((obj) => (obj.id === id ? { ...obj, material } : obj)),
+      prev.map((obj) =>
+        obj.id === id
+          ? { ...obj, material, pbr: defaultPbrForMaterial(material.name) }
+          : obj,
+      ),
+    );
+  };
+
+  const getObjectPbr = (id: string): PbrSettings => {
+    const obj = objects.find((o) => o.id === id);
+    return obj?.pbr ?? defaultPbrForMaterial(obj?.material.name ?? "");
+  };
+
+  const setObjectPbr = (id: string, patch: Partial<PbrSettings>) => {
+    setObjects((prev) =>
+      prev.map((obj) =>
+        obj.id === id
+          ? {
+              ...obj,
+              pbr: {
+                ...(obj.pbr ?? defaultPbrForMaterial(obj.material.name)),
+                ...patch,
+              },
+            }
+          : obj,
+      ),
     );
   };
 
@@ -418,6 +483,8 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
         clearObjects,
         getObjectMaterial,
         setObjectMaterial,
+        getObjectPbr,
+        setObjectPbr,
         uvScale,
         setUvScale,
         normalScale,
@@ -547,6 +614,26 @@ export function getMaterialFamily(
   const lower = materialName.toLowerCase();
   const families = Object.keys(availableMaterials) as (keyof MaterialLibrary)[];
   return families.find((f) => lower.startsWith(f)) ?? null;
+}
+
+// aoMapIntensity isn't material-family specific, so it has no per-family entry;
+// every object starts from this uniform default.
+const DEFAULT_AO_MAP_INTENSITY = 0.7;
+
+/** Build a fresh PBR settings object from a material's family defaults. */
+export function defaultPbrForMaterial(materialName: string): PbrSettings {
+  const family = getMaterialFamily(materialName) ?? "amaral";
+  const d = MATERIAL_PBR_DEFAULTS[family];
+  return {
+    uvScale: d.uvScale,
+    normalScale: d.normalScale,
+    metalness: d.metalness ?? 0,
+    roughness: d.roughness,
+    sheen: d.sheen,
+    sheenRoughness: d.sheenRoughness,
+    envMapIntensity: d.envMapIntensity,
+    aoMapIntensity: DEFAULT_AO_MAP_INTENSITY,
+  };
 }
 
 export const useMaterial = () => {

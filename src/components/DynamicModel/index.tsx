@@ -1,7 +1,11 @@
 import { useGLTF, useTexture } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { useMaterial, availableMaterials } from "../../context/MaterialContext";
+import {
+  useMaterial,
+  availableMaterials,
+  lowResUrl,
+} from "../../context/MaterialContext";
 import {
   availableModules,
   availableCompleteSets,
@@ -11,6 +15,44 @@ import { useLoaderStore } from "../../store/loaderStore";
 import { extractBaseModuleId } from "../../utils/moduleId";
 
 const BASE = import.meta.env.BASE_URL;
+
+// ── Selection outline ───────────────────────────────────────────────────────
+// A solid, opaque outline for the selected module. Rendered as an inside-out
+// hull (BackSide) INFLATED ALONG VERTEX NORMALS — not scaled — so the outline
+// keeps a uniform thickness and never shifts relative to the model's pivot
+// (scaling a clone pushes off-pivot parts like the legs out of place). The
+// object itself occludes the shell, leaving only a clean rim visible.
+const SELECTION_OUTLINE_COLOR = "#7E7870";
+const SELECTION_OUTLINE_THICKNESS = 0.007; // outline thickness, in model units
+
+const outlineVertexShader = /* glsl */ `
+  uniform float uThickness;
+  void main() {
+    // Push each vertex out along its own normal → uniform, pivot-independent shell.
+    vec3 inflated = position + normal * uThickness;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(inflated, 1.0);
+  }
+`;
+
+const outlineFragmentShader = /* glsl */ `
+  uniform vec3 uColor;
+  void main() {
+    gl_FragColor = vec4(uColor, 1.0);
+  }
+`;
+
+function createOutlineMaterial(): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(SELECTION_OUTLINE_COLOR) },
+      uThickness: { value: SELECTION_OUTLINE_THICKNESS },
+    },
+    vertexShader: outlineVertexShader,
+    fragmentShader: outlineFragmentShader,
+    side: THREE.BackSide,
+    toneMapped: false,
+  });
+}
 
 interface DynamicModelProps {
   objectId: string;
@@ -28,15 +70,8 @@ export function DynamicModel({
   const { registerObjectSize } = useConfigurator();
   const {
     selectedObjectId,
-    uvScale,
-    normalScale,
-    metalness,
-    roughness,
-    sheen,
-    sheenRoughness,
-    envMapIntensity,
-    aoMapIntensity,
     getObjectMaterial,
+    getObjectPbr,
     addObject,
     objects,
   } = useMaterial();
@@ -82,8 +117,8 @@ export function DynamicModel({
   ]);
 
   const [diffuseMap, normalMap] = useTexture([
-    objectMaterial?.diffuse || availableMaterials.cremona[0].diffuse,
-    objectMaterial?.normal || availableMaterials.cremona[0].normal,
+    lowResUrl(objectMaterial?.diffuse || availableMaterials.cremona[0].diffuse),
+    lowResUrl(objectMaterial?.normal || availableMaterials.cremona[0].normal),
   ]);
 
   // Hide loader when textures are loaded
@@ -97,7 +132,15 @@ export function DynamicModel({
     }
   }, [diffuseMap, normalMap, isLoading]);
 
-  const effectiveUvScale = modelDefinition?.uvScale ?? uvScale;
+  // ── Per-object PBR resolution ───────────────────────────────────────────
+  // Each module reads ITS OWN stored surface tuning, seeded from its material's
+  // family defaults and persisted per object. This is what lets two modules
+  // with different fabrics keep their own uvScale / normal / sheen etc. —
+  // selecting or tuning one no longer touches the look of the others. The Leva
+  // panel writes only to the currently selected object's stored PBR (see Scene).
+  const pbr = getObjectPbr(objectId);
+
+  const effectiveUvScale = modelDefinition?.uvScale ?? pbr.uvScale;
 
   // Single PBR material applied only to the Sofa_Fabric mesh
   const fabricMaterial = useMemo(() => {
@@ -127,15 +170,15 @@ export function DynamicModel({
     const mat = new THREE.MeshPhysicalMaterial({
       map: diffuse,
       normalMap: normal,
-      normalScale: new THREE.Vector2(normalScale, normalScale),
+      normalScale: new THREE.Vector2(pbr.normalScale, pbr.normalScale),
       aoMap: srcFabric?.aoMap ?? null,
-      aoMapIntensity: srcFabric?.aoMap ? aoMapIntensity : 0,
-      roughness,
-      metalness,
-      sheen,
-      sheenRoughness,
+      aoMapIntensity: srcFabric?.aoMap ? pbr.aoMapIntensity : 0,
+      roughness: pbr.roughness,
+      metalness: pbr.metalness,
+      sheen: pbr.sheen,
+      sheenRoughness: pbr.sheenRoughness,
       sheenColor: new THREE.Color(1, 1, 1),
-      envMapIntensity,
+      envMapIntensity: pbr.envMapIntensity,
     });
 
     return mat;
@@ -143,13 +186,13 @@ export function DynamicModel({
     diffuseMap,
     normalMap,
     effectiveUvScale,
-    normalScale,
-    metalness,
-    roughness,
-    sheen,
-    sheenRoughness,
-    envMapIntensity,
-    aoMapIntensity,
+    pbr.normalScale,
+    pbr.metalness,
+    pbr.roughness,
+    pbr.sheen,
+    pbr.sheenRoughness,
+    pbr.envMapIntensity,
+    pbr.aoMapIntensity,
     materials,
   ]);
 
@@ -165,26 +208,26 @@ export function DynamicModel({
   }, [effectiveUvScale, fabricMaterial]);
 
   useEffect(() => {
-    fabricMaterial.normalScale?.set(normalScale, normalScale);
+    fabricMaterial.normalScale?.set(pbr.normalScale, pbr.normalScale);
     fabricMaterial.needsUpdate = true;
-  }, [normalScale, fabricMaterial]);
+  }, [pbr.normalScale, fabricMaterial]);
 
   useEffect(() => {
     const m = fabricMaterial as THREE.MeshPhysicalMaterial;
-    m.metalness = metalness;
-    m.roughness = roughness;
-    m.sheen = sheen;
-    m.sheenRoughness = sheenRoughness;
-    m.envMapIntensity = envMapIntensity;
-    if (m.aoMap) m.aoMapIntensity = aoMapIntensity;
+    m.metalness = pbr.metalness;
+    m.roughness = pbr.roughness;
+    m.sheen = pbr.sheen;
+    m.sheenRoughness = pbr.sheenRoughness;
+    m.envMapIntensity = pbr.envMapIntensity;
+    if (m.aoMap) m.aoMapIntensity = pbr.aoMapIntensity;
     m.needsUpdate = true;
   }, [
-    metalness,
-    roughness,
-    sheen,
-    sheenRoughness,
-    envMapIntensity,
-    aoMapIntensity,
+    pbr.metalness,
+    pbr.roughness,
+    pbr.sheen,
+    pbr.sheenRoughness,
+    pbr.envMapIntensity,
+    pbr.aoMapIntensity,
     fabricMaterial,
   ]);
 
@@ -224,9 +267,47 @@ export function DynamicModel({
 
   const groupRef = useRef<THREE.Group>(null);
 
-  // Register this module's bounding box size so duplicateObject can compute safe offsets.
+  // Selection outline: one shared shader material + a pre-built hull clone that
+  // all wear it. Built once per model geometry, shown only while selected.
+  const outlineMaterial = useMemo(() => createOutlineMaterial(), []);
+  const outlineHull = useMemo(() => {
+    const hull = clonedObject.clone();
+    hull.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = outlineMaterial;
+        child.castShadow = false;
+        child.receiveShadow = false;
+        child.userData.isSelectionOutline = true;
+      }
+    });
+    return hull;
+  }, [clonedObject, outlineMaterial]);
+
+  // Register this module's real bounding-box size. Used both for duplicateObject
+  // offsets and for the collision-footprint debug overlay / sizing.
+  //
+  // Measured in the clone's OWN local frame (not world space): we fold each
+  // mesh's geometry box through its transform relative to clonedObject, so the
+  // parent group's 90° rotation never leaks into the numbers. That keeps the
+  // size rotation-independent — a session-restored, already-rotated module
+  // reports the same intrinsic [x, y, z] as a freshly spawned one. The
+  // selection-outline clone is skipped so it can't inflate the box.
   useEffect(() => {
-    const box = new THREE.Box3().setFromObject(clonedObject);
+    clonedObject.updateWorldMatrix(true, true);
+    const inv = clonedObject.matrixWorld.clone().invert();
+    const box = new THREE.Box3();
+    const childBox = new THREE.Box3();
+    const toLocal = new THREE.Matrix4();
+    clonedObject.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry || mesh.userData.isSelectionOutline)
+        return;
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      childBox.copy(mesh.geometry.boundingBox!);
+      toLocal.multiplyMatrices(inv, mesh.matrixWorld);
+      childBox.applyMatrix4(toLocal);
+      box.union(childBox);
+    });
     const size = new THREE.Vector3();
     box.getSize(size);
     if (size.x > 0) {
@@ -248,29 +329,7 @@ export function DynamicModel({
       userData={{ objectId }}
     >
       <primitive object={clonedObject} dispose={null} />
-      {isSelected && (
-        <primitive
-          object={clonedObject.clone()}
-          scale={[1, 1.01, 1]}
-          ref={(ref: THREE.Object3D) => {
-            if (ref) {
-              const selectionMaterial = new THREE.MeshBasicMaterial({
-                color: "#757575",
-                side: THREE.BackSide,
-                transparent: true,
-                opacity: 1,
-              });
-
-              ref.traverse((child: THREE.Object3D) => {
-                if (child instanceof THREE.Mesh) {
-                  child.material = selectionMaterial;
-                  child.userData.isSelectionOutline = true;
-                }
-              });
-            }
-          }}
-        />
-      )}
+      {isSelected && <primitive object={outlineHull} />}
     </group>
   );
 }
@@ -279,17 +338,27 @@ export function DynamicModel({
 // first time its module/set is rendered (useGLTF inside the component). This
 // keeps the initial page load light; only the selected model is fetched.
 
-// Pre-fetch every material texture into the browser's HTTP cache AND
-// drei's Suspense cache so fabric switches are instant with no flicker.
-// Native Image elements force the browser to fully download + decode each
-// file now; when THREE.js requests the same URL later it is served from
-// memory without any network round-trip.
-Object.values(availableMaterials)
-  .flat()
-  .forEach(({ diffuse, normal }) => {
-    useTexture.preload([diffuse, normal]);
-    [diffuse, normal].forEach((src) => {
-      const img = new Image();
-      img.src = src;
+// Warm the material-texture cache so fabric switches are instant with no
+// flicker — but do it AFTER the initial paint, during browser idle time.
+// Running it eagerly at module load fires ~90 MB of texture requests that
+// saturate the connection pool and starve the first model + texture the user
+// actually needs to see, making the page feel very slow to appear.
+function warmMaterialTextures() {
+  Object.values(availableMaterials)
+    .flat()
+    .forEach(({ diffuse, normal }) => {
+      // Warm the same 1K maps the model actually uses, not the 2K originals.
+      useTexture.preload([lowResUrl(diffuse), lowResUrl(normal)]);
     });
-  });
+}
+
+if (typeof window !== "undefined") {
+  const ric = (window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  }).requestIdleCallback;
+  if (ric) {
+    ric(warmMaterialTextures, { timeout: 5000 });
+  } else {
+    window.setTimeout(warmMaterialTextures, 3000);
+  }
+}

@@ -3,6 +3,7 @@ import {
   Environment,
   OrbitControls,
   Line,
+  Edges,
 } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useControls, folder, Leva } from "leva";
@@ -18,17 +19,18 @@ import {
   useContext,
   useMemo,
 } from "react";
-import {
-  useMaterial,
-  MATERIAL_PBR_DEFAULTS,
-  getMaterialFamily,
-} from "../../context/MaterialContext";
+import { useMaterial } from "../../context/MaterialContext";
 
 function saveSession(key: string, value: unknown) {
   try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
 }
 
-import { useConfigurator } from "../../context/ConfiguratorContext";
+import {
+  useConfigurator,
+  getModuleCategory,
+} from "../../context/ConfiguratorContext";
+import { halfExtentAlong } from "../../data/snapDistances";
+import { extractBaseModuleId } from "../../utils/moduleId";
 import { useLanguage } from "../../context/LanguageContext";
 import { useLoaderStore } from "../../store/loaderStore";
 import { useObjectSelection } from "../../hooks/useObjectSelection";
@@ -449,7 +451,15 @@ function CameraCollisionConstraint({
     const controls = orbitControlsRef.current;
     if (!controls) return;
 
+    // Re-entrancy guard: controls.update() at the end synchronously re-dispatches
+    // the "change" event, re-entering this handler. If update() leaves the camera
+    // inside a sphere (overlapping spheres it can't escape in one shot, or update()
+    // repositioning it back), the correction would recurse without bound and blow
+    // the stack ("Maximum call stack size exceeded"). The guard lets the first
+    // correction run and applies update() once; the re-entrant change is ignored.
+    let correcting = false;
     const handleChange = () => {
+      if (correcting) return;
       const spheres = spheresRef.current;
       if (spheres.length === 0) return;
 
@@ -481,9 +491,13 @@ function CameraCollisionConstraint({
       }
 
       // Re-sync controls so the corrected position sticks without jitter. This
-      // may re-dispatch "change", but the camera is now outside every sphere so
-      // the re-entrant call breaks immediately — no infinite loop.
-      if (corrected) controls.update();
+      // re-dispatches "change", but the guard above swallows the re-entrant call,
+      // so a single change event can correct at most once — no infinite loop.
+      if (corrected) {
+        correcting = true;
+        controls.update();
+        correcting = false;
+      }
     };
 
     controls.addEventListener("change", handleChange);
@@ -538,7 +552,13 @@ function ClickHandler({
 }) {
   const { gl, scene } = useThree();
   const { selectedObjectId, setSelectedObjectId } = useMaterial();
-  const { objectPositions, objectRotations } = useConfigurator();
+  const {
+    objectPositions,
+    objectRotations,
+    objectBoundingSizes,
+    connectModules,
+    disconnectModule,
+  } = useConfigurator();
 
   const isRotatingRef = useRef(false);
   const mouseDownRef = useRef<{ x: number; y: number } | null>(null);
@@ -555,9 +575,12 @@ function ClickHandler({
     sceneObjects,
     objectPositions,
     objectRotations,
+    objectBoundingSizes,
     onDragUpdate,
     onSnapPreview,
     onDragStateChange,
+    onConnect: connectModules,
+    onDisconnect: disconnectModule,
   });
 
   useEffect(() => {
@@ -742,9 +765,141 @@ function SnapIndicator({
   );
 }
 
+// Debug overlay: draws each module's collision footprint as a translucent,
+// axis-aligned box.
+//
+// When the model's real bounding box has been measured (objectBoundingSizes,
+// registered by DynamicModel from the actual geometry) we draw THAT — true
+// width / depth / height, no hand-tuning. The X/Z extents are swapped for the
+// 90° rotation quadrant so the box stays axis-aligned with the world like the
+// collision test does. We fall back to the per-category MODULE_DIMENSIONS table
+// (with a token height) only until the measurement lands on first load.
+const FALLBACK_BOX_HEIGHT = 0.7;
+
+// Per-face colours in three.js BoxGeometry group order: +X, -X, +Y, -Y, +Z, -Z.
+const COLLISION_FACE_COLORS = [
+  "#ff3b30", // +X  right   (red)
+  "#34c759", // -X  left    (green)
+  "#0a84ff", // +Y  top     (blue)
+  "#ffd60a", // -Y  bottom  (yellow)
+  "#ff2d95", // +Z  front   (magenta)
+  "#00e5ff", // -Z  back    (cyan)
+] as const;
+
+function CollisionDebugBox({
+  position,
+  rotationY,
+  category,
+  measuredSize,
+  opacity,
+}: {
+  position: [number, number, number];
+  rotationY: number;
+  category: ReturnType<typeof getModuleCategory>;
+  measuredSize?: [number, number, number];
+  opacity: number;
+}) {
+  // Same quadrant math the snap hook uses: round Y rotation to 0/90/180/270°.
+  const quadrant = ((Math.round(rotationY / (Math.PI / 2)) % 4) + 4) % 4;
+  const isOdd = quadrant % 2 !== 0;
+
+  let width: number;
+  let depth: number;
+  let height: number;
+  if (measuredSize) {
+    // Real geometry. Odd quadrants put local depth along world-X and vice versa.
+    width = isOdd ? measuredSize[2] : measuredSize[0];
+    depth = isOdd ? measuredSize[0] : measuredSize[2];
+    height = measuredSize[1];
+  } else {
+    width = halfExtentAlong(category, quadrant, "x") * 2;
+    depth = halfExtentAlong(category, quadrant, "z") * 2;
+    height = FALLBACK_BOX_HEIGHT;
+  }
+
+  return (
+    // Box is axis-aligned and sits on the ground (centre lifted by half height).
+    <group position={[position[0], height / 2, position[2]]}>
+      <mesh>
+        <boxGeometry args={[width, height, depth]} />
+        {/* One material per BoxGeometry face group, in three.js's fixed order.
+            The box never rotates with the model, so each colour is a fixed
+            WORLD direction — use these to orient yourself while fine-tuning:
+              +X red   = world right      -X green  = world left
+              +Y blue  = top              -Y yellow = bottom (on the floor)
+              +Z magenta = world front    -Z cyan   = world back            */}
+        {COLLISION_FACE_COLORS.map((color, i) => (
+          <meshBasicMaterial
+            key={i}
+            attach={`material-${i}`}
+            color={color}
+            transparent
+            opacity={opacity}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        ))}
+        <Edges color="#ffffff" />
+      </mesh>
+    </group>
+  );
+}
+
+// Debug overlay: draws the camera-collision boundary sphere for a module — the
+// exact sphere CameraCollision pushes the orbit camera out of. The radius is
+// half the model's 3D bounding-box diagonal × 1.05 padding (matching
+// Box3.getBoundingSphere there); because 90° rotations only permute the axes,
+// the diagonal — and therefore the radius — is rotation-invariant. The centre
+// sits at the module's [x, z] lifted to half its height (it rests on the floor).
+function CameraSphereDebug({
+  position,
+  category,
+  rotationY,
+  measuredSize,
+  opacity,
+}: {
+  position: [number, number, number];
+  category: ReturnType<typeof getModuleCategory>;
+  rotationY: number;
+  measuredSize?: [number, number, number];
+  opacity: number;
+}) {
+  let width: number;
+  let height: number;
+  let depth: number;
+  if (measuredSize) {
+    [width, height, depth] = measuredSize;
+  } else {
+    const quadrant = ((Math.round(rotationY / (Math.PI / 2)) % 4) + 4) % 4;
+    width = halfExtentAlong(category, quadrant, "x") * 2;
+    depth = halfExtentAlong(category, quadrant, "z") * 2;
+    height = FALLBACK_BOX_HEIGHT;
+  }
+
+  const radius =
+    0.5 * Math.sqrt(width * width + height * height + depth * depth) * 1.05;
+
+  return (
+    <mesh position={[position[0], height / 2, position[2]]}>
+      <sphereGeometry args={[radius, 24, 16]} />
+      <meshBasicMaterial
+        color="#00e5ff"
+        wireframe
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 // Component to render all objects in the scene
 function SceneObjects({
   snapPreview,
+  showCollisionBoxes,
+  collisionBoxOpacity,
+  showCameraSpheres,
+  cameraSphereOpacity,
 }: {
   snapPreview: {
     fromId: string;
@@ -752,8 +907,17 @@ function SceneObjects({
     fromPos: [number, number, number];
     toPos: [number, number, number];
   } | null;
+  showCollisionBoxes: boolean;
+  collisionBoxOpacity: number;
+  showCameraSpheres: boolean;
+  cameraSphereOpacity: number;
 }) {
-  const { sceneObjects, objectRotations, objectPositions } = useConfigurator();
+  const {
+    sceneObjects,
+    objectRotations,
+    objectPositions,
+    objectBoundingSizes,
+  } = useConfigurator();
 
   return (
     <>
@@ -763,13 +927,36 @@ function SceneObjects({
           0,
           0,
         ];
+        const rotation = objectRotations.get(inst.instanceId) || [0, 0, 0];
         return (
           <group key={inst.instanceId}>
             <DynamicModel
               objectId={inst.instanceId}
               position={position as [number, number, number]}
-              rotation={objectRotations.get(inst.instanceId) || [0, 0, 0]}
+              rotation={rotation as [number, number, number]}
             />
+            {showCollisionBoxes && (
+              <CollisionDebugBox
+                position={position as [number, number, number]}
+                rotationY={rotation[1]}
+                category={getModuleCategory(inst.instanceId)}
+                measuredSize={objectBoundingSizes.get(
+                  extractBaseModuleId(inst.instanceId),
+                )}
+                opacity={collisionBoxOpacity}
+              />
+            )}
+            {showCameraSpheres && (
+              <CameraSphereDebug
+                position={position as [number, number, number]}
+                rotationY={rotation[1]}
+                category={getModuleCategory(inst.instanceId)}
+                measuredSize={objectBoundingSizes.get(
+                  extractBaseModuleId(inst.instanceId),
+                )}
+                opacity={cameraSphereOpacity}
+              />
+            )}
           </group>
         );
       })}
@@ -787,17 +974,10 @@ function SceneObjects({
 
 const Scene = () => {
   const {
-    setUvScale,
-    setNormalScale,
-    setMetalness,
-    setRoughness,
-    setSheen,
-    setSheenRoughness,
-    setEnvMapIntensity,
-    setAoMapIntensity,
     selectedObjectId,
     currentMaterial,
-    objects: materialObjects,
+    getObjectPbr,
+    setObjectPbr,
   } = useMaterial();
   const {
     sceneObjects,
@@ -866,8 +1046,6 @@ const Scene = () => {
     setIsDraggingObject(isDragging);
   };
 
-  const currentFamily = getMaterialFamily(currentMaterial.name) ?? "amaral";
-
   const [matControls, setMatControls] = useControls(() => ({
     Material: folder(
       {
@@ -904,20 +1082,36 @@ const Scene = () => {
           label: "AO Intensity",
         },
       },
-      { collapsed: false },
+      { collapsed: true },
     ),
   }));
 
-  // Push slider values into MaterialContext whenever the user moves a slider
+  // Leva tuning writes ONLY to the currently selected object's stored PBR, so
+  // moving a slider never touches any other module. With nothing selected the
+  // panel is inert.
+  //
+  // IMPORTANT: this effect intentionally depends on the matControls values
+  // ONLY — never on selectedObjectId. When the selection changes, the load
+  // effect below sets the sliders to the new object's values; on that same
+  // commit the sliders still briefly hold the PREVIOUS object's values. If we
+  // also re-ran this writer on selectedObjectId, it would fire first and write
+  // those stale previous-object values into the newly selected object, making
+  // its uvScale flicker before settling. By keying only on slider movement we
+  // write only on real user edits, targeting whatever object is selected at
+  // that moment.
   useEffect(() => {
-    setUvScale(matControls.uvScale);
-    setNormalScale(matControls.normalStrength);
-    setMetalness(matControls.metalness);
-    setRoughness(matControls.roughness);
-    setSheen(matControls.sheen);
-    setSheenRoughness(matControls.sheenRoughness);
-    setEnvMapIntensity(matControls.envMapIntensity);
-    setAoMapIntensity(matControls.aoMapIntensity);
+    if (!selectedObjectId) return;
+    setObjectPbr(selectedObjectId, {
+      uvScale: matControls.uvScale,
+      normalScale: matControls.normalStrength,
+      metalness: matControls.metalness,
+      roughness: matControls.roughness,
+      sheen: matControls.sheen,
+      sheenRoughness: matControls.sheenRoughness,
+      envMapIntensity: matControls.envMapIntensity,
+      aoMapIntensity: matControls.aoMapIntensity,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     matControls.uvScale,
     matControls.normalStrength,
@@ -929,44 +1123,24 @@ const Scene = () => {
     matControls.aoMapIntensity,
   ]);
 
-  // Reset sliders to per-family defaults when the material family changes,
-  // but not on deselect (selectedObjectId null causes currentMaterial to fall
-  // back to the amaral default, which would incorrectly clobber the sliders).
+  // Load the selected object's stored PBR into the sliders when the selection
+  // changes, or when its material changes (which re-seeds its defaults). This
+  // is what makes the panel reflect the object you're actually looking at.
   useEffect(() => {
     if (!selectedObjectId) return;
-    const d = MATERIAL_PBR_DEFAULTS[currentFamily];
+    const p = getObjectPbr(selectedObjectId);
     setMatControls({
-      uvScale: d.uvScale,
-      normalStrength: d.normalScale,
-      roughness: d.roughness,
-      metalness: d.metalness,
-      sheen: d.sheen,
-      sheenRoughness: d.sheenRoughness,
-      envMapIntensity: d.envMapIntensity,
+      uvScale: p.uvScale,
+      normalStrength: p.normalScale,
+      metalness: p.metalness,
+      roughness: p.roughness,
+      sheen: p.sheen,
+      sheenRoughness: p.sheenRoughness,
+      envMapIntensity: p.envMapIntensity,
+      aoMapIntensity: p.aoMapIntensity,
     });
-  }, [currentFamily, selectedObjectId]);
-
-  // On session restore: apply per-family PBR defaults for the first scene
-  // object's material without requiring the user to click first.
-  useEffect(() => {
-    if (sceneObjects.length === 0) return;
-    const firstMat = materialObjects.find(
-      (o) => o.id === sceneObjects[0].instanceId,
-    );
-    if (!firstMat) return;
-    const family = getMaterialFamily(firstMat.material.name) ?? "amaral";
-    const d = MATERIAL_PBR_DEFAULTS[family];
-    setMatControls({
-      uvScale: d.uvScale,
-      normalStrength: d.normalScale,
-      roughness: d.roughness,
-      metalness: d.metalness,
-      sheen: d.sheen,
-      sheenRoughness: d.sheenRoughness,
-      envMapIntensity: d.envMapIntensity,
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedObjectId, currentMaterial]);
 
   const lightControls = useControls(
     "Lighting",
@@ -976,6 +1150,29 @@ const Scene = () => {
       directionalX: { value: -0.1, min: -5, max: 5, step: 0.1 },
       directionalY: { value: 1.1, min: -5, max: 5, step: 0.1 },
       directionalZ: { value: -1.6, min: -5, max: 5, step: 0.1 },
+    },
+    { collapsed: true },
+  );
+
+  const debugControls = useControls(
+    "Debug",
+    {
+      showCollisionBoxes: { value: true, label: "Collision Boxes" },
+      collisionBoxOpacity: {
+        value: 0.35,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: "Box Opacity",
+      },
+      showCameraSpheres: { value: false, label: "Camera Spheres" },
+      cameraSphereOpacity: {
+        value: 0.2,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: "Sphere Opacity",
+      },
     },
     { collapsed: true },
   );
@@ -1050,7 +1247,6 @@ const Scene = () => {
 
         {import.meta.env.DEV && (
           <Leva
-          hidden={true}
             collapsed={true}
             oneLineLabels={true}
           />
@@ -1140,7 +1336,13 @@ const Scene = () => {
             color="#ffffff"
           />
 
-          <SceneObjects snapPreview={snapPreview} />
+          <SceneObjects
+            snapPreview={snapPreview}
+            showCollisionBoxes={debugControls.showCollisionBoxes}
+            collisionBoxOpacity={debugControls.collisionBoxOpacity}
+            showCameraSpheres={debugControls.showCameraSpheres}
+            cameraSphereOpacity={debugControls.cameraSphereOpacity}
+          />
 
           <ContactShadows
             opacity={shadowControls.shadowOpacity}

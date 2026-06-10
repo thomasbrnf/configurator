@@ -56,7 +56,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className={`${selected ? "block" : "hidden"} pt-1.5 shrink-0`}
+          className={`${selected ? "opacity-100" : "opacity-0"} pt-1.5 shrink-0`}
           width="30"
           height="30"
           viewBox="0 0 30 30"

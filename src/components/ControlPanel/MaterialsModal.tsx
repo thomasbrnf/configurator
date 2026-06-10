@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useMaterial, availableMaterials } from "../../context/MaterialContext";
+import { useMaterial, availableMaterials, thumbUrl } from "../../context/MaterialContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { extractBaseModuleId } from "../../utils/moduleId";
 import type { MaterialDefinition } from "../../context/MaterialContext";
@@ -219,7 +219,7 @@ const MaterialsModal: React.FC = () => {
                                 : "border border-transparent hover:border-ui-border"
                             }`}
                             style={{
-                              backgroundImage: `url('${material.diffuse}')`,
+                              backgroundImage: `url('${thumbUrl(material.diffuse)}')`,
                               backgroundSize: "400%",
                               backgroundPosition: "center",
                             }}

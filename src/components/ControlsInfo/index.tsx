@@ -15,19 +15,18 @@ const ControlsInfo = ({
   onToggleAutoCenter,
 }: ControlsInfoProps) => {
   const { selectedObjectId } = useMaterial();
-  const { removeObjectById, updateObjectRotation, duplicateObject, configurationType } =
+  const { removeObjectById, tryRotateObject, isModuleConnected, duplicateObject, configurationType } =
     useConfigurator();
   const { t } = useLanguage();
 
   const hasSelection = selectedObjectId !== null;
+  // Rotation is only allowed for free (unsnapped) modules.
+  const canRotate =
+    hasSelection && !isModuleConnected(selectedObjectId!);
 
   const handleRotate = (direction: "left" | "right") => {
     if (!selectedObjectId) return;
-    updateObjectRotation(
-      selectedObjectId,
-      "y",
-      direction === "left" ? Math.PI / 2 : -Math.PI / 2,
-    );
+    tryRotateObject(selectedObjectId, direction);
   };
 
   const handleCopy = () => {
@@ -61,7 +60,7 @@ const ControlsInfo = ({
         <div className="flex flex-col gap-[10px]">
            <button
             onClick={() => handleRotate("left")}
-            disabled={!hasSelection}
+            disabled={!canRotate}
             className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white"
             title="Rotate left"
           >
@@ -73,7 +72,7 @@ const ControlsInfo = ({
           </button>
           <button
             onClick={() => handleRotate("right")}
-            disabled={!hasSelection}
+            disabled={!canRotate}
             className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white"
             title="Rotate right"
           >
