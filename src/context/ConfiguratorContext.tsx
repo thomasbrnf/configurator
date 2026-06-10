@@ -4,6 +4,7 @@ import { useMaterial } from "./MaterialContext";
 import { extractBaseModuleId, generateInstanceId } from "../utils/moduleId";
 import {
   worldHalfExtent,
+  worldOffsetXZ,
   quadrantFromRotationY,
   footprintOverlapsAny,
   resolveFootprintOut,
@@ -346,7 +347,14 @@ interface ConfiguratorContextType {
 
   // Model bounding sizes (keyed by baseModuleId) — registered by DynamicModel on load
   objectBoundingSizes: Map<string, [number, number, number]>;
-  registerObjectSize: (moduleId: string, size: [number, number, number]) => void;
+  // Local bounding-box centre offset (keyed by baseModuleId). ~0 for centred
+  // modules; non-zero for complete sets whose pivot is off-centre.
+  objectBoundingOffsets: Map<string, [number, number, number]>;
+  registerObjectSize: (
+    moduleId: string,
+    size: [number, number, number],
+    offset: [number, number, number],
+  ) => void;
 
   // Object rotations (keyed by instanceId) - [x, y, z] in radians
   objectRotations: Map<string, [number, number, number]>;
@@ -427,12 +435,28 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   const [objectBoundingSizes, setObjectBoundingSizes] = useState<
     Map<string, [number, number, number]>
   >(new Map());
+  const [objectBoundingOffsets, setObjectBoundingOffsets] = useState<
+    Map<string, [number, number, number]>
+  >(new Map());
 
-  const registerObjectSize = (moduleId: string, size: [number, number, number]) => {
+  const registerObjectSize = (
+    moduleId: string,
+    size: [number, number, number],
+    offset: [number, number, number],
+  ) => {
     setObjectBoundingSizes((prev) => {
       if (prev.get(moduleId)?.[0] === size[0] && prev.get(moduleId)?.[2] === size[2]) return prev;
       const next = new Map(prev);
       next.set(moduleId, size);
+      return next;
+    });
+    setObjectBoundingOffsets((prev) => {
+      const cur = prev.get(moduleId);
+      if (cur && cur[0] === offset[0] && cur[1] === offset[1] && cur[2] === offset[2]) {
+        return prev;
+      }
+      const next = new Map(prev);
+      next.set(moduleId, offset);
       return next;
     });
   };
@@ -753,13 +777,17 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
       return [idx * 1.9, 0, 0];
     };
     const sizeOf = (id: string) => objectBoundingSizes.get(extractBaseModuleId(id));
+    const offsetOf = (id: string) =>
+      objectBoundingOffsets.get(extractBaseModuleId(id));
     const footprintAt = (id: string, quadrant: number): Footprint => {
       const p = effPos(id);
       const cat = getModuleCategory(id);
       const size = sizeOf(id);
+      const off = offsetOf(id);
+      const [wox, woz] = off ? worldOffsetXZ(off, quadrant) : [0, 0];
       return {
-        x: p[0],
-        z: p[2],
+        x: p[0] + wox,
+        z: p[2] + woz,
         hx: worldHalfExtent(size, cat, quadrant, "x"),
         hz: worldHalfExtent(size, cat, quadrant, "z"),
       };
@@ -776,11 +804,17 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
       );
 
     const pos = effPos(instanceId);
+    // Offset between the rotated footprint CENTRE and the model ORIGIN, so a
+    // cleared centre can be converted back to the origin we actually store.
+    const ownOff = offsetOf(instanceId);
+    const [movedOx, movedOz] = ownOff
+      ? worldOffsetXZ(ownOff, newQuadrant)
+      : [0, 0];
     let nextPos: [number, number, number] | null = null;
     if (footprintOverlapsAny(moved, obstacles)) {
       const cleared = resolveFootprintOut(moved, obstacles);
       if (!cleared) return false; // boxed in — no room to rotate
-      nextPos = [cleared[0], pos[1], cleared[1]];
+      nextPos = [cleared[0] - movedOx, pos[1], cleared[1] - movedOz];
     }
 
     if (nextPos) {
@@ -857,6 +891,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         setRotationControlId,
         resetConfigurator,
         objectBoundingSizes,
+        objectBoundingOffsets,
         registerObjectSize,
       }}
     >

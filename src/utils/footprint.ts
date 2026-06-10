@@ -31,6 +31,29 @@ export function worldHalfExtent(
   return halfExtentAlong(category, quadrant, worldAxis);
 }
 
+// Rotate a model-LOCAL (x, z) bounding-box centre offset into WORLD space for a
+// 90° rotation quadrant. Matches three's Object3D Y-rotation (local +Z maps to
+// world +X at 90°). Most GLBs are authored with the geometry centred on the
+// origin (offset ≈ 0), but the complete sets pivot at one end, so their
+// footprint/overlay must be shifted by this to sit on the actual mesh.
+export function worldOffsetXZ(
+  offset: [number, number, number],
+  quadrant: number,
+): [number, number] {
+  const ox = offset[0];
+  const oz = offset[2];
+  switch (((quadrant % 4) + 4) % 4) {
+    case 1:
+      return [oz, -ox];
+    case 2:
+      return [-ox, -oz];
+    case 3:
+      return [-oz, ox];
+    default:
+      return [ox, oz];
+  }
+}
+
 // An axis-aligned footprint on the XZ plane: centre (x, z) and half-extents.
 export interface Footprint {
   x: number;

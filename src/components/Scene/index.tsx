@@ -30,6 +30,7 @@ import {
   getModuleCategory,
 } from "../../context/ConfiguratorContext";
 import { halfExtentAlong } from "../../data/snapDistances";
+import { worldOffsetXZ } from "../../utils/footprint";
 import { extractBaseModuleId } from "../../utils/moduleId";
 import { useLanguage } from "../../context/LanguageContext";
 import { useLoaderStore } from "../../store/loaderStore";
@@ -406,87 +407,105 @@ function CameraCollisionConstraint({
   objectRotations: Map<string, [number, number, number]>;
 }) {
   const { camera, scene } = useThree();
-  // One collision sphere per model. Empty means "nothing to collide with yet".
-  const spheresRef = useRef<THREE.Sphere[]>([]);
-  const tmpDirRef = useRef(new THREE.Vector3());
+  // One collision AABB per model. Empty means "nothing to collide with yet".
+  // Boxes hug the furniture far tighter than a bounding sphere, so the camera
+  // can approach flat faces naturally instead of being shoved out early — and
+  // overlapping boxes don't trap the camera the way overlapping spheres do.
+  const boxesRef = useRef<THREE.Box3[]>([]);
 
-  // Recompute one collision sphere per model whenever the scene changes — not
-  // just on add/remove, but also when an object is moved or rotated, so each
-  // sphere travels with its model. GLB models load asynchronously, so retry
-  // across frames until at least one group has bounds (mirrors AutoCenterCamera).
+  // Recompute one collision box per model whenever the scene changes — not just
+  // on add/remove, but also when an object is moved or rotated, so each box
+  // travels with its model. setFromObject gives the true world AABB, so this is
+  // correct even for off-centre set origins. GLB models load asynchronously, so
+  // retry across frames until at least one group has bounds.
   useEffect(() => {
     if (sceneObjects.length === 0) {
-      spheresRef.current = [];
+      boxesRef.current = [];
       return;
     }
     let raf = 0;
     let attempts = 0;
     const compute = () => {
       scene.updateMatrixWorld(true);
-      const spheres: THREE.Sphere[] = [];
+      const boxes: THREE.Box3[] = [];
       scene.traverse((obj) => {
         if (obj instanceof THREE.Group && obj.userData.objectId) {
           const objBox = new THREE.Box3().setFromObject(obj);
           if (objBox.isEmpty()) return;
-          const sphere = new THREE.Sphere();
-          objBox.getBoundingSphere(sphere);
-          sphere.radius *= 1.05; // small padding
-          spheres.push(sphere);
+          objBox.expandByScalar(CAMERA_BOX_PADDING); // small breathing room
+          boxes.push(objBox);
         }
       });
-      if (spheres.length === 0) {
+      if (boxes.length === 0) {
         if (attempts++ < 600) raf = requestAnimationFrame(compute);
         return;
       }
-      spheresRef.current = spheres;
+      boxesRef.current = boxes;
     };
     raf = requestAnimationFrame(compute);
     return () => cancelAnimationFrame(raf);
   }, [sceneObjects, objectPositions, objectRotations, scene]);
 
   // Push the camera back out of any model it has entered. The camera can sit
-  // inside several overlapping spheres at once, so iterate: each pass finds the
-  // deepest penetration and resolves it, repeating until clear (or a cap).
+  // inside several overlapping boxes at once, so iterate: each pass finds the
+  // box it's deepest inside and slides it out the nearest HORIZONTAL face,
+  // repeating until clear (or a cap). Horizontal only — never shove the camera
+  // up over the top or down through the floor.
   useEffect(() => {
     const controls = orbitControlsRef.current;
     if (!controls) return;
 
     // Re-entrancy guard: controls.update() at the end synchronously re-dispatches
     // the "change" event, re-entering this handler. If update() leaves the camera
-    // inside a sphere (overlapping spheres it can't escape in one shot, or update()
-    // repositioning it back), the correction would recurse without bound and blow
-    // the stack ("Maximum call stack size exceeded"). The guard lets the first
-    // correction run and applies update() once; the re-entrant change is ignored.
+    // inside a box (overlaps it can't escape in one shot, or update() repositioning
+    // it back), the correction would recurse without bound and blow the stack
+    // ("Maximum call stack size exceeded"). The guard lets the first correction run
+    // and applies update() once; the re-entrant change is ignored.
     let correcting = false;
     const handleChange = () => {
       if (correcting) return;
-      const spheres = spheresRef.current;
-      if (spheres.length === 0) return;
+      const boxes = boxesRef.current;
+      if (boxes.length === 0) return;
 
+      const cam = camera.position;
       let corrected = false;
       for (let pass = 0; pass < 8; pass++) {
-        // Find the sphere the camera has penetrated most deeply this pass.
-        let worst: THREE.Sphere | null = null;
-        let worstPenetration = 0;
-        for (const sphere of spheres) {
-          const distance = camera.position.distanceTo(sphere.center);
-          const penetration = sphere.radius - distance;
-          if (penetration > worstPenetration) {
-            worst = sphere;
-            worstPenetration = penetration;
+        // Find the box the camera is deepest inside this pass (largest distance
+        // to its nearest horizontal face), then push out through that face.
+        let worstDepth = 0;
+        let worstAxis: "x" | "z" = "x";
+        let worstTarget = 0;
+        for (const box of boxes) {
+          if (!box.containsPoint(cam)) continue;
+          // Distance to exit through each of the four vertical faces; the
+          // nearest (smallest) is how far this box would push the camera.
+          let exit = cam.x - box.min.x;
+          let axis: "x" | "z" = "x";
+          let target = box.min.x;
+          if (box.max.x - cam.x < exit) {
+            exit = box.max.x - cam.x;
+            target = box.max.x;
+            axis = "x";
+          }
+          if (cam.z - box.min.z < exit) {
+            exit = cam.z - box.min.z;
+            target = box.min.z;
+            axis = "z";
+          }
+          if (box.max.z - cam.z < exit) {
+            exit = box.max.z - cam.z;
+            target = box.max.z;
+            axis = "z";
+          }
+          if (exit > worstDepth) {
+            worstDepth = exit;
+            worstAxis = axis;
+            worstTarget = target;
           }
         }
-        if (!worst) break;
-
-        // Project the camera out to that sphere's surface. When it sits exactly
-        // at the center the direction is zero, so fall back to avoid a NaN.
-        const dir = tmpDirRef.current.subVectors(camera.position, worst.center);
-        if (dir.lengthSq() < 1e-8) {
-          dir.set(0, 0, 1);
-        } else {
-          dir.normalize();
-        }
-        camera.position.copy(worst.center).addScaledVector(dir, worst.radius);
+        if (worstDepth === 0) break; // outside every box
+        if (worstAxis === "x") cam.x = worstTarget;
+        else cam.z = worstTarget;
         corrected = true;
       }
 
@@ -506,6 +525,9 @@ function CameraCollisionConstraint({
 
   return null;
 }
+
+// Breathing room added to each side of a model's camera-collision box (metres).
+const CAMERA_BOX_PADDING = 0.1;
 
 // Pan Constraint Component - prevents panning below ground
 function PanConstraint({
@@ -556,6 +578,7 @@ function ClickHandler({
     objectPositions,
     objectRotations,
     objectBoundingSizes,
+    objectBoundingOffsets,
     connectModules,
     disconnectModule,
   } = useConfigurator();
@@ -576,6 +599,7 @@ function ClickHandler({
     objectPositions,
     objectRotations,
     objectBoundingSizes,
+    objectBoundingOffsets,
     onDragUpdate,
     onSnapPreview,
     onDragStateChange,
@@ -791,12 +815,14 @@ function CollisionDebugBox({
   rotationY,
   category,
   measuredSize,
+  offset,
   opacity,
 }: {
   position: [number, number, number];
   rotationY: number;
   category: ReturnType<typeof getModuleCategory>;
   measuredSize?: [number, number, number];
+  offset?: [number, number, number];
   opacity: number;
 }) {
   // Same quadrant math the snap hook uses: round Y rotation to 0/90/180/270°.
@@ -817,9 +843,12 @@ function CollisionDebugBox({
     height = FALLBACK_BOX_HEIGHT;
   }
 
+  // Shift to the true footprint centre for off-centre origins (complete sets).
+  const [wox, woz] = offset ? worldOffsetXZ(offset, quadrant) : [0, 0];
+
   return (
     // Box is axis-aligned and sits on the ground (centre lifted by half height).
-    <group position={[position[0], height / 2, position[2]]}>
+    <group position={[position[0] + wox, height / 2, position[2] + woz]}>
       <mesh>
         <boxGeometry args={[width, height, depth]} />
         {/* One material per BoxGeometry face group, in three.js's fixed order.
@@ -845,45 +874,50 @@ function CollisionDebugBox({
   );
 }
 
-// Debug overlay: draws the camera-collision boundary sphere for a module — the
-// exact sphere CameraCollision pushes the orbit camera out of. The radius is
-// half the model's 3D bounding-box diagonal × 1.05 padding (matching
-// Box3.getBoundingSphere there); because 90° rotations only permute the axes,
-// the diagonal — and therefore the radius — is rotation-invariant. The centre
-// sits at the module's [x, z] lifted to half its height (it rests on the floor).
-function CameraSphereDebug({
+// Debug overlay: draws the camera-collision boundary BOX for a module — the
+// padded world AABB CameraCollision pushes the orbit camera out of. Same
+// width/depth/height the footprint uses (X/Z swapped per 90° quadrant), grown
+// by the camera padding on every side, and shifted to the true footprint centre
+// for off-centre origins (complete sets). Wireframe so the model stays visible.
+function CameraBoxDebug({
   position,
   category,
   rotationY,
   measuredSize,
+  offset,
   opacity,
 }: {
   position: [number, number, number];
   category: ReturnType<typeof getModuleCategory>;
   rotationY: number;
   measuredSize?: [number, number, number];
+  offset?: [number, number, number];
   opacity: number;
 }) {
+  const quadrant = ((Math.round(rotationY / (Math.PI / 2)) % 4) + 4) % 4;
+  const isOdd = quadrant % 2 !== 0;
+
   let width: number;
   let height: number;
   let depth: number;
   if (measuredSize) {
-    [width, height, depth] = measuredSize;
+    width = isOdd ? measuredSize[2] : measuredSize[0];
+    depth = isOdd ? measuredSize[0] : measuredSize[2];
+    height = measuredSize[1];
   } else {
-    const quadrant = ((Math.round(rotationY / (Math.PI / 2)) % 4) + 4) % 4;
     width = halfExtentAlong(category, quadrant, "x") * 2;
     depth = halfExtentAlong(category, quadrant, "z") * 2;
     height = FALLBACK_BOX_HEIGHT;
   }
 
-  const radius =
-    0.5 * Math.sqrt(width * width + height * height + depth * depth) * 1.05;
+  const pad = 2 * CAMERA_BOX_PADDING;
+  const [wox, woz] = offset ? worldOffsetXZ(offset, quadrant) : [0, 0];
 
   return (
-    <mesh position={[position[0], height / 2, position[2]]}>
-      <sphereGeometry args={[radius, 24, 16]} />
+    <mesh position={[position[0] + wox, height / 2, position[2] + woz]}>
+      <boxGeometry args={[width + pad, height + pad, depth + pad]} />
       <meshBasicMaterial
-        color="#00e5ff"
+        color="#ff9500"
         wireframe
         transparent
         opacity={opacity}
@@ -898,8 +932,8 @@ function SceneObjects({
   snapPreview,
   showCollisionBoxes,
   collisionBoxOpacity,
-  showCameraSpheres,
-  cameraSphereOpacity,
+  showCameraBoxes,
+  cameraBoxOpacity,
 }: {
   snapPreview: {
     fromId: string;
@@ -909,14 +943,15 @@ function SceneObjects({
   } | null;
   showCollisionBoxes: boolean;
   collisionBoxOpacity: number;
-  showCameraSpheres: boolean;
-  cameraSphereOpacity: number;
+  showCameraBoxes: boolean;
+  cameraBoxOpacity: number;
 }) {
   const {
     sceneObjects,
     objectRotations,
     objectPositions,
     objectBoundingSizes,
+    objectBoundingOffsets,
   } = useConfigurator();
 
   return (
@@ -943,18 +978,24 @@ function SceneObjects({
                 measuredSize={objectBoundingSizes.get(
                   extractBaseModuleId(inst.instanceId),
                 )}
+                offset={objectBoundingOffsets.get(
+                  extractBaseModuleId(inst.instanceId),
+                )}
                 opacity={collisionBoxOpacity}
               />
             )}
-            {showCameraSpheres && (
-              <CameraSphereDebug
+            {showCameraBoxes && (
+              <CameraBoxDebug
                 position={position as [number, number, number]}
                 rotationY={rotation[1]}
                 category={getModuleCategory(inst.instanceId)}
                 measuredSize={objectBoundingSizes.get(
                   extractBaseModuleId(inst.instanceId),
                 )}
-                opacity={cameraSphereOpacity}
+                offset={objectBoundingOffsets.get(
+                  extractBaseModuleId(inst.instanceId),
+                )}
+                opacity={cameraBoxOpacity}
               />
             )}
           </group>
@@ -1165,13 +1206,13 @@ const Scene = () => {
         step: 0.01,
         label: "Box Opacity",
       },
-      showCameraSpheres: { value: false, label: "Camera Spheres" },
-      cameraSphereOpacity: {
-        value: 0.2,
+      showCameraBoxes: { value: false, label: "Camera Boxes" },
+      cameraBoxOpacity: {
+        value: 0.3,
         min: 0,
         max: 1,
         step: 0.01,
-        label: "Sphere Opacity",
+        label: "Camera Box Opacity",
       },
     },
     { collapsed: true },
@@ -1340,8 +1381,8 @@ const Scene = () => {
             snapPreview={snapPreview}
             showCollisionBoxes={debugControls.showCollisionBoxes}
             collisionBoxOpacity={debugControls.collisionBoxOpacity}
-            showCameraSpheres={debugControls.showCameraSpheres}
-            cameraSphereOpacity={debugControls.cameraSphereOpacity}
+            showCameraBoxes={debugControls.showCameraBoxes}
+            cameraBoxOpacity={debugControls.cameraBoxOpacity}
           />
 
           <ContactShadows

@@ -310,8 +310,17 @@ export function DynamicModel({
     });
     const size = new THREE.Vector3();
     box.getSize(size);
+    // Centre of the local bounding box. For most modules this is ~0 (geometry
+    // centred on the origin), but complete sets pivot at one end, so the centre
+    // is offset — captured here so footprints/overlays can sit on the real mesh.
+    const center = new THREE.Vector3();
+    box.getCenter(center);
     if (size.x > 0) {
-      registerObjectSize(baseModuleId, [size.x, size.y, size.z]);
+      registerObjectSize(
+        baseModuleId,
+        [size.x, size.y, size.z],
+        [center.x, center.y, center.z],
+      );
     }
   }, [clonedObject, baseModuleId, registerObjectSize]);
 

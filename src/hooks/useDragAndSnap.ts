@@ -7,7 +7,7 @@ import {
 } from "../context/ConfiguratorContext";
 import { getSnapConfig, halfExtentAlong } from "../data/snapDistances";
 import { extractBaseModuleId } from "../utils/moduleId";
-import { worldHalfExtent } from "../utils/footprint";
+import { worldHalfExtent, worldOffsetXZ } from "../utils/footprint";
 
 export interface SnapPreview {
   fromId: string;
@@ -26,6 +26,8 @@ interface UseDragAndSnapOptions {
   objectRotations: Map<string, [number, number, number]>;
   /** Real measured [x, y, z] bounding sizes, keyed by base module id. */
   objectBoundingSizes: Map<string, [number, number, number]>;
+  /** Local bounding-box centre offset, keyed by base module id (~0 unless off-centre). */
+  objectBoundingOffsets: Map<string, [number, number, number]>;
   onDragUpdate: (
     instanceId: string,
     position: [number, number, number],
@@ -63,6 +65,7 @@ export function useDragAndSnap({
   objectPositions,
   objectRotations,
   objectBoundingSizes,
+  objectBoundingOffsets,
   onDragUpdate,
   onSnapPreview,
   onDragStateChange,
@@ -156,6 +159,15 @@ export function useDragAndSnap({
     );
   }
 
+  // World [x, z] offset from a module's stored origin to its footprint CENTRE.
+  // ~0 for centred modules; non-zero for off-centre complete sets (rotation
+  // aware). Every collision/snap test centres footprints at origin + this.
+  function footOffset(instanceId: string): [number, number] {
+    const off = objectBoundingOffsets.get(extractBaseModuleId(instanceId));
+    if (!off) return [0, 0];
+    return worldOffsetXZ(off, quadrant(instanceId));
+  }
+
   function hasMeasuredSize(instanceId: string): boolean {
     return objectBoundingSizes.has(extractBaseModuleId(instanceId));
   }
@@ -181,8 +193,14 @@ export function useDragAndSnap({
     const dHalfX = footHalf(draggedId, "x");
     const dHalfZ = footHalf(draggedId, "z");
 
-    let px = x;
-    let pz = z;
+    // Work in footprint-CENTRE space (origin + offset) so off-centre modules
+    // (complete sets) collide by their real geometry. Inputs `x/z`/`prev` are
+    // origins; convert in, resolve, convert the result back to an origin.
+    const [dOffX, dOffZ] = footOffset(draggedId);
+    let px = x + dOffX;
+    let pz = z + dOffZ;
+    const prevCx = prev[0] + dOffX;
+    const prevCz = prev[1] + dOffZ;
 
     for (let pass = 0; pass < 4; pass++) {
       let moved = false;
@@ -190,11 +208,14 @@ export function useDragAndSnap({
         if (inst.instanceId === draggedId) return;
 
         const oPos = objectPositions.get(inst.instanceId) || [index * 1.9, 0, 0];
+        const [oOffX, oOffZ] = footOffset(inst.instanceId);
+        const oCx = oPos[0] + oOffX;
+        const oCz = oPos[2] + oOffZ;
         const sumX = dHalfX + footHalf(inst.instanceId, "x");
         const sumZ = dHalfZ + footHalf(inst.instanceId, "z");
 
-        const dx = px - oPos[0];
-        const dz = pz - oPos[2];
+        const dx = px - oCx;
+        const dz = pz - oCz;
         const overlapX = sumX - Math.abs(dx);
         const overlapZ = sumZ - Math.abs(dz);
         // No overlap if separated on either axis.
@@ -204,18 +225,18 @@ export function useDragAndSnap({
         // the side the module approached from (sign from `prev`), so it can
         // never be placed behind the obstacle.
         if (overlapX < overlapZ) {
-          const sign = prev[0] >= oPos[0] ? 1 : -1;
-          px = oPos[0] + sign * sumX;
+          const sign = prevCx >= oCx ? 1 : -1;
+          px = oCx + sign * sumX;
         } else {
-          const sign = prev[1] >= oPos[2] ? 1 : -1;
-          pz = oPos[2] + sign * sumZ;
+          const sign = prevCz >= oCz ? 1 : -1;
+          pz = oCz + sign * sumZ;
         }
         moved = true;
       });
       if (!moved) break;
     }
 
-    return [px, pz];
+    return [px - dOffX, pz - dOffZ];
   }
 
   // IDs of every module whose footprint the dragged module would overlap at
@@ -229,13 +250,18 @@ export function useDragAndSnap({
   ): { id: string; ox: number; oz: number }[] {
     const dHalfX = footHalf(draggedId, "x");
     const dHalfZ = footHalf(draggedId, "z");
+    // `x/z` is the dragged ORIGIN; centre its footprint like the obstacles'.
+    const [dOffX, dOffZ] = footOffset(draggedId);
+    const cx = x + dOffX;
+    const cz = z + dOffZ;
     const EPS = 1e-3;
     const hits: { id: string; ox: number; oz: number }[] = [];
     sceneObjects.forEach((inst, index) => {
       if (ignoreIds.has(inst.instanceId)) return;
       const oPos = objectPositions.get(inst.instanceId) || [index * 1.9, 0, 0];
-      const overlapX = dHalfX + footHalf(inst.instanceId, "x") - Math.abs(x - oPos[0]);
-      const overlapZ = dHalfZ + footHalf(inst.instanceId, "z") - Math.abs(z - oPos[2]);
+      const [oOffX, oOffZ] = footOffset(inst.instanceId);
+      const overlapX = dHalfX + footHalf(inst.instanceId, "x") - Math.abs(cx - (oPos[0] + oOffX));
+      const overlapZ = dHalfZ + footHalf(inst.instanceId, "z") - Math.abs(cz - (oPos[2] + oOffZ));
       if (overlapX > EPS && overlapZ > EPS) {
         hits.push({ id: inst.instanceId, ox: overlapX, oz: overlapZ });
       }
@@ -452,8 +478,18 @@ export function useDragAndSnap({
 
     const targetPos = objectPositions.get(targetId) || [0, 0, 0];
 
-    const dx = draggedX - targetPos[0];
-    const dz = draggedZ - targetPos[2];
+    // Compare and butt the modules by their footprint CENTRES (origin + offset)
+    // so off-centre sets join by real geometry; snapPos is converted back to the
+    // dragged module's stored origin at the end.
+    const [dOffX, dOffZ] = footOffset(draggedId);
+    const [tOffX, tOffZ] = footOffset(targetId);
+    const dCx = draggedX + dOffX;
+    const dCz = draggedZ + dOffZ;
+    const tCx = targetPos[0] + tOffX;
+    const tCz = targetPos[2] + tOffZ;
+
+    const dx = dCx - tCx;
+    const dz = dCz - tCz;
     const absX = Math.abs(dx);
     const absZ = Math.abs(dz);
 
@@ -544,15 +580,22 @@ export function useDragAndSnap({
       perpOffset = 0;
     }
 
+    // Snapped CENTRE: flush along the contact axis, back-aligned on the perp
+    // axis. Convert back to the stored origin by removing the dragged offset.
+    let snapCenterX = tCx;
+    let snapCenterZ = tCz;
+    if (axis === "x") {
+      snapCenterX = tCx + sign * gap;
+      snapCenterZ = tCz + perpOffset;
+    } else {
+      snapCenterZ = tCz + sign * gap;
+      snapCenterX = tCx + perpOffset;
+    }
     const snapPos: [number, number, number] = [
-      targetPos[0],
+      snapCenterX - dOffX,
       targetPos[1],
-      targetPos[2],
+      snapCenterZ - dOffZ,
     ];
-    snapPos[axis === "x" ? 0 : 2] =
-      targetPos[axis === "x" ? 0 : 2] + sign * gap;
-    snapPos[perpAxis === "x" ? 0 : 2] =
-      targetPos[perpAxis === "x" ? 0 : 2] + perpOffset;
 
     // Veto the snap if the target's contact face is already occupied: snapping
     // flush to the target would plant this module on top of whatever is already
