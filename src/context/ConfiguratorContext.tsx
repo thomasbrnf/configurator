@@ -77,6 +77,19 @@ export interface ModuleDefinition {
   uvScale?: number;
   /** Mesh names that keep their original GLTF material instead of the custom PBR */
   preserveMeshNames?: string[];
+  /**
+   * How far (in scene units) to pull this module forward from a strict back-face
+   * alignment. Standard modules with a protruding rear part use 0 (default).
+   * Flat-back modules (BAR, BL, BP …) need a positive value so they don't sit
+   * too far back when snapping to modules that do have the protrusion.
+   */
+  backFaceInset?: number;
+  /**
+   * When true, the 180° opposite-facing snap veto is lifted for this module.
+   * Mirror end-cap modules (BL, BP) need this so a 180°-rotated copy can snap
+   * into a row alongside standard modules.
+   */
+  allowOppositeFacing?: boolean;
 }
 
 export interface CompleteSetDefinition {
@@ -130,6 +143,7 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: `${BASE}models/thumbnails/BAR(2z)L.webp`,
     category: "light",
     snappingSides: "both",
+    backFaceInset: 0.091,
   },
   {
     id: "BAR(2z)S",
@@ -139,6 +153,7 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: `${BASE}models/thumbnails/BAR(2z)S.webp`,
     category: "light",
     snappingSides: "both",
+    backFaceInset: 0.091,
   },
   {
     id: "BAR",
@@ -148,6 +163,7 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: `${BASE}models/thumbnails/BAR.webp`,
     category: "light",
     snappingSides: "both",
+    backFaceInset: 0.091,
   },
   {
     id: "BL (b)",
@@ -157,6 +173,8 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: `${BASE}models/thumbnails/BL (b).webp`,
     category: "thin",
     snappingSides: "right",
+    backFaceInset: 0.091,
+    allowOppositeFacing: true,
   },
   {
     id: "BL",
@@ -166,6 +184,8 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: `${BASE}models/thumbnails/BL.webp`,
     category: "extralight",
     snappingSides: "right",
+    backFaceInset: 0.091,
+    allowOppositeFacing: true,
   },
   {
     id: "BP (b)",
@@ -175,6 +195,8 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: `${BASE}models/thumbnails/BP (b).webp`,
     category: "thin",
     snappingSides: "left",
+    backFaceInset: 0.091,
+    allowOppositeFacing: true,
   },
   {
     id: "BP",
@@ -184,6 +206,8 @@ export const availableModules: ModuleDefinition[] = [
     thumbnail: `${BASE}models/thumbnails/BP.webp`,
     category: "extralight",
     snappingSides: "left",
+    backFaceInset: 0.091,
+    allowOppositeFacing: true,
   },
   {
     id: "EN(2)L",
@@ -318,6 +342,18 @@ export const getModuleCategory = (objectId: string): ModuleCategory => {
   return module?.category || "standard";
 };
 
+export const getModuleBackFaceInset = (objectId: string): number => {
+  const baseModuleId = extractBaseModuleId(objectId);
+  const module = availableModules.find((m) => m.id === baseModuleId);
+  return module?.backFaceInset ?? 0;
+};
+
+export const getModuleAllowOppositeFacing = (objectId: string): boolean => {
+  const baseModuleId = extractBaseModuleId(objectId);
+  const module = availableModules.find((m) => m.id === baseModuleId);
+  return module?.allowOppositeFacing ?? false;
+};
+
 interface ConfiguratorContextType {
   // Step management
   currentStep: ConfigurationStep;
@@ -377,6 +413,7 @@ interface ConfiguratorContextType {
   connectModules: (a: string, b: string) => void;
   disconnectModule: (instanceId: string) => void;
   isModuleConnected: (instanceId: string) => boolean;
+  getModuleNeighbors: (instanceId: string) => string[];
 
   // Object positions (keyed by instanceId) - [x, y, z]
   objectPositions: Map<string, [number, number, number]>;
@@ -614,13 +651,66 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
   const duplicateObject = (instanceId: string) => {
     const baseModuleId = extractBaseModuleId(instanceId);
     const newInstanceId = generateInstanceId(baseModuleId, 0);
+
+    const sourceRotation = objectRotations.get(instanceId);
+    const sourcePosition = objectPositions.get(instanceId) || [0, 0, 0];
+
+    const storedSize = objectBoundingSizes.get(baseModuleId);
+    const offsetX = storedSize
+      ? Math.sqrt(storedSize[0] * storedSize[0] + storedSize[2] * storedSize[2]) + 0.1
+      : 1.5;
+
+    const copyQuadrant = quadrantFromRotationY(sourceRotation ? sourceRotation[1] : 0);
+    const copyOffset = objectBoundingOffsets.get(baseModuleId);
+    const [wox, woz] = copyOffset ? worldOffsetXZ(copyOffset, copyQuadrant) : [0, 0];
+    const cat = getModuleCategory(instanceId);
+
+    const proposedX = sourcePosition[0] + offsetX;
+    const proposedZ = sourcePosition[2];
+
+    const copyFootprint: Footprint = {
+      x: proposedX + wox,
+      z: proposedZ + woz,
+      hx: worldHalfExtent(storedSize, cat, copyQuadrant, "x"),
+      hz: worldHalfExtent(storedSize, cat, copyQuadrant, "z"),
+    };
+
+    const obstacles: Footprint[] = sceneObjects
+      .filter((o) => o.instanceId !== instanceId)
+      .map((o) => {
+        const oBaseId = extractBaseModuleId(o.instanceId);
+        const oPos = objectPositions.get(o.instanceId) || [0, 0, 0];
+        const oRot = objectRotations.get(o.instanceId);
+        const oQuadrant = quadrantFromRotationY(oRot ? oRot[1] : 0);
+        const oSize = objectBoundingSizes.get(oBaseId);
+        const oCat = getModuleCategory(o.instanceId);
+        const oOff = objectBoundingOffsets.get(oBaseId);
+        const [owox, owoz] = oOff ? worldOffsetXZ(oOff, oQuadrant) : [0, 0];
+        return {
+          x: oPos[0] + owox,
+          z: oPos[2] + owoz,
+          hx: worldHalfExtent(oSize, oCat, oQuadrant, "x"),
+          hz: worldHalfExtent(oSize, oCat, oQuadrant, "z"),
+        };
+      });
+
+    let finalX = proposedX;
+    let finalZ = proposedZ;
+
+    if (footprintOverlapsAny(copyFootprint, obstacles)) {
+      const cleared = resolveFootprintOut(copyFootprint, obstacles);
+      if (!cleared) return; // boxed in — abort silently
+      finalX = cleared[0] - wox;
+      finalZ = cleared[1] - woz;
+    }
+
+    // Collision resolved — commit everything.
     const instance: SceneInstance = {
       instanceId: newInstanceId,
       moduleId: baseModuleId,
     };
 
-    // Inherit the source's fabric material (DynamicModel's mount-time addObject is a
-    // no-op when the id already exists, so this pre-seeded material wins).
+    // Pre-seed the fabric material so DynamicModel's mount-time addObject is a no-op.
     const sourceMaterial = getObjectMaterial(instanceId);
     if (sourceMaterial) {
       const sourceObject = objects.find((o) => o.id === instanceId);
@@ -631,17 +721,6 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
       });
     }
 
-    // Inherit rotation and place the copy beside the source without overlapping.
-    const sourceRotation = objectRotations.get(instanceId);
-    const sourcePosition = objectPositions.get(instanceId) || [0, 0, 0];
-
-    // Compute safe X offset from stored bounding size.
-    // Use the footprint diagonal so any rotation is covered, plus a small gap.
-    const storedSize = objectBoundingSizes.get(baseModuleId);
-    const offsetX = storedSize
-      ? Math.sqrt(storedSize[0] * storedSize[0] + storedSize[2] * storedSize[2]) + 0.1
-      : 1.5;
-
     setSceneObjects((prev) => {
       const index = prev.findIndex((inst) => inst.instanceId === instanceId);
       if (index === -1) return [...prev, instance];
@@ -651,11 +730,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     });
     setObjectPositions((prev) => {
       const next = new Map(prev);
-      next.set(newInstanceId, [
-        sourcePosition[0] + offsetX,
-        sourcePosition[1],
-        sourcePosition[2],
-      ]);
+      next.set(newInstanceId, [finalX, sourcePosition[1], finalZ]);
       return next;
     });
     if (sourceRotation) {
@@ -754,6 +829,19 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
       }
     }
     return false;
+  };
+
+  // All modules currently snapped to `instanceId` (its direct neighbours).
+  const getModuleNeighbors = (instanceId: string): string[] => {
+    const neighbors: string[] = [];
+    for (const key of connections) {
+      const sep = key.indexOf("|");
+      const a = key.slice(0, sep);
+      const b = key.slice(sep + 1);
+      if (a === instanceId) neighbors.push(b);
+      else if (b === instanceId) neighbors.push(a);
+    }
+    return neighbors;
   };
 
   // Rotate 90° with the rules: connected modules can't rotate; before rotating,
@@ -885,6 +973,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         connectModules,
         disconnectModule,
         isModuleConnected,
+        getModuleNeighbors,
         objectPositions,
         setObjectPosition,
         rotationControlId,
