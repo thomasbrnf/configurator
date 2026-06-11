@@ -667,36 +667,42 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
 
     const hx = worldHalfExtent(storedSize, cat, copyQuadrant, "x");
     const hz = worldHalfExtent(storedSize, cat, copyQuadrant, "z");
-    // Offset to step away from the source in each candidate direction.
-    const stepX = hx * 2 + 0.1;
-    const stepZ = hz * 2 + 0.1;
 
-    const obstacles: Footprint[] = sceneObjects
-      .filter((o) => o.instanceId !== instanceId)
-      .map((o) => {
-        const oBaseId = extractBaseModuleId(o.instanceId);
-        const oPos = objectPositions.get(o.instanceId) || [0, 0, 0];
-        const oRot = objectRotations.get(o.instanceId);
-        const oQuadrant = quadrantFromRotationY(oRot ? oRot[1] : 0);
-        const oSize = objectBoundingSizes.get(oBaseId);
-        const oCat = getModuleCategory(o.instanceId);
-        const oOff = objectBoundingOffsets.get(oBaseId);
-        const [owox, owoz] = oOff ? worldOffsetXZ(oOff, oQuadrant) : [0, 0];
-        return {
-          x: oPos[0] + owox,
-          z: oPos[2] + owoz,
-          hx: worldHalfExtent(oSize, oCat, oQuadrant, "x"),
-          hz: worldHalfExtent(oSize, oCat, oQuadrant, "z"),
-        };
-      });
+    // Build obstacles including the source — the copy must not overlap it either.
+    const obstacles: Footprint[] = sceneObjects.map((o) => {
+      const oBaseId = extractBaseModuleId(o.instanceId);
+      const oPos = objectPositions.get(o.instanceId) || [0, 0, 0];
+      const oRot = objectRotations.get(o.instanceId);
+      const oQuadrant = quadrantFromRotationY(oRot ? oRot[1] : 0);
+      const oSize = objectBoundingSizes.get(oBaseId);
+      const oCat = getModuleCategory(o.instanceId);
+      const oOff = objectBoundingOffsets.get(oBaseId);
+      const [owox, owoz] = oOff ? worldOffsetXZ(oOff, oQuadrant) : [0, 0];
+      return {
+        x: oPos[0] + owox,
+        z: oPos[2] + owoz,
+        hx: worldHalfExtent(oSize, oCat, oQuadrant, "x"),
+        hz: worldHalfExtent(oSize, oCat, oQuadrant, "z"),
+      };
+    });
+
+    // Step = source half-extent + copy half-extent + gap so each candidate
+    // starts just outside the source footprint in that direction.
+    const sourceHx = worldHalfExtent(storedSize, cat, copyQuadrant, "x");
+    const sourceHz = worldHalfExtent(storedSize, cat, copyQuadrant, "z");
+    const [srcWox, srcWoz] = copyOffset ? worldOffsetXZ(copyOffset, copyQuadrant) : [0, 0];
+    const srcFpX = sourcePosition[0] + srcWox;
+    const srcFpZ = sourcePosition[2] + srcWoz;
+    const stepX = sourceHx + hx + 0.1;
+    const stepZ = sourceHz + hz + 0.1;
 
     // Try candidate spawn origins in priority order: right, front, back, left.
     // For each, attempt resolveFootprintOut; take the first that clears.
     const candidates: [number, number][] = [
-      [sourcePosition[0] + stepX, sourcePosition[2]],
-      [sourcePosition[0], sourcePosition[2] - stepZ],
-      [sourcePosition[0], sourcePosition[2] + stepZ],
-      [sourcePosition[0] - stepX, sourcePosition[2]],
+      [srcFpX + stepX - wox, srcFpZ - woz],
+      [srcFpX - wox, srcFpZ - stepZ - woz],
+      [srcFpX - wox, srcFpZ + stepZ - woz],
+      [srcFpX - stepX - wox, srcFpZ - woz],
     ];
 
     let finalX: number | null = null;
