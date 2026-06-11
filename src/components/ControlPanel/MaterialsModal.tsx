@@ -246,7 +246,7 @@ const MaterialsModal: React.FC = () => {
             <>
               <div className="flex py-3 items-center px-[20px] border-t border-b border-ui-dark">
                 <span className="font-lato font-light text-[25px] text-ui-dark uppercase">
-                  Wood
+                  {t.wood}
                 </span>
               </div>
 

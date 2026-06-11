@@ -665,15 +665,11 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     const [wox, woz] = copyOffset ? worldOffsetXZ(copyOffset, copyQuadrant) : [0, 0];
     const cat = getModuleCategory(instanceId);
 
-    const proposedX = sourcePosition[0] + offsetX;
-    const proposedZ = sourcePosition[2];
-
-    const copyFootprint: Footprint = {
-      x: proposedX + wox,
-      z: proposedZ + woz,
-      hx: worldHalfExtent(storedSize, cat, copyQuadrant, "x"),
-      hz: worldHalfExtent(storedSize, cat, copyQuadrant, "z"),
-    };
+    const hx = worldHalfExtent(storedSize, cat, copyQuadrant, "x");
+    const hz = worldHalfExtent(storedSize, cat, copyQuadrant, "z");
+    // Offset to step away from the source in each candidate direction.
+    const stepX = hx * 2 + 0.1;
+    const stepZ = hz * 2 + 0.1;
 
     const obstacles: Footprint[] = sceneObjects
       .filter((o) => o.instanceId !== instanceId)
@@ -694,15 +690,34 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
         };
       });
 
-    let finalX = proposedX;
-    let finalZ = proposedZ;
+    // Try candidate spawn origins in priority order: right, front, back, left.
+    // For each, attempt resolveFootprintOut; take the first that clears.
+    const candidates: [number, number][] = [
+      [sourcePosition[0] + stepX, sourcePosition[2]],
+      [sourcePosition[0], sourcePosition[2] - stepZ],
+      [sourcePosition[0], sourcePosition[2] + stepZ],
+      [sourcePosition[0] - stepX, sourcePosition[2]],
+    ];
 
-    if (footprintOverlapsAny(copyFootprint, obstacles)) {
-      const cleared = resolveFootprintOut(copyFootprint, obstacles);
-      if (!cleared) return; // boxed in — abort silently
-      finalX = cleared[0] - wox;
-      finalZ = cleared[1] - woz;
+    let finalX: number | null = null;
+    let finalZ: number | null = null;
+
+    for (const [cx, cz] of candidates) {
+      const fp: Footprint = { x: cx + wox, z: cz + woz, hx, hz };
+      if (!footprintOverlapsAny(fp, obstacles)) {
+        finalX = cx;
+        finalZ = cz;
+        break;
+      }
+      const cleared = resolveFootprintOut(fp, obstacles);
+      if (cleared) {
+        finalX = cleared[0] - wox;
+        finalZ = cleared[1] - woz;
+        break;
+      }
     }
+
+    if (finalX === null || finalZ === null) return; // totally boxed in — abort silently
 
     // Collision resolved — commit everything.
     const instance: SceneInstance = {

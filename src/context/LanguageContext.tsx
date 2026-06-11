@@ -45,6 +45,7 @@ interface Translations {
   leather: string;
   club: string;
   granit: string;
+  wood: string;
   addObject: string;
   changeConfigType: string;
   addModule: string;
@@ -100,7 +101,7 @@ const translations: Record<Language, Translations> = {
     welcome: "Witamy w konfiguratorze",
     welcomeSubtitle: "Zaprojektuj swoją wymarzoną sofę",
     startConfiguration: "Rozpocznij Konfigurację",
-    chooseConfigType: "Jak chciałbyś skonfigurować \n swoją sofę?",
+    chooseConfigType: "Jak chciałbyś skonfigurować swoją sofę?",
     configTypeSubtitle: "Jak chciałbyś skonfigurować swoją sofę?",
     completeSets: "Zestawy",
     completeSetsDesc: "Wybierz gotowe \n rozwiązanie",
@@ -108,17 +109,17 @@ const translations: Record<Language, Translations> = {
     modulesDesc: "Zaprojektuj \n swój układ",
     selectModules: "Wybierz Moduły",
     selectModulesSubtitle: "Wybierz moduły, które chcesz dodać do swojej sofy",
-    addToScene: "STWÓRZ SOFE",
+    addToScene: "KONFIGURUJ",
     backToMenu: "Wróć do Menu",
     back: "Wstecz",
     close: "Zamknij",
 
     // Module Selection
-    selectCompleteSet: "Wybierz Kompletny Zestaw",
-    selectCompleteSetSubtitle: "Wybierz jeden z gotowych zestawów mebli",
+    selectCompleteSet: "Wybierz jeden z zaproponowanych zestawów.",
+    selectCompleteSetSubtitle: "Wybierz jeden z zaproponowanych zestawów.",
     clickToSelect2: "Kliknij, aby wybrać",
     alreadyInScene: "Już dodany do sceny",
-    selectModulesMultiple: "Zbuduj własną konfigurację, wybierając poszczególne moduły",
+    selectModulesMultiple: "Zbuduj własną konfigurację, wybierając poszczególne moduły.",
     buildOwnConfiguration:
       "Zbuduj własną konfigurację wybierając poszczególne moduły",
     clearSelection: "Wyczyść wybór",
@@ -131,6 +132,7 @@ const translations: Record<Language, Translations> = {
     leather: "Skóra",
     club: "Club",
     granit: "Granit",
+    wood: "Drewno",
     addObject: "Dodaj Obiekt",
     changeConfigType: "Typ Konfiguracji",
     addModule: "Dodaj Moduł",
@@ -147,7 +149,7 @@ const translations: Record<Language, Translations> = {
     home: "Home",
     moduleSelect: "Wybór modułów",
     setSelect: "Zestaw",
-    editor: "Edytor",
+    editor: "EDYCJA",
 
     // Context Menu
     delete: "Usuń",
@@ -187,7 +189,7 @@ const translations: Record<Language, Translations> = {
     welcome: "Welcome to the configurator",
     welcomeSubtitle: "Design your dream sofa",
     startConfiguration: "Start Configuration",
-    chooseConfigType: "How would you like to configure \n your sofa?",
+    chooseConfigType: "How would you like to configure your sofa?",
     configTypeSubtitle: "How would you like to configure your sofa?",
     completeSets: "Complete Sets",
     completeSetsDesc: "Choose a \n ready-made solution",
@@ -201,7 +203,7 @@ const translations: Record<Language, Translations> = {
     close: "Close",
 
     // Module Selection
-    selectCompleteSet: "Select Complete Set",
+    selectCompleteSet: "Choose one of the ready-made furniture sets",
     selectCompleteSetSubtitle: "Choose one of the ready-made furniture sets",
     clickToSelect2: "Click to select",
     alreadyInScene: "Already in scene",
@@ -218,6 +220,7 @@ const translations: Record<Language, Translations> = {
     leather: "Leather",
     club: "Club",
     granit: "Granit",
+    wood: "Wood",
     addObject: "Add Object",
     changeConfigType: "Configuration Type",
     addModule: "Add Module",
