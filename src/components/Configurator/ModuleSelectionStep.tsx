@@ -117,8 +117,8 @@ const ModuleSelectionStep: React.FC = () => {
           onBack={handleBack}
           onClose={sceneObjects.length > 0 ? handleClose : undefined}
           breadcrumb={[
-            { label: t.home, onClick: () => setCurrentStep("welcome") },
-            { label: t.changeConfigType, onClick: () => setCurrentStep("config-type") },
+            { label: t.home, onClick: () => { setCurrentStep("welcome"); setModuleCounts(new Map()); } },
+            { label: t.changeConfigType, onClick: () => { setCurrentStep("config-type"); setModuleCounts(new Map()); } },
             { label: t.completeSets },
           ]}
         />
@@ -128,6 +128,9 @@ const ModuleSelectionStep: React.FC = () => {
             <h2 className="font-lato font-medium text-[clamp(18px,1.3vw,25px)] text-black leading-none">
               {t.selectCompleteSet}
             </h2>
+            <p className="font-lato font-light text-[clamp(15px,1.04vw,20px)] text-black leading-normal">
+              {t.selectCompleteSetSubtitle}
+            </p>
           </div>
 
           <div className="flex-1 overflow-y-auto  pb-[44px]">
@@ -166,8 +169,8 @@ const ModuleSelectionStep: React.FC = () => {
         onBack={handleBack}
         onClose={sceneObjects.length > 0 ? handleClose : undefined}
         breadcrumb={[
-          { label: t.home, onClick: () => setCurrentStep("welcome") },
-          { label: t.changeConfigType, onClick: () => setCurrentStep("config-type") },
+          { label: t.home, onClick: () => { setCurrentStep("welcome"); setModuleCounts(new Map()); } },
+          { label: t.changeConfigType, onClick: () => { setCurrentStep("config-type"); setModuleCounts(new Map()); } },
           { label: t.moduleSelect },
         ]}
       />
