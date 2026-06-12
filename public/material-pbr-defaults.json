@@ -9,6 +9,47 @@
     "envMapIntensity": 0.15,
     "aoMapIntensity": 0.7
   },
+  "AMARAL 90": {
+    "uvScale": 18.0,
+    "normalScale": 1.55,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.87,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "AMARAL 790": {
+    "uvScale": 18.0,
+    "normalScale": 1.55,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.87,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "AMARAL 10": {
+    "uvScale": 18.0,
+    "normalScale": 1.55,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.87,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "AMARAL 32": {
+    "uvScale": 18.0,
+    "normalScale": 1.55,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.87,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+
   "cremona": {
     "uvScale": 18.9,
     "normalScale": 1.35,
@@ -19,6 +60,67 @@
     "envMapIntensity": 0.15,
     "aoMapIntensity": 0.7
   },
+  "CREMONA 02": {
+    "uvScale": 18.9,
+    "normalScale": 1.35,
+    "roughness": 0.93,
+    "metalness": 1,
+    "sheen": 0.05,
+    "sheenRoughness": 0.93,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "CREMONA 24": {
+    "uvScale": 18.9,
+    "normalScale": 1.35,
+    "roughness": 0.93,
+    "metalness": 1,
+    "sheen": 0.05,
+    "sheenRoughness": 0.93,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "CREMONA 96": {
+    "uvScale": 18.9,
+    "normalScale": 1.35,
+    "roughness": 0.93,
+    "metalness": 1,
+    "sheen": 0.05,
+    "sheenRoughness": 0.93,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "CREMONA 81": {
+    "uvScale": 18.9,
+    "normalScale": 1.35,
+    "roughness": 0.93,
+    "metalness": 1,
+    "sheen": 0.05,
+    "sheenRoughness": 0.93,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "CREMONA 77": {
+    "uvScale": 18.9,
+    "normalScale": 1.35,
+    "roughness": 0.93,
+    "metalness": 1,
+    "sheen": 0.05,
+    "sheenRoughness": 0.93,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "CREMONA 34": {
+    "uvScale": 18.9,
+    "normalScale": 1.35,
+    "roughness": 0.93,
+    "metalness": 1,
+    "sheen": 0.05,
+    "sheenRoughness": 0.93,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+
   "otaru": {
     "uvScale": 18.2,
     "normalScale": 1.55,
@@ -29,6 +131,77 @@
     "envMapIntensity": 0.1,
     "aoMapIntensity": 0.7
   },
+  "OTARU 02": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "OTARU 27": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "OTARU 300": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "OTARU 605": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "OTARU 611": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "OTARU 612": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "OTARU 615": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+
   "ilias": {
     "uvScale": 20.0,
     "normalScale": 1.35,
@@ -39,6 +212,37 @@
     "envMapIntensity": 0.1,
     "aoMapIntensity": 0.7
   },
+  "ILIAS 13": {
+    "uvScale": 20.0,
+    "normalScale": 1.35,
+    "roughness": 0.91,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "ILIAS 18": {
+    "uvScale": 20.0,
+    "normalScale": 1.35,
+    "roughness": 0.91,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "ILIAS 06": {
+    "uvScale": 20.0,
+    "normalScale": 1.35,
+    "roughness": 0.91,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+
   "indiana": {
     "uvScale": 16.0,
     "normalScale": 0.8,
@@ -49,6 +253,87 @@
     "envMapIntensity": 0.15,
     "aoMapIntensity": 0.7
   },
+  "INDIANA 1": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "INDIANA 6": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "INDIANA 9": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "INDIANA 12": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "INDIANA 15": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "INDIANA 17": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "INDIANA 21": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "INDIANA 22": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+
   "madras": {
     "uvScale": 16.3,
     "normalScale": 0.4,
@@ -59,6 +344,37 @@
     "envMapIntensity": 0.1,
     "aoMapIntensity": 0.7
   },
+  "MADRAS 230": {
+    "uvScale": 16.3,
+    "normalScale": 0.4,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "MADRAS 310": {
+    "uvScale": 16.3,
+    "normalScale": 0.4,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "MADRAS 220": {
+    "uvScale": 16.3,
+    "normalScale": 0.4,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+
   "ness": {
     "uvScale": 18.7,
     "normalScale": 1.75,
@@ -69,6 +385,57 @@
     "envMapIntensity": 0.07,
     "aoMapIntensity": 0.7
   },
+  "NESS 09": {
+    "uvScale": 18.7,
+    "normalScale": 1.75,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0,
+    "sheenRoughness": 1,
+    "envMapIntensity": 0.07,
+    "aoMapIntensity": 0.7
+  },
+  "NESS 15": {
+    "uvScale": 18.7,
+    "normalScale": 1.75,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0,
+    "sheenRoughness": 1,
+    "envMapIntensity": 0.07,
+    "aoMapIntensity": 0.7
+  },
+  "NESS 25": {
+    "uvScale": 18.7,
+    "normalScale": 1.75,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0,
+    "sheenRoughness": 1,
+    "envMapIntensity": 0.07,
+    "aoMapIntensity": 0.7
+  },
+  "NESS 56": {
+    "uvScale": 18.7,
+    "normalScale": 1.75,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0,
+    "sheenRoughness": 1,
+    "envMapIntensity": 0.07,
+    "aoMapIntensity": 0.7
+  },
+  "NESS 96": {
+    "uvScale": 18.7,
+    "normalScale": 1.75,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0,
+    "sheenRoughness": 1,
+    "envMapIntensity": 0.07,
+    "aoMapIntensity": 0.7
+  },
+
   "noma": {
     "uvScale": 18.4,
     "normalScale": 0.55,
@@ -79,6 +446,57 @@
     "envMapIntensity": 0.15,
     "aoMapIntensity": 0.7
   },
+  "NOMA 26": {
+    "uvScale": 18.4,
+    "normalScale": 0.55,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "NOMA 55": {
+    "uvScale": 18.4,
+    "normalScale": 0.55,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "NOMA 97": {
+    "uvScale": 18.4,
+    "normalScale": 0.55,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "NOMA 29": {
+    "uvScale": 18.4,
+    "normalScale": 0.55,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "NOMA 05": {
+    "uvScale": 18.4,
+    "normalScale": 0.55,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+
   "pegaso": {
     "uvScale": 19.9,
     "normalScale": 0.2,
@@ -89,7 +507,88 @@
     "envMapIntensity": 0.1,
     "aoMapIntensity": 0.7
   },
+  "PEGASO 2450": {
+    "uvScale": 19.9,
+    "normalScale": 0.2,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "PEGASO 2840": {
+    "uvScale": 19.9,
+    "normalScale": 0.2,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "PEGASO 2960": {
+    "uvScale": 19.9,
+    "normalScale": 0.2,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+
   "puente": {
+    "uvScale": 16.8,
+    "normalScale": 0.045,
+    "roughness": 0.87,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "PUENTE 15": {
+    "uvScale": 16.8,
+    "normalScale": 0.045,
+    "roughness": 0.87,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "PUENTE 56": {
+    "uvScale": 16.8,
+    "normalScale": 0.045,
+    "roughness": 0.87,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "PUENTE 33": {
+    "uvScale": 16.8,
+    "normalScale": 0.045,
+    "roughness": 0.87,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "PUENTE 06": {
+    "uvScale": 16.8,
+    "normalScale": 0.045,
+    "roughness": 0.87,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "PUENTE 29": {
     "uvScale": 16.8,
     "normalScale": 0.045,
     "roughness": 0.87,
