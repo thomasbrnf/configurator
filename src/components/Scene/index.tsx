@@ -6,7 +6,7 @@ import {
   Edges,
 } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useControls, folder, Leva } from "leva";
+import { useControls, folder, Leva, button } from "leva";
 import { DynamicModel } from "../DynamicModel";
 import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
@@ -19,7 +19,7 @@ import {
   useContext,
   useMemo,
 } from "react";
-import { useMaterial } from "../../context/MaterialContext";
+import { useMaterial, setPbrDefault, exportPbrDefaults } from "../../context/MaterialContext";
 
 function saveSession(key: string, value: unknown) {
   try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
@@ -28,9 +28,15 @@ function saveSession(key: string, value: unknown) {
 import {
   useConfigurator,
   getModuleCategory,
+  getModuleSnappingConfig,
 } from "../../context/ConfiguratorContext";
 import { halfExtentAlong } from "../../data/snapDistances";
-import { worldOffsetXZ } from "../../utils/footprint";
+import {
+  worldOffsetXZ,
+  worldHalfExtent,
+  quadrantFromRotationY,
+  snapFaceDirs,
+} from "../../utils/footprint";
 import { extractBaseModuleId } from "../../utils/moduleId";
 import { useLanguage } from "../../context/LanguageContext";
 import { useLoaderStore } from "../../store/loaderStore";
@@ -391,6 +397,123 @@ function AutoCenterCamera({
   return null;
 }
 
+// Decompose a model group into the MINIMUM number of axis-aligned collision
+// boxes needed to represent its XZ footprint without interior seams.
+//
+// Two bugs in naive multi-box approaches:
+//   1. Strided vertex sampling misses extremal vertices → overall AABB too small
+//      → thin unprotected strips at model edges where camera slips through.
+//   2. Multiple boxes with shared interior faces → push-out algorithm exits when
+//      exit==0 (camera exactly on seam face) → camera slips through mid-model.
+//
+// Fix: use exact geometry.boundingBox (transformed to world space) for the
+// overall AABB; then use sampled vertices only to detect which of the four XZ
+// quadrants are occupied; then return the MINIMUM box cover:
+//   • 4 occupied  → 1 box  (full AABB, identical to original behaviour)
+//   • 3 occupied  → 2 boxes (L-shape: one full-width strip + one remainder)
+//   • 2 adjacent  → 1 box  (merged territory)
+//   • 2 diagonal  → 2 boxes (disconnected regions)
+//   • 1 occupied  → 1 box
+// This eliminates all interior seams for the straight-sofa and L-shape cases.
+function decomposeGroupBoxes(group: THREE.Group, padding: number): THREE.Box3[] {
+  // ── Step 1: exact overall AABB from cached geometry bounding boxes ──────────
+  // geometry.boundingBox is in local mesh space; applyMatrix4(matrixWorld) maps
+  // it to world space. For 90° Y-rotations (the only rotations used here) this
+  // gives the exact world AABB with no overestimation.
+  const overall = new THREE.Box3();
+  const childBox = new THREE.Box3();
+  group.traverse((child) => {
+    if (!(child instanceof THREE.Mesh) || child.userData.isSelectionOutline)
+      return;
+    child.updateWorldMatrix(true, false);
+    if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+    childBox.copy(child.geometry.boundingBox!).applyMatrix4(child.matrixWorld);
+    overall.union(childBox);
+  });
+  if (overall.isEmpty()) return [];
+
+  const { min: mn, max: mx } = overall;
+  const midX = (mn.x + mx.x) / 2;
+  const midZ = (mn.z + mx.z) / 2;
+
+  // ── Step 2: quadrant occupancy via sampled vertices ─────────────────────────
+  // Q0 = (−x,−z)  Q1 = (−x,+z)  Q2 = (+x,−z)  Q3 = (+x,+z)
+  const occ = [false, false, false, false];
+  const wp = new THREE.Vector3();
+  group.traverse((child) => {
+    if (!(child instanceof THREE.Mesh) || child.userData.isSelectionOutline)
+      return;
+    const pos = child.geometry.attributes.position;
+    if (!pos) return;
+    child.updateWorldMatrix(true, false);
+    for (let i = 0; i < pos.count; i++) {
+      wp.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld);
+      occ[(wp.x >= midX ? 2 : 0) + (wp.z >= midZ ? 1 : 0)] = true;
+    }
+  });
+
+  const count = occ.filter(Boolean).length;
+  if (count === 0) return [];
+
+  // ── Step 3: minimum box cover ───────────────────────────────────────────────
+  // Helper: full territory box for one quadrant.
+  const qBox = (qi: number): THREE.Box3 =>
+    new THREE.Box3(
+      new THREE.Vector3(qi >= 2 ? midX : mn.x, mn.y, qi % 2 === 1 ? midZ : mn.z),
+      new THREE.Vector3(qi >= 2 ? mx.x : midX, mx.y, qi % 2 === 1 ? mx.z : midZ),
+    );
+
+  const pad = (b: THREE.Box3) => b.expandByScalar(padding);
+
+  // 4 occupied → single box (no interior seams at all).
+  if (count === 4) return [pad(overall.clone())];
+
+  // 1 occupied → single quadrant box.
+  if (count === 1) return [pad(qBox(occ.indexOf(true)))];
+
+  // 2 occupied → merge if adjacent (share a face), else keep separate.
+  if (count === 2) {
+    const [a, b] = occ.flatMap((v, i) => (v ? [i] : []));
+    const adjacent =
+      (a + b === 1 && a < 2) ||   // Q0+Q1: same x-half
+      (a + b === 5 && a >= 2) ||  // Q2+Q3: same x-half
+      Math.abs(a - b) === 2;      // Q0+Q2 or Q1+Q3: same z-half
+    if (adjacent) return [pad(qBox(a).union(qBox(b)))];
+    return [pad(qBox(a)), pad(qBox(b))];
+  }
+
+  // 3 occupied (L-shape) → 2 non-overlapping rectangles: one full-width strip
+  // covering the two occupied quadrants that share a Z-half, plus one piece for
+  // the remaining single occupied quadrant. Single shared face → no seam gap.
+  if (count === 3) {
+    const empty = occ.indexOf(false);
+    switch (empty) {
+      case 3: // Q3 empty (+x+z) → full-bottom strip + left-top piece
+        return [
+          pad(new THREE.Box3(new THREE.Vector3(mn.x, mn.y, mn.z), new THREE.Vector3(mx.x, mx.y, midZ))),
+          pad(new THREE.Box3(new THREE.Vector3(mn.x, mn.y, midZ), new THREE.Vector3(midX, mx.y, mx.z))),
+        ];
+      case 2: // Q2 empty (+x−z) → full-top strip + left-bottom piece
+        return [
+          pad(new THREE.Box3(new THREE.Vector3(mn.x, mn.y, midZ), new THREE.Vector3(mx.x, mx.y, mx.z))),
+          pad(new THREE.Box3(new THREE.Vector3(mn.x, mn.y, mn.z), new THREE.Vector3(midX, mx.y, midZ))),
+        ];
+      case 1: // Q1 empty (−x+z) → full-bottom strip + right-top piece
+        return [
+          pad(new THREE.Box3(new THREE.Vector3(mn.x, mn.y, mn.z), new THREE.Vector3(mx.x, mx.y, midZ))),
+          pad(new THREE.Box3(new THREE.Vector3(midX, mn.y, midZ), new THREE.Vector3(mx.x, mx.y, mx.z))),
+        ];
+      case 0: // Q0 empty (−x−z) → full-top strip + right-bottom piece
+        return [
+          pad(new THREE.Box3(new THREE.Vector3(mn.x, mn.y, midZ), new THREE.Vector3(mx.x, mx.y, mx.z))),
+          pad(new THREE.Box3(new THREE.Vector3(midX, mn.y, mn.z), new THREE.Vector3(mx.x, mx.y, midZ))),
+        ];
+    }
+  }
+
+  return [pad(overall.clone())];
+}
+
 // Camera Collision Constraint - prevents the camera from entering the model
 // while leaving pan/rotate/zoom otherwise untouched. Maintains a bounding
 // sphere around every model in the scene and, on each OrbitControls "change",
@@ -429,12 +552,9 @@ function CameraCollisionConstraint({
       scene.updateMatrixWorld(true);
       const boxes: THREE.Box3[] = [];
       scene.traverse((obj) => {
-        if (obj instanceof THREE.Group && obj.userData.objectId) {
-          const objBox = new THREE.Box3().setFromObject(obj);
-          if (objBox.isEmpty()) return;
-          objBox.expandByScalar(CAMERA_BOX_PADDING); // small breathing room
-          boxes.push(objBox);
-        }
+        if (!(obj instanceof THREE.Group) || !obj.userData.objectId) return;
+        const groupBoxes = decomposeGroupBoxes(obj, CAMERA_BOX_PADDING);
+        for (const b of groupBoxes) boxes.push(b);
       });
       if (boxes.length === 0) {
         if (attempts++ < 600) raf = requestAnimationFrame(compute);
@@ -581,6 +701,7 @@ function ClickHandler({
     objectBoundingOffsets,
     connectModules,
     disconnectModule,
+    getModuleNeighbors,
   } = useConfigurator();
 
   const isRotatingRef = useRef(false);
@@ -605,6 +726,7 @@ function ClickHandler({
     onDragStateChange,
     onConnect: connectModules,
     onDisconnect: disconnectModule,
+    getNeighbors: getModuleNeighbors,
   });
 
   useEffect(() => {
@@ -874,66 +996,320 @@ function CollisionDebugBox({
   );
 }
 
-// Debug overlay: draws the camera-collision boundary BOX for a module — the
-// padded world AABB CameraCollision pushes the orbit camera out of. Same
-// width/depth/height the footprint uses (X/Z swapped per 90° quadrant), grown
-// by the camera padding on every side, and shifted to the true footprint centre
-// for off-centre origins (complete sets). Wireframe so the model stays visible.
+// Debug overlay: draws the camera-collision boxes for a module — one padded
+// AABB per mesh child, mirroring exactly what CameraCollisionConstraint builds
+// at runtime. This shows the true per-mesh breakdown so L-shaped / multi-part
+// sets display tight boxes around each arm rather than one large envelope.
 function CameraBoxDebug({
-  position,
-  category,
-  rotationY,
-  measuredSize,
-  offset,
+  instanceId,
   opacity,
 }: {
-  position: [number, number, number];
-  category: ReturnType<typeof getModuleCategory>;
-  rotationY: number;
-  measuredSize?: [number, number, number];
-  offset?: [number, number, number];
+  instanceId: string;
   opacity: number;
 }) {
-  const quadrant = ((Math.round(rotationY / (Math.PI / 2)) % 4) + 4) % 4;
-  const isOdd = quadrant % 2 !== 0;
+  const { scene } = useThree();
+  const [boxes, setBoxes] = useState<THREE.Box3[]>([]);
 
-  let width: number;
-  let height: number;
-  let depth: number;
-  if (measuredSize) {
-    width = isOdd ? measuredSize[2] : measuredSize[0];
-    depth = isOdd ? measuredSize[0] : measuredSize[2];
-    height = measuredSize[1];
-  } else {
-    width = halfExtentAlong(category, quadrant, "x") * 2;
-    depth = halfExtentAlong(category, quadrant, "z") * 2;
-    height = FALLBACK_BOX_HEIGHT;
-  }
-
-  const pad = 2 * CAMERA_BOX_PADDING;
-  const [wox, woz] = offset ? worldOffsetXZ(offset, quadrant) : [0, 0];
+  useEffect(() => {
+    scene.updateMatrixWorld(true);
+    const collected: THREE.Box3[] = [];
+    scene.traverse((obj) => {
+      if (
+        !(obj instanceof THREE.Group) ||
+        obj.userData.objectId !== instanceId
+      )
+        return;
+      const groupBoxes = decomposeGroupBoxes(obj, CAMERA_BOX_PADDING);
+      for (const b of groupBoxes) collected.push(b);
+    });
+    setBoxes(collected);
+  }, [scene, instanceId]);
 
   return (
-    <mesh position={[position[0] + wox, height / 2, position[2] + woz]}>
-      <boxGeometry args={[width + pad, height + pad, depth + pad]} />
-      <meshBasicMaterial
-        color="#ff9500"
-        wireframe
-        transparent
-        opacity={opacity}
-        depthWrite={false}
-      />
-    </mesh>
+    <>
+      {boxes.map((box, i) => {
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        return (
+          <mesh key={i} position={[center.x, center.y, center.z]}>
+            <boxGeometry args={[size.x, size.y, size.z]} />
+            <meshBasicMaterial
+              color="#ff9500"
+              wireframe
+              transparent
+              opacity={opacity}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })}
+    </>
   );
 }
 
 // Component to render all objects in the scene
+// Evenly-spaced hues around the colour wheel — each mesh in the scene gets its
+// own tint so you can immediately see how the GLB is split into mesh parts.
+const MESH_DEBUG_PALETTE = [
+  "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71",
+  "#1abc9c", "#3498db", "#9b59b6", "#e91e63",
+  "#00bcd4", "#8bc34a", "#ff5722", "#607d8b",
+];
+
+// Debug overlay: renders each mesh in the scene as a coloured transparent hull
+// so you can see exactly how the GLB is split into parts. Useful for diagnosing
+// why camera collision boxes cover (or miss) certain areas.
+function MeshColorDebug({ opacity }: { opacity: number }) {
+  const { scene } = useThree();
+  type MeshEntry = { uuid: string; color: string; geometry: THREE.BufferGeometry; matrix: THREE.Matrix4 };
+  const [meshes, setMeshes] = useState<MeshEntry[]>([]);
+
+  useEffect(() => {
+    scene.updateMatrixWorld(true);
+    const collected: MeshEntry[] = [];
+    let colorIdx = 0;
+    scene.traverse((obj) => {
+      if (!(obj instanceof THREE.Group) || !obj.userData.objectId) return;
+      obj.traverse((child) => {
+        if (
+          !(child instanceof THREE.Mesh) ||
+          child.userData.isSelectionOutline
+        )
+          return;
+        collected.push({
+          uuid: child.uuid,
+          color: MESH_DEBUG_PALETTE[colorIdx++ % MESH_DEBUG_PALETTE.length],
+          geometry: child.geometry,
+          matrix: child.matrixWorld.clone(),
+        });
+      });
+    });
+    setMeshes(collected);
+  }, [scene]);
+
+  return (
+    <>
+      {meshes.map(({ uuid, color, geometry, matrix }) => (
+        <mesh key={uuid} matrixAutoUpdate={false} matrix={matrix}>
+          <primitive object={geometry} attach="geometry" />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={opacity}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+// Debug overlay: renders a semi-transparent coloured quad on each face of a
+// module that accepts a snap connection, so you can see exactly which sides are
+// active and how they change when the module is rotated.
+// Green  = snappable side face (left / right)
+// Cyan   = snappable front face
+const SNAP_FACE_COLOR: Record<string, string> = {
+  side: "#00e676",
+  front: "#00e5ff",
+};
+
+function SnapFaceDebug({
+  instanceId,
+  opacity,
+}: {
+  instanceId: string;
+  opacity: number;
+}) {
+  const {
+    objectPositions,
+    objectRotations,
+    objectBoundingSizes,
+    objectBoundingOffsets,
+  } = useConfigurator();
+
+  const pos = objectPositions.get(instanceId) ?? [0, 0, 0];
+  const ry = objectRotations.get(instanceId)?.[1] ?? 0;
+  const baseId = extractBaseModuleId(instanceId);
+  const size = objectBoundingSizes.get(baseId);
+  const off = objectBoundingOffsets.get(baseId);
+  const quadrant = quadrantFromRotationY(ry);
+  const snapping = getModuleSnappingConfig(instanceId);
+  const dirs = snapFaceDirs(snapping, quadrant);
+
+  // Footprint centre in world XZ (origin + rotation-aware offset).
+  const [offX, offZ] = off ? worldOffsetXZ(off, quadrant) : [0, 0];
+  const cx = pos[0] + offX;
+  const cz = pos[2] + offZ;
+  const height = size ? size[1] : 1.0;
+  const cy = height / 2;
+
+  return (
+    <>
+      {dirs.map(([dx, dz], i) => {
+        // Half-extents of this module's footprint along each world axis.
+        const halfX = worldHalfExtent(size, getModuleCategory(instanceId), quadrant, "x");
+        const halfZ = worldHalfExtent(size, getModuleCategory(instanceId), quadrant, "z");
+
+        // Face centre: step from footprint centre to the face along [dx, dz].
+        const faceCx = cx + dx * halfX;
+        const faceCz = cz + dz * halfZ;
+
+        // Face dimensions: a face perpendicular to X has width=halfZ*2, and vice versa.
+        const faceW = dx !== 0 ? halfZ * 2 : halfX * 2;
+        const faceH = height;
+
+        // Rotate the quad so it faces outward along [dx, dz].
+        const angle = Math.atan2(dx, dz); // Y rotation that aligns local +Z with [dx,dz]
+
+        // Colour: front-face dirs are always world ±X or ±Z aligned with the
+        // module's front (local +Z) — distinguish by checking if this is the
+        // "front" direction for the module's snapping config.
+        const isFront =
+          snapping === "front" ||
+          (snapping === "left-front" && i === 1) ||
+          (snapping === "right-front" && i === 1);
+        const color = SNAP_FACE_COLOR[isFront ? "front" : "side"];
+
+        return (
+          <mesh
+            key={i}
+            position={[faceCx, cy, faceCz]}
+            rotation={[0, angle, 0]}
+          >
+            <planeGeometry args={[faceW, faceH]} />
+            <meshBasicMaterial
+              color={color}
+              transparent
+              opacity={opacity}
+              depthWrite={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        );
+      })}
+    </>
+  );
+}
+
+function DebugInfoPanel() {
+  const { sceneObjects, objectRotations, objectPositions } = useConfigurator();
+  const [open, setOpen] = useState(false);
+
+  const rows = sceneObjects.map((inst) => {
+    const pos = objectPositions.get(inst.instanceId) ?? [0, 0, 0];
+    const rot = objectRotations.get(inst.instanceId) ?? [0, 0, 0];
+    const ry = rot[1];
+    const deg = ((ry * 180) / Math.PI).toFixed(1);
+    const quad = quadrantFromRotationY(ry);
+    const snapping = getModuleSnappingConfig(inst.instanceId);
+    return { id: inst.instanceId, pos, deg, quad, snapping };
+  });
+
+  const copyText = rows
+    .map(
+      (r) =>
+        `${r.id} | rot=${r.deg}° q${r.quad} | snap=${r.snapping} | pos=[${r.pos.map((v) => v.toFixed(3)).join(", ")}]`,
+    )
+    .join("\n");
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          position: "fixed",
+          bottom: 8,
+          left: 8,
+          zIndex: 9999,
+          background: "#1a1a2e",
+          color: "#e0e0e0",
+          border: "1px solid #444",
+          borderRadius: 4,
+          padding: "4px 10px",
+          fontSize: 11,
+          fontFamily: "monospace",
+          cursor: "pointer",
+          opacity: 0.85,
+        }}
+      >
+        {open ? "▼ debug" : "▶ debug"}
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 36,
+            left: 8,
+            zIndex: 9998,
+            background: "rgba(15,15,25,0.95)",
+            color: "#e0e0e0",
+            border: "1px solid #444",
+            borderRadius: 6,
+            padding: "10px 14px",
+            fontFamily: "monospace",
+            fontSize: 11,
+            maxHeight: "60vh",
+            overflowY: "auto",
+            minWidth: 520,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontWeight: "bold", color: "#aaa" }}>Scene objects ({rows.length})</span>
+            <button
+              onClick={() => navigator.clipboard.writeText(copyText)}
+              style={{ background: "#333", border: "1px solid #555", color: "#ccc", borderRadius: 3, padding: "2px 8px", fontSize: 10, cursor: "pointer" }}
+            >
+              copy
+            </button>
+          </div>
+          <table style={{ borderCollapse: "collapse", width: "100%" }}>
+            <thead>
+              <tr style={{ color: "#888", borderBottom: "1px solid #333" }}>
+                <th style={{ textAlign: "left", padding: "2px 8px 4px 0" }}>instance ID</th>
+                <th style={{ textAlign: "center", padding: "2px 6px" }}>rot Y</th>
+                <th style={{ textAlign: "center", padding: "2px 6px" }}>q</th>
+                <th style={{ textAlign: "center", padding: "2px 6px" }}>snap</th>
+                <th style={{ textAlign: "left", padding: "2px 0 2px 6px" }}>position</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr
+                  key={r.id}
+                  style={{ borderBottom: "1px solid #222", background: i % 2 ? "rgba(255,255,255,0.03)" : "transparent" }}
+                >
+                  <td style={{ padding: "3px 8px 3px 0", color: "#b3d9ff", whiteSpace: "nowrap" }}>{r.id}</td>
+                  <td style={{ textAlign: "center", padding: "3px 6px", color: "#ffd77a" }}>{r.deg}°</td>
+                  <td style={{ textAlign: "center", padding: "3px 6px", color: "#c8f" }}>{r.quad}</td>
+                  <td style={{ textAlign: "center", padding: "3px 6px", color: "#7dffb3" }}>{r.snapping}</td>
+                  <td style={{ padding: "3px 0 3px 6px", color: "#aaa", whiteSpace: "nowrap" }}>
+                    [{r.pos.map((v) => v.toFixed(3)).join(", ")}]
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
+
 function SceneObjects({
   snapPreview,
   showCollisionBoxes,
   collisionBoxOpacity,
   showCameraBoxes,
   cameraBoxOpacity,
+  showMeshColors,
+  meshColorsOpacity,
+  showSnapFaces,
+  snapFacesOpacity,
 }: {
   snapPreview: {
     fromId: string;
@@ -945,6 +1321,10 @@ function SceneObjects({
   collisionBoxOpacity: number;
   showCameraBoxes: boolean;
   cameraBoxOpacity: number;
+  showMeshColors: boolean;
+  meshColorsOpacity: number;
+  showSnapFaces: boolean;
+  snapFacesOpacity: number;
 }) {
   const {
     sceneObjects,
@@ -986,16 +1366,14 @@ function SceneObjects({
             )}
             {showCameraBoxes && (
               <CameraBoxDebug
-                position={position as [number, number, number]}
-                rotationY={rotation[1]}
-                category={getModuleCategory(inst.instanceId)}
-                measuredSize={objectBoundingSizes.get(
-                  extractBaseModuleId(inst.instanceId),
-                )}
-                offset={objectBoundingOffsets.get(
-                  extractBaseModuleId(inst.instanceId),
-                )}
+                instanceId={inst.instanceId}
                 opacity={cameraBoxOpacity}
+              />
+            )}
+            {showSnapFaces && (
+              <SnapFaceDebug
+                instanceId={inst.instanceId}
+                opacity={snapFacesOpacity}
               />
             )}
           </group>
@@ -1009,6 +1387,8 @@ function SceneObjects({
           toPos={snapPreview.toPos}
         />
       )}
+
+      {showMeshColors && <MeshColorDebug opacity={meshColorsOpacity} />}
     </>
   );
 }
@@ -1017,6 +1397,7 @@ const Scene = () => {
   const {
     selectedObjectId,
     currentMaterial,
+    getObjectMaterial,
     getObjectPbr,
     setObjectPbr,
   } = useMaterial();
@@ -1087,6 +1468,18 @@ const Scene = () => {
     setIsDraggingObject(isDragging);
   };
 
+  // Ref that always holds the latest values needed by Leva button callbacks,
+  // which close over the mount-time scope and would otherwise see stale state.
+  const pbrActionRef = useRef<{
+    selectedObjectId: string | null;
+    getObjectMaterial: typeof getObjectMaterial;
+    getObjectPbr: typeof getObjectPbr;
+  }>({ selectedObjectId: null, getObjectMaterial, getObjectPbr });
+
+  useEffect(() => {
+    pbrActionRef.current = { selectedObjectId, getObjectMaterial, getObjectPbr };
+  });
+
   const [matControls, setMatControls] = useControls(() => ({
     Material: folder(
       {
@@ -1122,6 +1515,19 @@ const Scene = () => {
           step: 0.01,
           label: "AO Intensity",
         },
+        // ─── PBR default management (DEV only) ───────────────────────
+        setShadeDefault: button(() => {
+          const { selectedObjectId: id, getObjectMaterial: getMat, getObjectPbr: getPbr } =
+            pbrActionRef.current;
+          if (!id) return;
+          const mat = getMat(id);
+          if (!mat) return;
+          setPbrDefault(mat.name, getPbr(id));
+          console.info(`[PBR] Set default for "${mat.name}"`);
+        }),
+        exportPbrJson: button(() => {
+          exportPbrDefaults();
+        }),
       },
       { collapsed: true },
     ),
@@ -1198,7 +1604,7 @@ const Scene = () => {
   const debugControls = useControls(
     "Debug",
     {
-      showCollisionBoxes: { value: true, label: "Collision Boxes" },
+      showCollisionBoxes: { value: false, label: "Collision Boxes" },
       collisionBoxOpacity: {
         value: 0.35,
         min: 0,
@@ -1213,6 +1619,22 @@ const Scene = () => {
         max: 1,
         step: 0.01,
         label: "Camera Box Opacity",
+      },
+      showMeshColors: { value: false, label: "Mesh Colors" },
+      meshColorsOpacity: {
+        value: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: "Mesh Color Opacity",
+      },
+      showSnapFaces: { value: false, label: "Snap Faces" },
+      snapFacesOpacity: {
+        value: 0.6,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: "Snap Face Opacity",
       },
     },
     { collapsed: true },
@@ -1287,10 +1709,13 @@ const Scene = () => {
         )}
 
         {import.meta.env.DEV && (
-          <Leva
-            collapsed={true}
-            oneLineLabels={true}
-          />
+          <>
+            <Leva
+              collapsed={true}
+              oneLineLabels={true}
+            />
+            <DebugInfoPanel />
+          </>
         )}
         <Canvas
           camera={{ position: [0, 2, 2], fov: 60 }}
@@ -1383,6 +1808,10 @@ const Scene = () => {
             collisionBoxOpacity={debugControls.collisionBoxOpacity}
             showCameraBoxes={debugControls.showCameraBoxes}
             cameraBoxOpacity={debugControls.cameraBoxOpacity}
+            showMeshColors={debugControls.showMeshColors}
+            meshColorsOpacity={debugControls.meshColorsOpacity}
+            showSnapFaces={debugControls.showSnapFaces}
+            snapFacesOpacity={debugControls.snapFacesOpacity}
           />
 
           <ContactShadows
