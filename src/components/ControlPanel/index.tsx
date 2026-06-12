@@ -47,7 +47,12 @@ const ControlPanel: React.FC = () => {
       <ConfiguratorHeader
         fixed
         leftContent={leftButton}
-        breadcrumb={[t.home, t.changeConfigType, configurationType === "complete" ? t.setSelect : t.moduleSelect, t.editor]}
+        breadcrumb={[
+          { label: t.home, onClick: () => setCurrentStep("welcome") },
+          { label: t.changeConfigType, onClick: () => setCurrentStep("config-type") },
+          { label: configurationType === "complete" ? t.setSelect : t.moduleSelect, onClick: () => setCurrentStep("module-selection") },
+          { label: t.editor },
+        ]}
         subBar={subBar}
       />
       <MaterialsModal />
