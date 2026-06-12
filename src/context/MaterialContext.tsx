@@ -387,6 +387,17 @@ export const MaterialProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetch(`${BASE}material-pbr-defaults.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json: Record<string, Partial<PbrSettings>> | null) => {
+        if (json) Object.assign(pbrOverrides, json);
+      })
+      .catch(() => {
+        // No file → use hardcoded defaults. Silent fallback intentional.
+      });
+  }, []);
+
   useEffect(() => saveSession("mat_objects", objects), [objects]);
   const [uvScale, setUvScale] = useState(15.4);
   const [normalScale, setNormalScale] = useState(1.15);
@@ -620,19 +631,70 @@ export function getMaterialFamily(
 // every object starts from this uniform default.
 const DEFAULT_AO_MAP_INTENSITY = 0.7;
 
-/** Build a fresh PBR settings object from a material's family defaults. */
+// Module-level — survives React remounts, never triggers re-renders.
+// Keys are either exact material names ("NESS 15") or family names ("ness").
+// Populated at startup from public/material-pbr-defaults.json.
+let pbrOverrides: Record<string, Partial<PbrSettings>> = {};
+
+/** Store the current PBR as the default for a specific material shade or family.
+ *  Call this from the Leva "Set as Shade Default" button. */
+export function setPbrDefault(materialName: string, pbr: PbrSettings): void {
+  pbrOverrides[materialName] = { ...pbr };
+}
+
+/** Download the merged defaults (hardcoded family values + all runtime overrides)
+ *  as material-pbr-defaults.json. Drop this file in /public on the server. */
+export function exportPbrDefaults(): void {
+  const output: Record<string, Partial<PbrSettings>> = {};
+
+  // Seed with hardcoded family defaults (includes aoMapIntensity)
+  for (const [family, d] of Object.entries(MATERIAL_PBR_DEFAULTS) as [
+    keyof MaterialLibrary,
+    (typeof MATERIAL_PBR_DEFAULTS)[keyof MaterialLibrary],
+  ][]) {
+    output[family] = {
+      uvScale: d.uvScale,
+      normalScale: d.normalScale,
+      metalness: d.metalness ?? 0,
+      roughness: d.roughness,
+      sheen: d.sheen,
+      sheenRoughness: d.sheenRoughness,
+      envMapIntensity: d.envMapIntensity,
+      aoMapIntensity: DEFAULT_AO_MAP_INTENSITY,
+    };
+  }
+
+  // Shade-level or family-level overrides set at runtime win
+  Object.assign(output, pbrOverrides);
+
+  const json = JSON.stringify(output, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "material-pbr-defaults.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Build a fresh PBR settings object for a material.
+ *  Lookup order: exact shade override → family override → hardcoded family default. */
 export function defaultPbrForMaterial(materialName: string): PbrSettings {
   const family = getMaterialFamily(materialName) ?? "amaral";
-  const d = MATERIAL_PBR_DEFAULTS[family];
+  const hardcoded = MATERIAL_PBR_DEFAULTS[family];
+
+  // Exact shade name wins over family name wins over hardcoded
+  const override = pbrOverrides[materialName] ?? pbrOverrides[family] ?? {};
+
   return {
-    uvScale: d.uvScale,
-    normalScale: d.normalScale,
-    metalness: d.metalness ?? 0,
-    roughness: d.roughness,
-    sheen: d.sheen,
-    sheenRoughness: d.sheenRoughness,
-    envMapIntensity: d.envMapIntensity,
-    aoMapIntensity: DEFAULT_AO_MAP_INTENSITY,
+    uvScale: override.uvScale ?? hardcoded.uvScale,
+    normalScale: override.normalScale ?? hardcoded.normalScale,
+    metalness: override.metalness ?? hardcoded.metalness ?? 0,
+    roughness: override.roughness ?? hardcoded.roughness,
+    sheen: override.sheen ?? hardcoded.sheen,
+    sheenRoughness: override.sheenRoughness ?? hardcoded.sheenRoughness,
+    envMapIntensity: override.envMapIntensity ?? hardcoded.envMapIntensity,
+    aoMapIntensity: override.aoMapIntensity ?? DEFAULT_AO_MAP_INTENSITY,
   };
 }
 
