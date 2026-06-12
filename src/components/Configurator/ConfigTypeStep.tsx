@@ -31,7 +31,10 @@ const ConfigTypeStep: React.FC = () => {
         onClose={
           sceneObjects.length > 0 ? () => setCurrentStep("scene") : undefined
         }
-        breadcrumb={[t.home, t.changeConfigType]}
+        breadcrumb={[
+          { label: t.home, onClick: () => setCurrentStep("welcome") },
+          { label: t.changeConfigType },
+        ]}
       />
 
       {/* Vertically centered, never scrolls — sized with clamp() so it fits
