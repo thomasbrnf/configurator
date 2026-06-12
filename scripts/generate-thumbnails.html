@@ -341,12 +341,12 @@
           loadTex(normal),
         ]);
         if (baseMap) {
-          baseMap.repeat.set(31, 31);
+          baseMap.repeat.set(6.2, 6.2);
           baseMap.colorSpace = THREE.SRGBColorSpace;
           baseMap.needsUpdate = true;
         }
         if (normalMap) {
-          normalMap.repeat.set(31, 31);
+          normalMap.repeat.set(6.2, 6.2);
           normalMap.needsUpdate = true;
         }
       }
@@ -359,15 +359,17 @@
 
       function buildFabricMaterial(gltfMaterials) {
         const src = gltfMaterials["Sofa_Fabric"];
-        return new THREE.MeshStandardMaterial({
+        return new THREE.MeshPhysicalMaterial({
           map: baseMap || null,
           normalMap: normalMap || null,
-          normalScale: new THREE.Vector2(1, 1),
+          normalScale: new THREE.Vector2(0.55, 0.55),
           aoMap: src?.aoMap ?? null,
-          aoMapIntensity: src?.aoMap ? 1 : 0,
-          roughness: 0.82,
-          metalness: 0.04,
-          envMapIntensity: 0.5,
+          aoMapIntensity: 0.30,
+          roughness: 0.93,
+          metalness: 1,
+          envMapIntensity: 0.15,
+          sheen: 0.05,
+          sheenRoughness: 0.93,
           color: baseMap ? 0xffffff : 0xc8b8a0,
         });
       }
