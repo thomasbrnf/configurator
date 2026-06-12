@@ -1,17 +1,30 @@
 import React from "react";
 
+interface BreadcrumbItem {
+  label: string;
+  onClick?: () => void;
+}
 
 interface BreadcrumbProps {
-  items: string[];
+  items: BreadcrumbItem[];
 }
 
 const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => (
   <div className="flex items-center gap-1">
     {items.map((item, idx) => (
       <React.Fragment key={idx}>
-        <span className="font-lato font-light text-ui-muted text-[15px] uppercase whitespace-nowrap">
-          {item}
-        </span>
+        {item.onClick ? (
+          <button
+            onClick={item.onClick}
+            className="font-lato font-light text-ui-muted text-[15px] uppercase whitespace-nowrap opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          >
+            {item.label}
+          </button>
+        ) : (
+          <span className="font-lato font-light text-ui-muted text-[15px] uppercase whitespace-nowrap">
+            {item.label}
+          </span>
+        )}
         {idx < items.length - 1 && (
           <div className="flex items-center justify-center w-[6px] h-[11px]">
             <svg

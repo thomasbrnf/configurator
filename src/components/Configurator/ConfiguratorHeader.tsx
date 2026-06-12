@@ -11,7 +11,7 @@ interface ConfiguratorHeaderProps {
   onBack?: () => void;
   /** Fully custom left slot — overrides showLabel and onBack. */
   leftContent?: React.ReactNode;
-  breadcrumb?: string[];
+  breadcrumb?: { label: string; onClick?: () => void }[];
   onClose?: () => void;
   /** Second row rendered directly below the header bar (scene ADD MODULE bar). */
   subBar?: React.ReactNode;
@@ -70,6 +70,7 @@ const ConfiguratorHeader: React.FC<ConfiguratorHeaderProps> = ({
             <Breadcrumb items={breadcrumb} />
           </div>
         )}
+
 
         <div className="flex-1 h-[3px] bg-ui-mid" />
 
