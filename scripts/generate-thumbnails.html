@@ -119,6 +119,7 @@
     <script type="module">
       import * as THREE from "three";
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
       // ── Model lists (must mirror ConfiguratorContext.tsx) ─────────────────────
 
@@ -262,7 +263,7 @@
         },
       ];
 
-      const ALL = [...MODULES, ...SETS];
+      const ALL = [...MODULES];
 
       // ── Renderer ──────────────────────────────────────────────────────────────
 
@@ -334,8 +335,8 @@
       async function loadTextures() {
         // Use data URLs injected by the Node.js runner (avoids URL-encoding issues
         // with double-space folder names). Fall back to HTTP fetch if running standalone.
-        const base   = window.__fabricBaseDataURL   || "/materials/CREMONA 02  24  96  81  77  34/02_BaseColor.jpg";
-        const normal = window.__fabricNormalDataURL || "/materials/CREMONA 02  24  96  81  77  34/02_Normal.jpg";
+        const base   = window.__fabricBaseDataURL   || "/materials/CREMONA 02  24  96  81  77  34/02_BaseColor.webp";
+        const normal = window.__fabricNormalDataURL || "/materials/CREMONA 02  24  96  81  77  34/02_Normal_1k.webp";
         [baseMap, normalMap] = await Promise.all([
           loadTex(base),
           loadTex(normal),
@@ -416,7 +417,10 @@
 
       // ── Per-model render ──────────────────────────────────────────────────────
 
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
       const gltfLoader = new GLTFLoader();
+      gltfLoader.setDRACOLoader(dracoLoader);
 
       function renderModel(info) {
         return new Promise((resolve, reject) => {
