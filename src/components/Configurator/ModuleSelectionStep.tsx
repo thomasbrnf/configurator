@@ -116,7 +116,11 @@ const ModuleSelectionStep: React.FC = () => {
         <ConfiguratorHeader
           onBack={handleBack}
           onClose={sceneObjects.length > 0 ? handleClose : undefined}
-          breadcrumb={[t.home, t.changeConfigType, t.completeSets]}
+          breadcrumb={[
+            { label: t.home, onClick: () => setCurrentStep("welcome") },
+            { label: t.changeConfigType, onClick: () => setCurrentStep("config-type") },
+            { label: t.completeSets },
+          ]}
         />
 
         <div className="pt-[95px] flex flex-col px-[100px] flex-1 text-left overflow-hidden">
@@ -124,9 +128,6 @@ const ModuleSelectionStep: React.FC = () => {
             <h2 className="font-lato font-medium text-[clamp(18px,1.3vw,25px)] text-black leading-none">
               {t.selectCompleteSet}
             </h2>
-            <p className="font-lato font-light text-[clamp(15px,1.04vw,20px)] text-black leading-normal">
-              {t.selectCompleteSetSubtitle}
-            </p>
           </div>
 
           <div className="flex-1 overflow-y-auto  pb-[44px]">
@@ -164,7 +165,11 @@ const ModuleSelectionStep: React.FC = () => {
       <ConfiguratorHeader
         onBack={handleBack}
         onClose={sceneObjects.length > 0 ? handleClose : undefined}
-        breadcrumb={[t.home, t.changeConfigType, t.moduleSelect]}
+        breadcrumb={[
+          { label: t.home, onClick: () => setCurrentStep("welcome") },
+          { label: t.changeConfigType, onClick: () => setCurrentStep("config-type") },
+          { label: t.moduleSelect },
+        ]}
       />
 
       <div className="pt-[95px] flex w-full flex-col px-[100px] flex-1 text-left overflow-hidden">
