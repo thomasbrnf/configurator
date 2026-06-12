@@ -54,7 +54,7 @@ const ModuleSelectionStep: React.FC = () => {
   };
 
   const handleCompleteSetSelect = (setId: string) => {
-    showLoader("Ładowanie sofy...");
+    showLoader("Ładowanie...");
     setTimeout(hideLoader, 500);
     clearScene();
     setSelectedCompleteSet(setId);
@@ -97,7 +97,7 @@ const ModuleSelectionStep: React.FC = () => {
   const clearModules = () => setModuleCounts(new Map());
 
   const addModulesToScene = () => {
-    showLoader("Ładowanie sofy...");
+    showLoader("Ładowanie...");
     setTimeout(hideLoader, 500);
     let counter = 0;
     moduleCounts.forEach((count, moduleId) => {

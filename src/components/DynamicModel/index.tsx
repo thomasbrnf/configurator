@@ -100,7 +100,7 @@ export function DynamicModel({
     const objectExists = objects.some((obj) => obj.id === objectId);
     if (!objectExists) {
       const { showLoader } = useLoaderStore.getState();
-      showLoader("Ładowanie obiektu...");
+      showLoader("Ładowanie...");
 
       addObject({
         id: objectId,

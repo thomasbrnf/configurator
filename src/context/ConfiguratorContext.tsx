@@ -656,9 +656,7 @@ export const ConfiguratorProvider: React.FC<{ children: ReactNode }> = ({
     const sourcePosition = objectPositions.get(instanceId) || [0, 0, 0];
 
     const storedSize = objectBoundingSizes.get(baseModuleId);
-    const offsetX = storedSize
-      ? Math.sqrt(storedSize[0] * storedSize[0] + storedSize[2] * storedSize[2]) + 0.1
-      : 1.5;
+
 
     const copyQuadrant = quadrantFromRotationY(sourceRotation ? sourceRotation[1] : 0);
     const copyOffset = objectBoundingOffsets.get(baseModuleId);

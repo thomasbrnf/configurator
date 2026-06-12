@@ -6,7 +6,7 @@ import {
   Edges,
 } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useControls, folder, Leva, button } from "leva";
+import { useControls, folder, Leva } from "leva";
 import { DynamicModel } from "../DynamicModel";
 import ControlsInfo from "../ControlsInfo";
 import * as THREE from "three";
@@ -19,7 +19,7 @@ import {
   useContext,
   useMemo,
 } from "react";
-import { useMaterial, setPbrDefault, exportPbrDefaults } from "../../context/MaterialContext";
+import { useMaterial } from "../../context/MaterialContext";
 
 function saveSession(key: string, value: unknown) {
   try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
