@@ -1,0 +1,102 @@
+{
+  "amaral": {
+    "uvScale": 18.0,
+    "normalScale": 1.55,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.87,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "cremona": {
+    "uvScale": 18.9,
+    "normalScale": 1.35,
+    "roughness": 0.93,
+    "metalness": 1,
+    "sheen": 0.05,
+    "sheenRoughness": 0.93,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "otaru": {
+    "uvScale": 18.2,
+    "normalScale": 1.55,
+    "roughness": 0.98,
+    "metalness": 0.98,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "ilias": {
+    "uvScale": 20.0,
+    "normalScale": 1.35,
+    "roughness": 0.91,
+    "metalness": 1,
+    "sheen": 0.04,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "indiana": {
+    "uvScale": 16.0,
+    "normalScale": 0.8,
+    "roughness": 0.94,
+    "metalness": 0.97,
+    "sheen": 0.03,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "madras": {
+    "uvScale": 16.3,
+    "normalScale": 0.4,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "ness": {
+    "uvScale": 18.7,
+    "normalScale": 1.75,
+    "roughness": 1,
+    "metalness": 1,
+    "sheen": 0,
+    "sheenRoughness": 1,
+    "envMapIntensity": 0.07,
+    "aoMapIntensity": 0.7
+  },
+  "noma": {
+    "uvScale": 18.4,
+    "normalScale": 0.55,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  },
+  "pegaso": {
+    "uvScale": 19.9,
+    "normalScale": 0.2,
+    "roughness": 0.91,
+    "metalness": 0,
+    "sheen": 0.05,
+    "sheenRoughness": 0.9,
+    "envMapIntensity": 0.1,
+    "aoMapIntensity": 0.7
+  },
+  "puente": {
+    "uvScale": 16.8,
+    "normalScale": 0.045,
+    "roughness": 0.87,
+    "metalness": 0,
+    "sheen": 0.04,
+    "sheenRoughness": 0.8,
+    "envMapIntensity": 0.15,
+    "aoMapIntensity": 0.7
+  }
+}
