@@ -56,6 +56,7 @@ const ModuleSelectionStep: React.FC = () => {
   const handleCompleteSetSelect = (setId: string) => {
     showLoader("Ładowanie sofy...");
     setTimeout(hideLoader, 500);
+    clearScene();
     setSelectedCompleteSet(setId);
     addObjectToScene(setId);
     setCurrentStep("scene");
