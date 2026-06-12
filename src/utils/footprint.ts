@@ -1,4 +1,7 @@
-import type { ModuleCategory } from "../context/ConfiguratorContext";
+import type {
+  ModuleCategory,
+  SnappingSide,
+} from "../context/ConfiguratorContext";
 import { halfExtentAlong } from "../data/snapDistances";
 
 // Footprint scale applied to the real measured geometry. 1.0 = collide / snap at
@@ -60,6 +63,45 @@ export interface Footprint {
   z: number;
   hx: number;
   hz: number;
+}
+
+// World direction of a module's local +X ("right") face after a q·90° Y rotation.
+export const RIGHT_DIR: readonly [number, number][] = [
+  [1, 0],
+  [0, -1],
+  [-1, 0],
+  [0, 1],
+];
+
+// World direction of a module's local −Z ("back") face after a q·90° Y rotation.
+export const BACK_DIR: readonly [number, number][] = [
+  [0, -1],
+  [-1, 0],
+  [0, 1],
+  [1, 0],
+];
+
+// World-space [x, z] unit vectors of all active snapping faces for a module,
+// given its snapping config and 90°-quadrant rotation. Mirrors the logic in
+// useDragAndSnap so the debug overlay uses exactly the same face set.
+export function snapFaceDirs(
+  snapping: SnappingSide,
+  quadrant: number,
+): [number, number][] {
+  if (snapping === "none") return [];
+  const right = RIGHT_DIR[quadrant] as [number, number];
+  const left: [number, number] = [-right[0], -right[1]];
+  const back = BACK_DIR[quadrant] as [number, number];
+  const front: [number, number] = [-back[0], -back[1]];
+  switch (snapping) {
+    case "both":        return [right, left];
+    case "right":       return [right];
+    case "left":        return [left];
+    case "front":       return [front];
+    case "left-front":  return [left, front];
+    case "right-front": return [right, front];
+    default:            return [];
+  }
 }
 
 const EPS = 1e-3;

@@ -104,7 +104,7 @@ const MaterialsModal: React.FC = () => {
           </span>
           {showWood && (
             <span className="font-lato font-normal text-[15px] text-ui-dark uppercase leading-none">
-              wood: {selectedWood || "—"}
+              {t.wood}: {selectedWood || "—"}
             </span>
           )}
         </div>

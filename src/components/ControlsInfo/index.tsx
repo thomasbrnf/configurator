@@ -56,88 +56,84 @@ const ControlsInfo = ({
   );
 
   return (
+    <>
     <div className="fixed left-[100px] bottom-[60px] z-50 flex flex-col gap-[10px]">
-        <div className="flex flex-col gap-[10px]">
-           <button
-            onClick={() => handleRotate("left")}
-            disabled={!canRotate}
-            className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white"
-            title="Rotate left"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="block group-hover:hidden">
-              <path d="M11.7695 0.436198C5.52053 0.436198 0.436198 5.52053 0.436198 11.7695C0.436198 18.0185 5.52053 23.1029 11.7695 23.1029C18.0185 23.1029 23.1029 18.0185 23.1029 11.7695H21.3593C21.3593 17.0752 17.0752 21.3593 11.7695 21.3593C6.46384 21.3593 2.17979 17.0752 2.17979 11.7695C2.17979 6.46384 6.46384 2.17979 11.7695 2.17979C15.1477 2.17979 18.1003 3.90976 19.8064 6.53876H15.2567V8.28235H22.2311V1.30799H20.4875V4.54998C18.4102 2.04357 15.2737 0.436198 11.7695 0.436198Z" fill="#454343"/>
-              <path d="M22.2311 8.28235V1.30799H20.4875V4.54998C18.5399 2.20046 15.6613 0.640119 12.4219 0.454427L11.7695 0.436198C5.52053 0.436198 0.436198 5.52053 0.436198 11.7695L0.450521 12.3516C0.744701 18.1384 5.40065 22.7944 11.1875 23.0885L11.7695 23.1029C18.0185 23.1029 23.1029 18.0185 23.1029 11.7695H21.3593C21.3593 17.0752 17.0752 21.3593 11.7695 21.3593V20.9232C16.8345 20.9232 20.9232 16.8345 20.9232 11.7695V11.3333H23.5391V11.7695C23.5391 18.2593 18.2593 23.5391 11.7695 23.5391C5.27979 23.5391 0 18.2593 0 11.7695C0 5.27979 5.27979 0 11.7695 0C14.9997 0 17.927 1.31626 20.0521 3.42969V0.872396H22.6667V8.71875H14.8203V6.10286H18.9544C17.2828 3.97662 14.6954 2.61589 11.7695 2.61589C6.70458 2.61589 2.61589 6.70458 2.61589 11.7695C2.61589 16.8345 6.70458 20.9232 11.7695 20.9232V21.3593L11.2747 21.3464C6.3639 21.0981 2.44097 17.1752 2.19271 12.2643L2.17979 11.7695C2.17979 6.46384 6.46384 2.17979 11.7695 2.17979L12.0846 2.1849C15.3309 2.28875 18.1535 3.99183 19.8064 6.53876H15.2567V8.28235H22.2311Z" fill="#454343"/>
-            </svg>
-            {rotateHoverSvg}
-          </button>
-          <button
-            onClick={() => handleRotate("right")}
-            disabled={!canRotate}
-            className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white"
-            title="Rotate right"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="block group-hover:hidden">
-              <path d="M11.7695 0.436198C18.0185 0.436198 23.1029 5.52053 23.1029 11.7695C23.1029 18.0185 18.0185 23.1029 11.7695 23.1029C5.52053 23.1029 0.436197 18.0185 0.436197 11.7695H2.17979C2.17979 17.0752 6.46384 21.3593 11.7695 21.3593C17.0752 21.3593 21.3593 17.0752 21.3593 11.7695C21.3593 6.46384 17.0752 2.17979 11.7695 2.17979C8.39133 2.17979 5.4388 3.90976 3.73267 6.53876H8.28235V8.28235H1.30799V1.30799H3.05158V4.54998C5.1289 2.04357 8.26532 0.436198 11.7695 0.436198Z" fill="#454343"/>
-              <path d="M1.30799 8.28235V1.30799H3.05158V4.54998C4.99911 2.20046 7.87778 0.640119 11.1172 0.454427L11.7695 0.436198C18.0185 0.436198 23.1029 5.52053 23.1029 11.7695L23.0885 12.3516C22.7944 18.1384 18.1384 22.7944 12.3516 23.0885L11.7695 23.1029C5.52053 23.1029 0.436197 18.0185 0.436197 11.7695H2.17979C2.17979 17.0752 6.46384 21.3593 11.7695 21.3593V20.9232C6.70458 20.9232 2.61588 16.8345 2.61588 11.7695V11.3333H0V11.7695C0 18.2593 5.27979 23.5391 11.7695 23.5391C18.2593 23.5391 23.5391 18.2593 23.5391 11.7695C23.5391 5.27979 18.2593 0 11.7695 0C8.5394 0 5.61204 1.31626 3.48698 3.42969V0.872396H0.872395V8.71875H8.71875V6.10286H4.58463C6.2563 3.97662 8.84362 2.61589 11.7695 2.61589C16.8345 2.61589 20.9232 6.70458 20.9232 11.7695C20.9232 16.8345 16.8345 20.9232 11.7695 20.9232V21.3593L12.2643 21.3464C17.1752 21.0981 21.0981 17.1752 21.3464 12.2643L21.3593 11.7695C21.3593 6.46384 17.0752 2.17979 11.7695 2.17979L11.4544 2.1849C8.2082 2.28875 5.38554 3.99183 3.73267 6.53876H8.28235V8.28235H1.30799Z" fill="#454343"/>
-            </svg>
-            {rotateHoverSvg}
-          </button> 
-      
+      <div className="flex flex-col gap-[10px]">
+        <button
+          onClick={() => handleRotate("left")}
+          disabled={!canRotate}
+          className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white"
+          title="Rotate left"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="block group-hover:hidden">
+            <path d="M11.7695 0.436198C5.52053 0.436198 0.436198 5.52053 0.436198 11.7695C0.436198 18.0185 5.52053 23.1029 11.7695 23.1029C18.0185 23.1029 23.1029 18.0185 23.1029 11.7695H21.3593C21.3593 17.0752 17.0752 21.3593 11.7695 21.3593C6.46384 21.3593 2.17979 17.0752 2.17979 11.7695C2.17979 6.46384 6.46384 2.17979 11.7695 2.17979C15.1477 2.17979 18.1003 3.90976 19.8064 6.53876H15.2567V8.28235H22.2311V1.30799H20.4875V4.54998C18.4102 2.04357 15.2737 0.436198 11.7695 0.436198Z" fill="#454343" />
+            <path d="M22.2311 8.28235V1.30799H20.4875V4.54998C18.5399 2.20046 15.6613 0.640119 12.4219 0.454427L11.7695 0.436198C5.52053 0.436198 0.436198 5.52053 0.436198 11.7695L0.450521 12.3516C0.744701 18.1384 5.40065 22.7944 11.1875 23.0885L11.7695 23.1029C18.0185 23.1029 23.1029 18.0185 23.1029 11.7695H21.3593C21.3593 17.0752 17.0752 21.3593 11.7695 21.3593V20.9232C16.8345 20.9232 20.9232 16.8345 20.9232 11.7695V11.3333H23.5391V11.7695C23.5391 18.2593 18.2593 23.5391 11.7695 23.5391C5.27979 23.5391 0 18.2593 0 11.7695C0 5.27979 5.27979 0 11.7695 0C14.9997 0 17.927 1.31626 20.0521 3.42969V0.872396H22.6667V8.71875H14.8203V6.10286H18.9544C17.2828 3.97662 14.6954 2.61589 11.7695 2.61589C6.70458 2.61589 2.61589 6.70458 2.61589 11.7695C2.61589 16.8345 6.70458 20.9232 11.7695 20.9232V21.3593L11.2747 21.3464C6.3639 21.0981 2.44097 17.1752 2.19271 12.2643L2.17979 11.7695C2.17979 6.46384 6.46384 2.17979 11.7695 2.17979L12.0846 2.1849C15.3309 2.28875 18.1535 3.99183 19.8064 6.53876H15.2567V8.28235H22.2311Z" fill="#454343" />
+          </svg>
+          {rotateHoverSvg}
+        </button>
+        <button
+          onClick={() => handleRotate("right")}
+          disabled={!canRotate}
+          className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white"
+          title="Rotate right"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="block group-hover:hidden">
+            <path d="M11.7695 0.436198C18.0185 0.436198 23.1029 5.52053 23.1029 11.7695C23.1029 18.0185 18.0185 23.1029 11.7695 23.1029C5.52053 23.1029 0.436197 18.0185 0.436197 11.7695H2.17979C2.17979 17.0752 6.46384 21.3593 11.7695 21.3593C17.0752 21.3593 21.3593 17.0752 21.3593 11.7695C21.3593 6.46384 17.0752 2.17979 11.7695 2.17979C8.39133 2.17979 5.4388 3.90976 3.73267 6.53876H8.28235V8.28235H1.30799V1.30799H3.05158V4.54998C5.1289 2.04357 8.26532 0.436198 11.7695 0.436198Z" fill="#454343" />
+            <path d="M1.30799 8.28235V1.30799H3.05158V4.54998C4.99911 2.20046 7.87778 0.640119 11.1172 0.454427L11.7695 0.436198C18.0185 0.436198 23.1029 5.52053 23.1029 11.7695L23.0885 12.3516C22.7944 18.1384 18.1384 22.7944 12.3516 23.0885L11.7695 23.1029C5.52053 23.1029 0.436197 18.0185 0.436197 11.7695H2.17979C2.17979 17.0752 6.46384 21.3593 11.7695 21.3593V20.9232C6.70458 20.9232 2.61588 16.8345 2.61588 11.7695V11.3333H0V11.7695C0 18.2593 5.27979 23.5391 11.7695 23.5391C18.2593 23.5391 23.5391 18.2593 23.5391 11.7695C23.5391 5.27979 18.2593 0 11.7695 0C8.5394 0 5.61204 1.31626 3.48698 3.42969V0.872396H0.872395V8.71875H8.71875V6.10286H4.58463C6.2563 3.97662 8.84362 2.61589 11.7695 2.61589C16.8345 2.61589 20.9232 6.70458 20.9232 11.7695C20.9232 16.8345 16.8345 20.9232 11.7695 20.9232V21.3593L12.2643 21.3464C17.1752 21.0981 21.0981 17.1752 21.3464 12.2643L21.3593 11.7695C21.3593 6.46384 17.0752 2.17979 11.7695 2.17979L11.4544 2.1849C8.2082 2.28875 5.38554 3.99183 3.73267 6.53876H8.28235V8.28235H1.30799Z" fill="#454343" />
+          </svg>
+          {rotateHoverSvg}
+        </button>
 
-          <button
-            onClick={handleCopy}
-            disabled={!hasSelection}
-            className={`group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white${configurationType === "complete" ? " hidden" : ""}`}
-            title="Copy"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="23"
-              height="27"
-              viewBox="0 0 23 27"
-              fill="none"
-            >
-              <path
-                d="M1.2 2.8C1.2 1.91634 1.91634 1.2 2.8 1.2H14.8C15.6837 1.2 16.4 1.91634 16.4 2.8V18C16.4 18.8837 15.6837 19.6 14.8 19.6H2.8C1.91634 19.6 1.2 18.8837 1.2 18V2.8Z"
-              className="fill-white group-hover:fill-ui-dark transition-colors"
-              />
-              <path
-                className="fill-ui-dark group-hover:fill-white transition-colors"
-                d="M15.2 2.8C15.2 2.57909 15.0209 2.4 14.8 2.4H2.8C2.57909 2.4 2.4 2.57909 2.4 2.8V18C2.4 18.2209 2.57909 18.4 2.8 18.4H14.8C15.0209 18.4 15.2 18.2209 15.2 18V2.8ZM17.6 18C17.6 19.5464 16.3464 20.8 14.8 20.8H2.8C1.2536 20.8 0 19.5464 0 18V2.8C0 1.2536 1.2536 0 2.8 0H14.8C16.3464 0 17.6 1.2536 17.6 2.8V18Z"
-              />
-              <path
-                d="M6 8.4C6 7.51634 6.71634 6.8 7.6 6.8H19.6C20.4837 6.8 21.2 7.51634 21.2 8.4V23.6C21.2 24.4837 20.4837 25.2 19.6 25.2H7.6C6.71634 25.2 6 24.4837 6 23.6V8.4Z"
-              className="fill-white group-hover:fill-ui-dark transition-colors"
-              />
-              <path
-                className="fill-ui-dark group-hover:fill-white transition-colors"
-                d="M20 8.4C20 8.17909 19.8209 8 19.6 8H7.6C7.37909 8 7.2 8.17909 7.2 8.4V23.6C7.2 23.8209 7.37909 24 7.6 24H19.6C19.8209 24 20 23.8209 20 23.6V8.4ZM22.4 23.6C22.4 25.1464 21.1464 26.4 19.6 26.4H7.6C6.0536 26.4 4.8 25.1464 4.8 23.6V8.4C4.8 6.8536 6.0536 5.6 7.6 5.6H19.6C21.1464 5.6 22.4 6.8536 22.4 8.4V23.6Z"
-              />
-            </svg>
-          </button>
 
-            <button className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark group transition-colors">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="6"
-              height="19"
-              viewBox="0 0 6 19"
-              fill="none"
-            >
-              <path
-                className="fill-ui-dark group-hover:fill-white transition-colors"
-                d="M4.7884 5.67013V18.4H1.64916V7.6H0V5.67013H1.64916H4.7884ZM5.21878 1.96035C5.21878 2.22504 5.16393 2.47318 5.05422 2.70479C4.94452 2.93639 4.79684 3.13904 4.61118 3.31274C4.43397 3.48645 4.223 3.62706 3.97827 3.73459C3.73355 3.83385 3.47194 3.88348 3.19346 3.88348C2.92342 3.88348 2.66604 3.83385 2.42131 3.73459C2.18502 3.62706 1.97827 3.48645 1.80106 3.31274C1.62384 3.13904 1.48038 2.93639 1.37068 2.70479C1.26941 2.47318 1.21878 2.22504 1.21878 1.96035C1.21878 1.68739 1.26941 1.43097 1.37068 1.1911C1.48038 0.951225 1.62384 0.744437 1.80106 0.570735C1.97827 0.397033 2.18502 0.260553 2.42131 0.161295C2.66604 0.0537649 2.92342 0 3.19346 0C3.47194 0 3.73355 0.0537649 3.97827 0.161295C4.223 0.260553 4.43397 0.397033 4.61118 0.570735C4.79684 0.744437 4.94452 0.951225 5.05422 1.1911C5.16393 1.43097 5.21878 1.68739 5.21878 1.96035Z"
-              />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={handleCopy}
+          disabled={!hasSelection}
+          className={`group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark transition-colors disabled:hidden disabled:cursor-not-allowed disabled:hover:bg-white${configurationType === "complete" ? " hidden" : ""}`}
+          title="Copy"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="23"
+            height="27"
+            viewBox="0 0 23 27"
+            fill="none"
+          >
+            <path
+              d="M1.2 2.8C1.2 1.91634 1.91634 1.2 2.8 1.2H14.8C15.6837 1.2 16.4 1.91634 16.4 2.8V18C16.4 18.8837 15.6837 19.6 14.8 19.6H2.8C1.91634 19.6 1.2 18.8837 1.2 18V2.8Z"
+              className="fill-white group-hover:fill-ui-dark transition-colors" />
+            <path
+              className="fill-ui-dark group-hover:fill-white transition-colors"
+              d="M15.2 2.8C15.2 2.57909 15.0209 2.4 14.8 2.4H2.8C2.57909 2.4 2.4 2.57909 2.4 2.8V18C2.4 18.2209 2.57909 18.4 2.8 18.4H14.8C15.0209 18.4 15.2 18.2209 15.2 18V2.8ZM17.6 18C17.6 19.5464 16.3464 20.8 14.8 20.8H2.8C1.2536 20.8 0 19.5464 0 18V2.8C0 1.2536 1.2536 0 2.8 0H14.8C16.3464 0 17.6 1.2536 17.6 2.8V18Z" />
+            <path
+              d="M6 8.4C6 7.51634 6.71634 6.8 7.6 6.8H19.6C20.4837 6.8 21.2 7.51634 21.2 8.4V23.6C21.2 24.4837 20.4837 25.2 19.6 25.2H7.6C6.71634 25.2 6 24.4837 6 23.6V8.4Z"
+              className="fill-white group-hover:fill-ui-dark transition-colors" />
+            <path
+              className="fill-ui-dark group-hover:fill-white transition-colors"
+              d="M20 8.4C20 8.17909 19.8209 8 19.6 8H7.6C7.37909 8 7.2 8.17909 7.2 8.4V23.6C7.2 23.8209 7.37909 24 7.6 24H19.6C19.8209 24 20 23.8209 20 23.6V8.4ZM22.4 23.6C22.4 25.1464 21.1464 26.4 19.6 26.4H7.6C6.0536 26.4 4.8 25.1464 4.8 23.6V8.4C4.8 6.8536 6.0536 5.6 7.6 5.6H19.6C21.1464 5.6 22.4 6.8536 22.4 8.4V23.6Z" />
+          </svg>
+        </button>
+
+        <button className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-ui-dark group transition-colors">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="6"
+            height="19"
+            viewBox="0 0 6 19"
+            fill="none"
+          >
+            <path
+              className="fill-ui-dark group-hover:fill-white transition-colors"
+              d="M4.7884 5.67013V18.4H1.64916V7.6H0V5.67013H1.64916H4.7884ZM5.21878 1.96035C5.21878 2.22504 5.16393 2.47318 5.05422 2.70479C4.94452 2.93639 4.79684 3.13904 4.61118 3.31274C4.43397 3.48645 4.223 3.62706 3.97827 3.73459C3.73355 3.83385 3.47194 3.88348 3.19346 3.88348C2.92342 3.88348 2.66604 3.83385 2.42131 3.73459C2.18502 3.62706 1.97827 3.48645 1.80106 3.31274C1.62384 3.13904 1.48038 2.93639 1.37068 2.70479C1.26941 2.47318 1.21878 2.22504 1.21878 1.96035C1.21878 1.68739 1.26941 1.43097 1.37068 1.1911C1.48038 0.951225 1.62384 0.744437 1.80106 0.570735C1.97827 0.397033 2.18502 0.260553 2.42131 0.161295C2.66604 0.0537649 2.92342 0 3.19346 0C3.47194 0 3.73355 0.0537649 3.97827 0.161295C4.223 0.260553 4.43397 0.397033 4.61118 0.570735C4.79684 0.744437 4.94452 0.951225 5.05422 1.1911C5.16393 1.43097 5.21878 1.68739 5.21878 1.96035Z" />
+          </svg>
+        </button>
+      </div>
 
 
       {/* Camera + utility buttons */}
       <div className="flex gap-[10px]">
         <div className="relative">
-      
-                <button
+
+          <button
             onClick={() => removeObjectById(selectedObjectId!)}
             className="group bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex items-center justify-center size-[40px] cursor-pointer hover:bg-[#EE4848] transition-colors"
             title="Delete"
@@ -152,82 +148,83 @@ const ControlsInfo = ({
               <path d="M2.21538 3.58194H5.90769H9.6H13.2923H16.9846V22.9254H13.2923H9.6H5.90769H2.21538V3.58194Z" />
               <path
                 className="fill-ui-dark group-hover:fill-white transition-colors"
-                d="M18.0923 2.50731V24H1.10769V2.50731H18.0923ZM14.4 21.8507H15.8769V4.65658H14.4V21.8507ZM10.7077 21.8507H12.1846V4.65658H10.7077V21.8507ZM7.01538 21.8507H8.49231V4.65658H7.01538V21.8507ZM3.32308 21.8507H4.8V4.65658H3.32308V21.8507Z"
-              />
+                d="M18.0923 2.50731V24H1.10769V2.50731H18.0923ZM14.4 21.8507H15.8769V4.65658H14.4V21.8507ZM10.7077 21.8507H12.1846V4.65658H10.7077V21.8507ZM7.01538 21.8507H8.49231V4.65658H7.01538V21.8507ZM3.32308 21.8507H4.8V4.65658H3.32308V21.8507Z" />
               <path
                 className="fill-ui-dark group-hover:fill-white transition-colors"
-                d="M11.6185 0V2.50748H19.2V3.94033H0V2.50748H7.58149V0H11.6185ZM9.05841 2.50748H10.1416V1.43285H9.05841V2.50748Z"
-              />
+                d="M11.6185 0V2.50748H19.2V3.94033H0V2.50748H7.58149V0H11.6185ZM9.05841 2.50748H10.1416V1.43285H9.05841V2.50748Z" />
             </svg>
           </button>
-          {/* 
-          {isTooltipVisible && (
-            <div className="absolute bottom-[48px] left-0 w-[280px] bg-white drop-shadow-[0px_1px_2.5px_rgba(0,0,0,0.3)] p-[15px] pointer-events-none z-10">
-              <p className="font-lato font-light text-[11px] text-ui-dark leading-[1.4]">
-                {t.clickToSelect}
-              </p>
-              <p className="font-lato font-light text-[11px] text-ui-dark leading-[1.4] mt-[5px]">
-                {t.mouseWheelZoom}
-              </p>
-              <p className="font-lato font-light text-[11px] text-ui-dark leading-[1.4] mt-[5px]">
-                {t.dragToRotate}
-              </p>
-            </div>
-          )} */}
+          {/*
+    {isTooltipVisible && (
+      <div className="absolute bottom-[48px] left-0 w-[280px] bg-white drop-shadow-[0px_1px_2.5px_rgba(0,0,0,0.3)] p-[15px] pointer-events-none z-10">
+        <p className="font-lato font-light text-[11px] text-ui-dark leading-[1.4]">
+          {t.clickToSelect}
+        </p>
+        <p className="font-lato font-light text-[11px] text-ui-dark leading-[1.4] mt-[5px]">
+          {t.mouseWheelZoom}
+        </p>
+        <p className="font-lato font-light text-[11px] text-ui-dark leading-[1.4] mt-[5px]">
+          {t.dragToRotate}
+        </p>
+      </div>
+    )} */}
         </div>
 
-              <button className="bg-white w-full drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] items-center cursor-pointer hover:bg-[#D4CCBC] group transition-colors">
-        <div className="size-[40px] shrink-0 flex items-center justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="18"
-            viewBox="0 0 14 18"
-            fill="none"
-          >
-            <path
-              className="fill-ui-dark group-hover:fill-black transition-colors"
-              d="M6.8 15.1556L13.6 8.15738L12.2402 6.77474L7.76163 11.3285V8.54815e-08L5.83837 0L5.83836 11.3285L1.35981 6.77474L0 8.15738L6.8 15.1556Z"
-            />
-            <path
-              className="fill-ui-dark group-hover:fill-black transition-colors"
-              d="M0.0685544 15.6444H13.5314V17.6H0.0685544V15.6444Z"
-            />
-          </svg>
-        </div>
-        <span className="flex-1 font-lato font-light text-[20px] text-ui-dark group-hover:text-black transition-colors uppercase text-center">
-          pdf 
-        </span>
-      </button>
+        <button className="bg-white w-full drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] items-center cursor-pointer hover:bg-[#D4CCBC] group transition-colors">
+          <div className="size-[40px] shrink-0 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="18"
+              viewBox="0 0 14 18"
+              fill="none"
+            >
+              <path
+                className="fill-ui-dark group-hover:fill-black transition-colors"
+                d="M6.8 15.1556L13.6 8.15738L12.2402 6.77474L7.76163 11.3285V8.54815e-08L5.83837 0L5.83836 11.3285L1.35981 6.77474L0 8.15738L6.8 15.1556Z" />
+              <path
+                className="fill-ui-dark group-hover:fill-black transition-colors"
+                d="M0.0685544 15.6444H13.5314V17.6H0.0685544V15.6444Z" />
+            </svg>
+          </div>
+          <span className="flex-1 font-lato font-light text-[20px] text-ui-dark group-hover:text-black transition-colors uppercase text-center">
+            pdf
+          </span>
+        </button>
       </div>
 
       {/* PDF download */}
-     
-        {onRecenter && (
-          <button
-            onClick={handleViewReset}
-            className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] px-2 gap-2 items-center cursor-pointer hover:bg-ui-dark group transition-colors"
-          >
-            <div className="size-[40px] shrink-0 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="19"
-                viewBox="0 0 24 19"
-                fill="none"
-              >
-                <path
-                  className="fill-ui-dark group-hover:fill-white transition-colors"
-                  d="M21.8788 5.68969V2.04604H18.1016V0H21.7045C22.3244 0 22.8619 0.219549 23.3171 0.658658C23.7723 1.09776 24 1.61627 24 2.21421V5.68969H21.8788ZM0 5.68969V2.21421C0 1.61627 0.227599 1.09776 0.682807 0.658658C1.13802 0.219549 1.67554 0 2.29539 0H5.89829V2.04604H2.12106V5.68969H0ZM18.1016 18.6667V16.6206H21.8788V12.977H24V16.4525C24 17.0503 23.7723 17.5689 23.3171 18.008C22.8619 18.4471 22.3244 18.6667 21.7045 18.6667H18.1016ZM2.29539 18.6667C1.67554 18.6667 1.13802 18.4471 0.682807 18.008C0.227599 17.5689 0 17.0503 0 16.4525V12.977H2.12106V16.6206H5.89829V18.6667H2.29539ZM3.8644 14.9389V3.72773H20.1355V14.9389H3.8644ZM5.98546 12.8929H18.0144V5.77377H5.98546V12.8929Z"
-                />
-              </svg>
-            </div>
-            <span className="flex-1 font-lato font-light text-[20px] text-ui-dark group-hover:text-white transition-colors uppercase text-center">
-              {t.recenter}
-            </span>
-          </button>
-        )}
+
+      {onRecenter && (
+        <button
+          onClick={handleViewReset}
+          className="bg-white drop-shadow-[0px_0.8px_2px_rgba(0,0,0,0.3)] flex h-[40px] px-2 gap-2 items-center cursor-pointer hover:bg-ui-dark group transition-colors"
+        >
+          <div className="size-[40px] shrink-0 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="19"
+              viewBox="0 0 24 19"
+              fill="none"
+            >
+              <path
+                className="fill-ui-dark group-hover:fill-white transition-colors"
+                d="M21.8788 5.68969V2.04604H18.1016V0H21.7045C22.3244 0 22.8619 0.219549 23.3171 0.658658C23.7723 1.09776 24 1.61627 24 2.21421V5.68969H21.8788ZM0 5.68969V2.21421C0 1.61627 0.227599 1.09776 0.682807 0.658658C1.13802 0.219549 1.67554 0 2.29539 0H5.89829V2.04604H2.12106V5.68969H0ZM18.1016 18.6667V16.6206H21.8788V12.977H24V16.4525C24 17.0503 23.7723 17.5689 23.3171 18.008C22.8619 18.4471 22.3244 18.6667 21.7045 18.6667H18.1016ZM2.29539 18.6667C1.67554 18.6667 1.13802 18.4471 0.682807 18.008C0.227599 17.5689 0 17.0503 0 16.4525V12.977H2.12106V16.6206H5.89829V18.6667H2.29539ZM3.8644 14.9389V3.72773H20.1355V14.9389H3.8644ZM5.98546 12.8929H18.0144V5.77377H5.98546V12.8929Z" />
+            </svg>
+          </div>
+          <span className="flex-1 font-lato font-light text-[20px] text-ui-dark group-hover:text-white transition-colors uppercase text-center">
+            {t.recenter}
+          </span>
+        </button>
+      )}
     </div>
+    
+    <div className="fixed bottom-5 left-[100px]"> <p className=" text-[#757575] text-[16px] font-light">
+        Powered by <a href="https://www.onvirtue.pl/" target="_blank" rel="noopener noreferrer" className="font-normal" >ONVIRTUE</a> 
+      </p>
+      </div></>
+
   );
 };
 

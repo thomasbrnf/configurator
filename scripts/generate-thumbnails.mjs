@@ -25,6 +25,7 @@ const ROOT = join(__dirname, "..");
 const PUBLIC = join(ROOT, "public");
 const OUT_DIR = join(PUBLIC, "models", "thumbnails");
 const PORT = 5174;
+const DRACO_DIR = join(ROOT, "node_modules", "three", "examples", "jsm", "libs", "draco", "gltf");
 
 // ── Minimal static server ─────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ const MIME = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
+  ".wasm": "application/wasm",
   ".webp": "image/webp",
 };
 
@@ -47,6 +49,8 @@ function startServer() {
       let filePath;
       if (url.startsWith("/scripts/")) {
         filePath = join(__dirname, url.slice("/scripts/".length));
+      } else if (url.startsWith("/draco/")) {
+        filePath = join(DRACO_DIR, url.slice("/draco/".length));
       } else {
         filePath = join(PUBLIC, url === "/" ? "index.html" : url);
       }
@@ -114,7 +118,7 @@ async function main() {
     // runs, so they're available when generate() auto-starts on load.
     // This avoids all URL-encoding issues with double-space folder names.
     const CREMONA_DIR = join(PUBLIC, "materials", "CREMONA 02  24  96  81  77  34");
-    const baseData   = (await readFile(join(CREMONA_DIR, "02_BaseColor_1k.webp"))).toString("base64");
+    const baseData   = (await readFile(join(CREMONA_DIR, "02_BaseColor.webp"))).toString("base64");
     const normalData = (await readFile(join(CREMONA_DIR, "02_Normal_1k.webp"))).toString("base64");
     const baseDataURL   = `data:image/webp;base64,${baseData}`;
     const normalDataURL = `data:image/webp;base64,${normalData}`;

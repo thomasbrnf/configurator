@@ -335,7 +335,7 @@
       async function loadTextures() {
         // Use data URLs injected by the Node.js runner (avoids URL-encoding issues
         // with double-space folder names). Fall back to HTTP fetch if running standalone.
-        const base   = window.__fabricBaseDataURL   || "/materials/CREMONA 02  24  96  81  77  34/02_BaseColor_1k.webp";
+        const base   = window.__fabricBaseDataURL   || "/materials/CREMONA 02  24  96  81  77  34/02_BaseColor.webp";
         const normal = window.__fabricNormalDataURL || "/materials/CREMONA 02  24  96  81  77  34/02_Normal_1k.webp";
         [baseMap, normalMap] = await Promise.all([
           loadTex(base),
@@ -360,17 +360,15 @@
 
       function buildFabricMaterial(gltfMaterials) {
         const src = gltfMaterials["Sofa_Fabric"];
-        return new THREE.MeshPhysicalMaterial({
+        return new THREE.MeshStandardMaterial({
           map: baseMap || null,
           normalMap: normalMap || null,
-          normalScale: new THREE.Vector2(0.55, 0.55),
+          normalScale: new THREE.Vector2(1, 1),
           aoMap: src?.aoMap ?? null,
-          aoMapIntensity: 0.30,
+          aoMapIntensity: src?.aoMap ? 1 : 0,
           roughness: 0.93,
-          metalness: 1,
-          envMapIntensity: 0.15,
-          sheen: 0.05,
-          sheenRoughness: 0.93,
+          metalness: 0.04,
+          envMapIntensity: 0.5,
           color: baseMap ? 0xffffff : 0xc8b8a0,
         });
       }
@@ -418,7 +416,7 @@
       // ── Per-model render ──────────────────────────────────────────────────────
 
       const dracoLoader = new DRACOLoader();
-      dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
+      dracoLoader.setDecoderPath("/draco/");
       const gltfLoader = new GLTFLoader();
       gltfLoader.setDRACOLoader(dracoLoader);
 

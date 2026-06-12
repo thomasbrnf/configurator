@@ -4,10 +4,12 @@ import { useThree } from "@react-three/fiber";
 import {
   getModuleSnappingConfig,
   getModuleCategory,
+  getModuleBackFaceInset,
+  getModuleAllowOppositeFacing,
 } from "../context/ConfiguratorContext";
 import { getSnapConfig, halfExtentAlong } from "../data/snapDistances";
 import { extractBaseModuleId } from "../utils/moduleId";
-import { worldHalfExtent, worldOffsetXZ } from "../utils/footprint";
+import { worldHalfExtent, worldOffsetXZ, RIGHT_DIR, BACK_DIR } from "../utils/footprint";
 
 export interface SnapPreview {
   fromId: string;
@@ -38,27 +40,11 @@ interface UseDragAndSnapOptions {
   onDisconnect?: (instanceId: string) => void;
   /** Called when a drag ends in a committed snap — records the new bond. */
   onConnect?: (draggedId: string, targetId: string) => void;
+  /** Returns all modules currently snapped to the given module. */
+  getNeighbors?: (instanceId: string) => string[];
   SNAP_DISTANCE?: number;
 }
 
-// World direction of a module's local +X ("right") face after a q·90° Y rotation,
-// as a cardinal [x, z] unit vector. q = [0,1,2,3] → 0/90/180/270°.
-const RIGHT_DIR: [number, number][] = [
-  [1, 0],
-  [0, -1],
-  [-1, 0],
-  [0, 1],
-];
-
-// World direction of a module's BACK face (local -Z) after a q·90° Y rotation.
-// q0 unrotated → back points world -Z (the cyan debug face). Used to align a
-// row of modules by their backs in a rotation-aware way.
-const BACK_DIR: [number, number][] = [
-  [0, -1],
-  [-1, 0],
-  [0, 1],
-  [1, 0],
-];
 
 export function useDragAndSnap({
   sceneObjects,
@@ -71,6 +57,7 @@ export function useDragAndSnap({
   onDragStateChange,
   onDisconnect,
   onConnect,
+  getNeighbors,
   SNAP_DISTANCE = 1.8,
 }: UseDragAndSnapOptions) {
   const { camera } = useThree();
@@ -540,7 +527,10 @@ export function useDragAndSnap({
       (contactFromDragged[0] === -rightDir[0] &&
         contactFromDragged[1] === -rightDir[1]);
     const oppositeFacing = (((qD - qT) % 4) + 4) % 4 === 2;
-    if (draggedSideContact && oppositeFacing) {
+    const eitherAllowsOppositeFacing =
+      getModuleAllowOppositeFacing(draggedId) ||
+      getModuleAllowOppositeFacing(targetId);
+    if (draggedSideContact && oppositeFacing && !eitherAllowsOppositeFacing) {
       return null;
     }
 
@@ -563,11 +553,32 @@ export function useDragAndSnap({
       // we fall back to centring them.
       const sD = backSignAlong(draggedId, perpAxis);
       const sT = backSignAlong(targetId, perpAxis);
-      perpOffset =
-        sD !== 0 && sT !== 0
-          ? sT * footHalf(targetId, perpAxis) -
-            sD * footHalf(draggedId, perpAxis)
-          : 0;
+      if (sD !== 0 && sT !== 0 && Math.sign(sD) === Math.sign(sT)) {
+        // Same back direction: align by back face, then apply each module's
+        // forward inset in its own back-direction sign.
+        perpOffset =
+          sT * footHalf(targetId, perpAxis) -
+          sD * footHalf(draggedId, perpAxis);
+        perpOffset -= sD * getModuleBackFaceInset(draggedId);
+        perpOffset += sT * getModuleBackFaceInset(targetId);
+      } else if (sD !== 0 && sT !== 0) {
+        // Opposite back directions. Use the TARGET's back sign as the sole
+        // orientation reference so both modules land at the same position
+        // relative to the row's back edge, regardless of which way the dragged
+        // module is rotated. Using sD here would invert the offset when the
+        // dragged module faces the opposite way (sD=-1 → wrong sign on all terms).
+        perpOffset =
+          sT * footHalf(targetId, perpAxis) -
+          sT * footHalf(draggedId, perpAxis);
+        perpOffset -= sT * getModuleBackFaceInset(draggedId);
+        perpOffset += sT * getModuleBackFaceInset(targetId);
+      } else {
+        // One or both backs are perpendicular to perpAxis (sD=0 or sT=0).
+        // Still apply whichever inset(s) are meaningful via the non-zero sign.
+        perpOffset = 0;
+        if (sD !== 0) perpOffset -= sD * getModuleBackFaceInset(draggedId);
+        if (sT !== 0) perpOffset += sT * getModuleBackFaceInset(targetId);
+      }
     } else if (qD === 0 && qT === 0 && axis === "x") {
       // Fallback (model not yet measured): unrotated row — hand-tuned table.
       gap = config.xDist;
@@ -579,6 +590,11 @@ export function useDragAndSnap({
         halfExtentAlong(targetCat, qT, axis);
       perpOffset = 0;
     }
+
+    // Pull modules 5% closer than flush so cushion edges nestle together rather
+    // than sitting perfectly tangent. Only affects snap position — free-drag
+    // collision uses the unmodified footprint scale.
+    gap *= 0.98;
 
     // Snapped CENTRE: flush along the contact axis, back-aligned on the perp
     // axis. Convert back to the stored origin by removing the dragged offset.
@@ -597,15 +613,48 @@ export function useDragAndSnap({
       snapCenterZ - dOffZ,
     ];
 
-    // Veto the snap if the target's contact face is already occupied: snapping
-    // flush to the target would plant this module on top of whatever is already
-    // connected there. The target itself is excluded (flush contact is the
-    // intended result); overlap with anyone else means "already connected".
+    // Veto the snap if the target's contact face is already occupied.
+    //
+    // We determine each existing neighbor's face on the target by comparing
+    // their center positions. If any neighbor already sits on the same face
+    // as `contactFromTarget`, the spot is taken — reject immediately.
+    //
+    // Neighbors on PERPENDICULAR faces (corner-junction partners) are excluded
+    // from the footprint overlap check below because the 0.98 gap factor pulls
+    // them ~2% closer than flush, causing a tiny footprint overlap at the corner.
+    // Excluding them prevents that overlap from falsely blocking a second corner
+    // connection. Same-face neighbors are NOT excluded so their footprint
+    // presence still catches any edge case the direction check misses.
+    const targetNeighbors = getNeighbors?.(targetId) ?? [];
+    const cornerJunctionNeighbors: string[] = [];
+    for (const neighborId of targetNeighbors) {
+      const nPos = objectPositions.get(neighborId);
+      const tPosCur = objectPositions.get(targetId) || [0, 0, 0];
+      if (!nPos) continue;
+      const [tOx, tOz] = footOffset(targetId);
+      const [nOx, nOz] = footOffset(neighborId);
+      const ndx = (nPos[0] + nOx) - (tPosCur[0] + tOx);
+      const ndz = (nPos[2] + nOz) - (tPosCur[2] + tOz);
+      const neighborAxis: "x" | "z" = Math.abs(ndx) > Math.abs(ndz) ? "x" : "z";
+      const neighborSign = (neighborAxis === "x" ? ndx : ndz) > 0 ? 1 : -1;
+      const neighborFaceOnTarget: [number, number] =
+        neighborAxis === "x" ? [neighborSign, 0] : [0, neighborSign];
+      if (
+        neighborFaceOnTarget[0] === contactFromTarget[0] &&
+        neighborFaceOnTarget[1] === contactFromTarget[1]
+      ) {
+        return null; // same face is already occupied
+      }
+      if (neighborAxis !== axis) {
+        cornerJunctionNeighbors.push(neighborId); // perpendicular face — safe to exclude from footprint check
+      }
+    }
+
     const snapHitsExclTarget = overlappingIds(
       draggedId,
       snapPos[0],
       snapPos[2],
-      new Set([draggedId, targetId]),
+      new Set([draggedId, targetId, ...cornerJunctionNeighbors]),
     );
     if (snapHitsExclTarget.length > 0) {
       return null;

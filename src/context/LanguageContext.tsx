@@ -159,9 +159,9 @@ const translations: Record<Language, Translations> = {
     finishRotation: "Zakończ Obracanie",
 
     // Loader
-    loadingObject: "Ładowanie sofy...",
-    loadingMaterial: "Ładowanie materiału...",
-    changingMaterial: "Zmienianie materiału...",
+    loadingObject: "Ładowanie...",
+    loadingMaterial: "Ładowanie...",
+    changingMaterial: "Ładowanie...",
     loading: "Ładowanie...",
     firstLoadTitle: "Przygotowywanie konfiguratora",
     firstLoadModels: "Pobieranie modeli",

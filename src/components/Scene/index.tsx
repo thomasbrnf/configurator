@@ -1516,18 +1516,18 @@ const Scene = () => {
           label: "AO Intensity",
         },
         // ─── PBR default management (DEV only) ───────────────────────
-        setShadeDefault: button(() => {
-          const { selectedObjectId: id, getObjectMaterial: getMat, getObjectPbr: getPbr } =
-            pbrActionRef.current;
-          if (!id) return;
-          const mat = getMat(id);
-          if (!mat) return;
-          setPbrDefault(mat.name, getPbr(id));
-          console.info(`[PBR] Set default for "${mat.name}"`);
-        }),
-        exportPbrJson: button(() => {
-          exportPbrDefaults();
-        }),
+        // setShadeDefault: button(() => {
+        //   const { selectedObjectId: id, getObjectMaterial: getMat, getObjectPbr: getPbr } =
+        //     pbrActionRef.current;
+        //   if (!id) return;
+        //   const mat = getMat(id);
+        //   if (!mat) return;
+        //   setPbrDefault(mat.name, getPbr(id));
+        //   console.info(`[PBR] Set default for "${mat.name}"`);
+        // }),
+        // exportPbrJson: button(() => {
+        //   exportPbrDefaults();
+        // }),
       },
       { collapsed: true },
     ),

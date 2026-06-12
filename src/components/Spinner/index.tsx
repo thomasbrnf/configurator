@@ -23,9 +23,6 @@ const Spinner = () => {
   if (!visible) return null;
 
   const messageMap: Record<string, string> = {
-    "Ładowanie sofy...": t.loadingObject,
-    "Ładowanie materiału...": t.loadingMaterial,
-    "Zmienianie materiału...": t.changingMaterial,
     "Ładowanie...": t.loading,
   };
 
