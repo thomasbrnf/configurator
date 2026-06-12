@@ -114,7 +114,7 @@ async function main() {
     // runs, so they're available when generate() auto-starts on load.
     // This avoids all URL-encoding issues with double-space folder names.
     const CREMONA_DIR = join(PUBLIC, "materials", "CREMONA 02  24  96  81  77  34");
-    const baseData   = (await readFile(join(CREMONA_DIR, "02_BaseColor.webp"))).toString("base64");
+    const baseData   = (await readFile(join(CREMONA_DIR, "02_BaseColor_1k.webp"))).toString("base64");
     const normalData = (await readFile(join(CREMONA_DIR, "02_Normal_1k.webp"))).toString("base64");
     const baseDataURL   = `data:image/webp;base64,${baseData}`;
     const normalDataURL = `data:image/webp;base64,${normalData}`;

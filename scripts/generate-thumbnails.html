@@ -335,7 +335,7 @@
       async function loadTextures() {
         // Use data URLs injected by the Node.js runner (avoids URL-encoding issues
         // with double-space folder names). Fall back to HTTP fetch if running standalone.
-        const base   = window.__fabricBaseDataURL   || "/materials/CREMONA 02  24  96  81  77  34/02_BaseColor.webp";
+        const base   = window.__fabricBaseDataURL   || "/materials/CREMONA 02  24  96  81  77  34/02_BaseColor_1k.webp";
         const normal = window.__fabricNormalDataURL || "/materials/CREMONA 02  24  96  81  77  34/02_Normal_1k.webp";
         [baseMap, normalMap] = await Promise.all([
           loadTex(base),
